@@ -85,7 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: comprehensive_dashboard.php');
             exit();
         } else {
-            $error = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+            // استخدام رسالة الخطأ من Auth إذا كانت متوفرة
+            $error = $auth->getLastError() ?: 'اسم المستخدم أو كلمة المرور غير صحيحة';
         }
     } else {
         $error = 'يرجى إدخال اسم المستخدم وكلمة المرور';

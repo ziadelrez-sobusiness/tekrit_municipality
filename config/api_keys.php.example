@@ -1,0 +1,38 @@
+<?php
+/**
+ * API Keys Configuration
+ * 
+ * ⚠️ مهم: هذا ملف مثال
+ * 
+ * 1. انسخ هذا الملف إلى api_keys.php
+ * 2. غير اسم الملف من api_keys.php.example إلى api_keys.php
+ * 3. أضف API Keys الخاصة بك
+ * 4. تأكد من أن api_keys.php في .gitignore (لا ترفعه للـ repository)
+ */
+
+return [
+    'api_keys' => [
+        // مثال على API Keys
+        // يمكنك إنشاء keys عشوائية باستخدام: bin2hex(random_bytes(32))
+        
+        // Public API Key (للوصول العام)
+        'TKT_PUBLIC_' . bin2hex(random_bytes(16)),
+        
+        // Private API Key (للاستخدام الداخلي)
+        'TKT_PRIVATE_' . bin2hex(random_bytes(16)),
+        
+        // يمكنك إضافة المزيد من Keys حسب الحاجة
+        // 'TKT_MOBILE_APP_' . bin2hex(random_bytes(16)),
+        // 'TKT_WEB_APP_' . bin2hex(random_bytes(16)),
+    ],
+    
+    // معلومات إضافية عن كل Key (اختياري)
+    'keys_info' => [
+        // 'TKT_PUBLIC_...' => [
+        //     'name' => 'Public API',
+        //     'description' => 'للوصول العام',
+        //     'rate_limit' => 1000 // حد مخصص
+        // ]
+    ]
+];
+

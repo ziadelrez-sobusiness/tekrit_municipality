@@ -1,369 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎯 الخطوات التالية</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-    </style>
-</head>
-<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen p-4 md:p-8">
-    <div class="max-w-5xl mx-auto">
-        
-        <!-- العنوان -->
-        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
-            <div class="text-9xl mb-4">🎯</div>
-            <h1 class="text-6xl font-black text-blue-600 mb-3">
-                ماذا بعد؟
-            </h1>
-            <p class="text-2xl text-gray-600">الخطوات التالية بعد ربط الحساب</p>
-        </div>
-
-        <!-- الوضع الحالي -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">✅ الوضع الحالي</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
-                    <p class="font-bold text-green-900 mb-2">✅ ما يعمل:</p>
-                    <ul class="text-sm text-green-800 space-y-1 mr-4">
-                        <li>• إعدادات Telegram محفوظة</li>
-                        <li>• Bot Token صحيح</li>
-                        <li>• قوالب الرسائل جاهزة</li>
-                        <li>• الاختبار اليدوي يعمل</li>
-                        <li>• ربط الحساب ناجح</li>
-                        <li>• إرسال الرسائل المعلقة يعمل</li>
-                    </ul>
-                </div>
-                
-                <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4">
-                    <p class="font-bold text-yellow-900 mb-2">⏳ ما ينتظر:</p>
-                    <ul class="text-sm text-yellow-800 space-y-1 mr-4">
-                        <li>• ❌ Webhook URL غير محدد</li>
-                        <li>• ⏳ البوت لا يستجيب تلقائياً</li>
-                        <li>• ⏳ يحتاج رابط عام (public URL)</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- المشكلة الوحيدة المتبقية -->
-        <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
-            <h2 class="text-4xl font-black mb-6 text-center">⚠️ المشكلة الوحيدة المتبقية</h2>
-            
-            <div class="bg-white bg-opacity-20 rounded-xl p-6">
-                <p class="text-3xl font-bold mb-4 text-center">
-                    ❌ Webhook URL غير محدد
-                </p>
-                <p class="text-xl text-center mb-6">
-                    السبب: localhost لا يعمل مع Telegram
-                </p>
-                
-                <div class="bg-white bg-opacity-30 rounded-lg p-6">
-                    <p class="text-2xl font-bold mb-3 text-center">💡 الحل:</p>
-                    <div class="space-y-2 text-lg">
-                        <p>1️⃣ استخدام ngrok للتطوير المحلي</p>
-                        <p>2️⃣ أو نشر الموقع على خادم حقيقي</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- الخيار 1: ngrok -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">🔧 الخيار 1: استخدام ngrok (للتطوير)</h2>
-            
-            <div class="space-y-6">
-                <!-- الخطوة 1 -->
-                <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border-l-4 border-blue-500">
-                    <p class="text-2xl font-bold text-blue-900 mb-3">1️⃣ تحميل وتشغيل ngrok</p>
-                    
-                    <div class="space-y-3">
-                        <div class="bg-white rounded p-4">
-                            <p class="font-bold text-blue-900 mb-2">أ. تحميل ngrok:</p>
-                            <a href="https://ngrok.com/download" target="_blank" 
-                               class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
-                                📥 تحميل من ngrok.com
-                            </a>
-                        </div>
-                        
-                        <div class="bg-white rounded p-4">
-                            <p class="font-bold text-blue-900 mb-2">ب. تشغيل ngrok:</p>
-                            <pre class="bg-gray-100 p-3 rounded text-sm overflow-x-auto">ngrok http 8080</pre>
-                        </div>
-                        
-                        <div class="bg-white rounded p-4">
-                            <p class="font-bold text-blue-900 mb-2">ج. نسخ الرابط:</p>
-                            <p class="text-sm text-blue-800 mb-2">سيظهر لك رابط مثل:</p>
-                            <pre class="bg-gray-100 p-3 rounded text-sm">https://abc123.ngrok.io</pre>
-                            <p class="text-xs text-blue-700 mt-2">⚠️ هذا الرابط مؤقت - سيتغير كل مرة تشغل ngrok</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- الخطوة 2 -->
-                <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border-l-4 border-green-500">
-                    <p class="text-2xl font-bold text-green-900 mb-3">2️⃣ تحديث Webhook URL</p>
-                    
-                    <div class="space-y-3">
-                        <div class="bg-white rounded p-4">
-                            <p class="font-bold text-green-900 mb-2">أ. افتح صفحة إعدادات Telegram:</p>
-                            <a href="http://localhost:8080/tekrit_municipality/modules/telegram_settings.php" 
-                               target="_blank"
-                               class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
-                                ⚙️ فتح إعدادات Telegram
-                            </a>
-                        </div>
-                        
-                        <div class="bg-white rounded p-4">
-                            <p class="font-bold text-green-900 mb-2">ب. أدخل Webhook URL:</p>
-                            <p class="text-sm text-green-800 mb-2">استبدل <code class="bg-green-200 px-2 py-1 rounded">abc123</code> برابط ngrok الخاص بك:</p>
-                            <pre class="bg-gray-100 p-3 rounded text-sm overflow-x-auto">https://abc123.ngrok.io/tekrit_municipality/public/telegram_webhook.php</pre>
-                        </div>
-                        
-                        <div class="bg-white rounded p-4">
-                            <p class="font-bold text-green-900 mb-2">ج. احفظ الإعدادات</p>
-                            <p class="text-sm text-green-800">اضغط زر "حفظ الإعدادات" في الصفحة</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- الخطوة 3 -->
-                <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border-l-4 border-purple-500">
-                    <p class="text-2xl font-bold text-purple-900 mb-3">3️⃣ اختبار البوت</p>
-                    
-                    <div class="bg-white rounded p-4">
-                        <ol class="text-sm text-purple-800 space-y-2 mr-4">
-                            <li><strong>1.</strong> افتح Telegram على هاتفك</li>
-                            <li><strong>2.</strong> ابحث عن: <code class="bg-purple-200 px-2 py-1 rounded font-bold">@TekritAkkarBot</code></li>
-                            <li><strong>3.</strong> اضغط <strong>Start</strong></li>
-                            <li><strong>4.</strong> أرسل رمز الدخول: <code class="bg-purple-200 px-2 py-1 rounded font-bold">TKT-121683E2</code></li>
-                            <li><strong>5.</strong> <span class="text-green-600 font-bold">يجب أن يرد البوت فوراً! ✅</span></li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- الخيار 2: خادم حقيقي -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">🌐 الخيار 2: نشر على خادم حقيقي (الحل الدائم)</h2>
-            
-            <div class="space-y-4">
-                <div class="bg-blue-50 rounded-lg p-4">
-                    <p class="font-bold text-blue-900 mb-2">1️⃣ اختر استضافة</p>
-                    <p class="text-sm text-blue-800">مثل: HostGator, Bluehost, SiteGround, أو VPS</p>
-                </div>
-                
-                <div class="bg-green-50 rounded-lg p-4">
-                    <p class="font-bold text-green-900 mb-2">2️⃣ احصل على دومين</p>
-                    <p class="text-sm text-green-800">مثل: tekrit-municipality.com</p>
-                </div>
-                
-                <div class="bg-purple-50 rounded-lg p-4">
-                    <p class="font-bold text-purple-900 mb-2">3️⃣ فعّل HTTPS</p>
-                    <p class="text-sm text-purple-800">Telegram يتطلب HTTPS (معظم الاستضافات توفر SSL مجاني)</p>
-                </div>
-                
-                <div class="bg-orange-50 rounded-lg p-4">
-                    <p class="font-bold text-orange-900 mb-2">4️⃣ ارفع الملفات</p>
-                    <p class="text-sm text-orange-800">ارفع جميع ملفات المشروع إلى الخادم</p>
-                </div>
-                
-                <div class="bg-pink-50 rounded-lg p-4">
-                    <p class="font-bold text-pink-900 mb-2">5️⃣ حدّث Webhook URL</p>
-                    <p class="text-sm text-pink-800">في إعدادات Telegram، أدخل:</p>
-                    <pre class="bg-white p-2 rounded text-xs mt-2">https://tekrit-municipality.com/public/telegram_webhook.php</pre>
-                </div>
-                
-                <div class="bg-green-50 rounded-lg p-4">
-                    <p class="font-bold text-green-900 mb-2">6️⃣ اختبر البوت</p>
-                    <p class="text-sm text-green-800">✅ سيعمل تلقائياً 24/7 بدون أي مشاكل!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ماذا سيحدث بعد تفعيل Webhook -->
-        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
-            <h2 class="text-4xl font-black mb-6 text-center">✨ ماذا سيحدث بعد تفعيل Webhook؟</h2>
-            
-            <div class="bg-white bg-opacity-20 rounded-xl p-6">
-                <div class="space-y-4 text-lg">
-                    <div class="flex items-start gap-3">
-                        <span class="text-3xl">1️⃣</span>
-                        <div>
-                            <p class="font-bold mb-1">المواطن يقدم طلب</p>
-                            <p class="text-sm opacity-90">يتم تسجيل رسالة Telegram كـ "pending"</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-3">
-                        <span class="text-3xl">2️⃣</span>
-                        <div>
-                            <p class="font-bold mb-1">المواطن يفتح البوت</p>
-                            <p class="text-sm opacity-90">يبحث عن @TekritAkkarBot ويضغط Start</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-3">
-                        <span class="text-3xl">3️⃣</span>
-                        <div>
-                            <p class="font-bold mb-1">المواطن يرسل رمز الدخول</p>
-                            <p class="text-sm opacity-90">البوت يرد فوراً ويربط الحساب تلقائياً</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-3">
-                        <span class="text-3xl">4️⃣</span>
-                        <div>
-                            <p class="font-bold mb-1">إرسال الرسائل المعلقة</p>
-                            <p class="text-sm opacity-90">جميع الرسائل المعلقة تُرسل تلقائياً</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-start gap-3">
-                        <span class="text-3xl">5️⃣</span>
-                        <div>
-                            <p class="font-bold mb-1">إشعارات فورية</p>
-                            <p class="text-sm opacity-90">المواطن يستلم إشعارات لكل تحديث على طلبه</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- الوضع الحالي vs بعد Webhook -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">📊 المقارنة</h2>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="bg-gray-100">
-                            <th class="px-4 py-3 text-right font-bold">الميزة</th>
-                            <th class="px-4 py-3 text-center font-bold">الآن (بدون Webhook)</th>
-                            <th class="px-4 py-3 text-center font-bold">بعد Webhook</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="px-4 py-3">تقديم طلب</td>
-                            <td class="px-4 py-3 text-center">✅ يعمل</td>
-                            <td class="px-4 py-3 text-center">✅ يعمل</td>
-                        </tr>
-                        <tr class="border-b bg-gray-50">
-                            <td class="px-4 py-3">تسجيل رسائل Telegram</td>
-                            <td class="px-4 py-3 text-center">✅ يعمل (pending)</td>
-                            <td class="px-4 py-3 text-center">✅ يعمل (pending)</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="px-4 py-3">ربط حساب Telegram</td>
-                            <td class="px-4 py-3 text-center">🔧 يدوي فقط</td>
-                            <td class="px-4 py-3 text-center">✅ تلقائي</td>
-                        </tr>
-                        <tr class="border-b bg-gray-50">
-                            <td class="px-4 py-3">إرسال الرسائل المعلقة</td>
-                            <td class="px-4 py-3 text-center">🔧 يدوي فقط</td>
-                            <td class="px-4 py-3 text-center">✅ تلقائي</td>
-                        </tr>
-                        <tr class="border-b">
-                            <td class="px-4 py-3">الرد على رسائل المواطنين</td>
-                            <td class="px-4 py-3 text-center">❌ لا يعمل</td>
-                            <td class="px-4 py-3 text-center">✅ تلقائي</td>
-                        </tr>
-                        <tr class="border-b bg-gray-50">
-                            <td class="px-4 py-3">إشعارات التحديثات</td>
-                            <td class="px-4 py-3 text-center">⏳ معلقة</td>
-                            <td class="px-4 py-3 text-center">✅ فورية</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- روابط سريعة -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🔗 روابط سريعة</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="http://localhost:8080/tekrit_municipality/modules/telegram_settings.php" 
-                   target="_blank"
-                   class="block bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-lg p-6 text-center transition">
-                    <p class="text-4xl mb-3">⚙️</p>
-                    <p class="font-bold text-blue-900 text-lg">إعدادات Telegram</p>
-                    <p class="text-sm text-blue-700 mt-2">تحديث Webhook URL</p>
-                </a>
-                
-                <a href="http://localhost:8080/tekrit_municipality/public/check_telegram_debug.php" 
-                   target="_blank"
-                   class="block bg-green-50 hover:bg-green-100 border-2 border-green-300 rounded-lg p-6 text-center transition">
-                    <p class="text-4xl mb-3">🔍</p>
-                    <p class="font-bold text-green-900 text-lg">صفحة الفحص</p>
-                    <p class="text-sm text-green-700 mt-2">تحقق من الإعدادات</p>
-                </a>
-                
-                <a href="http://localhost:8080/tekrit_municipality/modules/citizens_accounts.php" 
-                   target="_blank"
-                   class="block bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 rounded-lg p-6 text-center transition">
-                    <p class="text-4xl mb-3">👥</p>
-                    <p class="font-bold text-purple-900 text-lg">حسابات المواطنين</p>
-                    <p class="text-sm text-purple-700 mt-2">تحقق من حالة الربط</p>
-                </a>
-                
-                <a href="https://ngrok.com/download" 
-                   target="_blank"
-                   class="block bg-orange-50 hover:bg-orange-100 border-2 border-orange-300 rounded-lg p-6 text-center transition">
-                    <p class="text-4xl mb-3">📥</p>
-                    <p class="font-bold text-orange-900 text-lg">تحميل ngrok</p>
-                    <p class="text-sm text-orange-700 mt-2">للتطوير المحلي</p>
-                </a>
-            </div>
-        </div>
-
-        <!-- الخلاصة -->
-        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8">
-            <h2 class="text-3xl font-bold text-yellow-900 mb-6 text-center">📋 الخلاصة</h2>
-            
-            <div class="space-y-4">
-                <div class="bg-white rounded-lg p-4">
-                    <p class="font-bold text-green-900 mb-2">✅ ما تم إنجازه:</p>
-                    <ul class="text-sm text-green-800 space-y-1 mr-4">
-                        <li>• جميع الإعدادات محفوظة</li>
-                        <li>• الكود يعمل بشكل صحيح</li>
-                        <li>• الاختبار اليدوي ناجح</li>
-                        <li>• ربط الحساب يعمل</li>
-                        <li>• إرسال الرسائل المعلقة يعمل</li>
-                    </ul>
-                </div>
-                
-                <div class="bg-white rounded-lg p-4">
-                    <p class="font-bold text-orange-900 mb-2">⏳ ما ينتظر:</p>
-                    <ul class="text-sm text-orange-800 space-y-1 mr-4">
-                        <li>• تحديد Webhook URL</li>
-                        <li>• استخدام ngrok أو خادم حقيقي</li>
-                    </ul>
-                </div>
-                
-                <div class="bg-white rounded-lg p-4">
-                    <p class="font-bold text-blue-900 mb-2">🎯 الخطوة التالية:</p>
-                    <p class="text-sm text-blue-800">
-                        اختر أحد الخيارين: ngrok للتطوير أو خادم حقيقي للإنتاج
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="mt-8 text-center text-gray-600">
-            <p class="font-bold text-2xl mb-2">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
-            <p class="text-xl font-bold text-blue-600 mt-4">
-                🚀 أنت على بُعد خطوة واحدة من تفعيل البوت!
-            </p>
-        </div>
-    </div>
-</body>
-</html>
-

@@ -1,8 +1,22 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
-header('Access-Control-Allow-Headers: Content-Type');
+// تحميل ApiSecurity إذا كان موجوداً
+$useApiSecurity = file_exists(__DIR__ . '/../includes/ApiSecurity.php');
+if ($useApiSecurity) {
+    require_once __DIR__ . '/../includes/ApiSecurity.php';
+    $configFile = __DIR__ . '/../config/api_config.php';
+    ApiSecurity::init(file_exists($configFile) ? $configFile : null);
+    
+    // التحقق من الأمان (API Key اختياري، Rate Limiting مفعّل)
+    if (!ApiSecurity::validate(['require_api_key' => false, 'rate_limit' => true])) {
+        exit; // ApiSecurity::validate() يرسل الاستجابة و يخرج
+    }
+} else {
+    // Fallback للكود القديم
+    header('Content-Type: application/json; charset=utf-8');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST');
+    header('Access-Control-Allow-Headers: Content-Type');
+}
 
 require_once '../config/database.php';
 
@@ -278,16 +292,29 @@ try {
     }
     
 } catch (Exception $e) {
-    $response['success'] = false;
-    $response['error'] = $e->getMessage();
-    $response['debug_info'] = [
-        'action' => $action ?? 'غير محدد',
-        'request_method' => $_SERVER['REQUEST_METHOD'],
-        'request_uri' => $_SERVER['REQUEST_URI'] ?? '',
-        'php_version' => PHP_VERSION
-    ];
+    // استخدام ApiSecurity لإرسال الخطأ إذا كان متاحاً
+    if ($useApiSecurity && class_exists('ApiSecurity')) {
+        ApiSecurity::sendError($e->getMessage(), 500);
+    } else {
+        // Fallback للكود القديم
+        $response['success'] = false;
+        $response['error'] = $e->getMessage();
+        $response['debug_info'] = [
+            'action' => $action ?? 'غير محدد',
+            'request_method' => $_SERVER['REQUEST_METHOD'],
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? '',
+            'php_version' => PHP_VERSION
+        ];
+        
+        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+    exit;
 }
 
 // إرسال الاستجابة
-echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+if ($useApiSecurity && class_exists('ApiSecurity')) {
+    ApiSecurity::sendSuccess($response);
+} else {
+    echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+}
 ?> 

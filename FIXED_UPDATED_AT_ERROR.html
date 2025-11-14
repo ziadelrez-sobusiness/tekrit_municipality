@@ -1,232 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>✅ تم إصلاح خطأ updated_at</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-    </style>
-</head>
-<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto">
-        
-        <!-- العنوان -->
-        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
-            <div class="text-9xl mb-4">✅</div>
-            <h1 class="text-6xl font-black text-green-600 mb-3">
-                تم الإصلاح!
-            </h1>
-            <p class="text-2xl text-gray-600">خطأ updated_at</p>
-        </div>
-
-        <!-- المشكلة -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">❌ المشكلة التي كانت موجودة</h2>
-            
-            <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
-                <p class="font-bold text-red-900 text-xl mb-3">خطأ SQL:</p>
-                <pre class="bg-red-100 p-4 rounded text-sm text-red-800 overflow-x-auto">SQLSTATE[42S22]: Column not found: 1054 Unknown column 'updated_at' in 'field list'</pre>
-                
-                <div class="mt-4">
-                    <p class="font-bold text-red-900 mb-2">السبب:</p>
-                    <p class="text-red-800">
-                        الكود كان يحاول تحديث عمود <code class="bg-red-200 px-2 py-1 rounded">updated_at</code> 
-                        في جدول <code class="bg-red-200 px-2 py-1 rounded">citizens_accounts</code>، 
-                        لكن هذا العمود غير موجود في الجدول!
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- الإصلاح -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">🔧 الإصلاح</h2>
-            
-            <div class="space-y-6">
-                <!-- الملف 1 -->
-                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
-                    <p class="font-bold text-green-900 text-xl mb-3">✅ 1. public/test_telegram_link.php</p>
-                    
-                    <div class="bg-white rounded p-4 mb-3">
-                        <p class="font-bold text-gray-800 mb-2">قبل الإصلاح:</p>
-                        <pre class="text-xs bg-red-50 p-3 rounded overflow-x-auto text-red-800">UPDATE citizens_accounts 
-SET telegram_chat_id = ?, 
-    telegram_username = ?,
-    updated_at = NOW()  ← ❌ هذا السطر يسبب الخطأ
-WHERE id = ?</pre>
-                    </div>
-                    
-                    <div class="bg-white rounded p-4">
-                        <p class="font-bold text-gray-800 mb-2">بعد الإصلاح:</p>
-                        <pre class="text-xs bg-green-50 p-3 rounded overflow-x-auto text-green-800">UPDATE citizens_accounts 
-SET telegram_chat_id = ?, 
-    telegram_username = ?
-WHERE id = ?</pre>
-                    </div>
-                </div>
-                
-                <!-- الملف 2 -->
-                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
-                    <p class="font-bold text-blue-900 text-xl mb-3">✅ 2. public/telegram_webhook.php</p>
-                    
-                    <p class="text-blue-800 mb-3">تم إصلاح نفس المشكلة في مكانين:</p>
-                    
-                    <div class="space-y-2 text-sm text-blue-800">
-                        <p>• عند ربط الحساب برمز الدخول (السطر ~83)</p>
-                        <p>• عند ربط الحساب برقم الهاتف (السطر ~127)</p>
-                        <p>• عند تحديث حالة رسائل telegram_log (السطر ~248)</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- اختبر الآن -->
-        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
-            <h2 class="text-4xl font-black mb-6 text-center">🧪 اختبر الآن!</h2>
-            
-            <div class="bg-white bg-opacity-20 rounded-xl p-6 text-center">
-                <p class="text-2xl font-bold mb-6">
-                    تم إصلاح الخطأ - يمكنك الآن اختبار ربط الحساب
-                </p>
-                
-                <a href="http://localhost:8080/tekrit_municipality/public/test_telegram_link.php?code=TKT-121683E2" 
-                   target="_blank"
-                   class="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition shadow-lg text-xl">
-                    🔗 اختبار ربط الحساب
-                </a>
-                
-                <p class="text-lg mt-6 opacity-90">
-                    يجب أن يعمل الآن بدون أي أخطاء! ✅
-                </p>
-            </div>
-        </div>
-
-        <!-- ماذا يحدث الآن -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6">✨ ماذا يحدث الآن؟</h2>
-            
-            <div class="space-y-4">
-                <div class="bg-blue-50 rounded-lg p-4 flex items-start gap-3">
-                    <span class="text-3xl">1️⃣</span>
-                    <div>
-                        <p class="font-bold text-blue-900 mb-1">ربط الحساب</p>
-                        <p class="text-sm text-blue-800">
-                            سيتم ربط <code class="bg-blue-200 px-2 py-1 rounded">telegram_chat_id</code> 
-                            بحساب المواطن بنجاح
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="bg-green-50 rounded-lg p-4 flex items-start gap-3">
-                    <span class="text-3xl">2️⃣</span>
-                    <div>
-                        <p class="font-bold text-green-900 mb-1">إرسال الرسائل المعلقة</p>
-                        <p class="text-sm text-green-800">
-                            جميع الرسائل المعلقة (pending) ستُرسل تلقائياً
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="bg-purple-50 rounded-lg p-4 flex items-start gap-3">
-                    <span class="text-3xl">3️⃣</span>
-                    <div>
-                        <p class="font-bold text-purple-900 mb-1">تحديث الحالة</p>
-                        <p class="text-sm text-purple-800">
-                            حالة الحساب ستتغير من "❌ غير مربوط" إلى "✅ مربوط"
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="bg-orange-50 rounded-lg p-4 flex items-start gap-3">
-                    <span class="text-3xl">4️⃣</span>
-                    <div>
-                        <p class="font-bold text-orange-900 mb-1">رسالة نجاح</p>
-                        <p class="text-sm text-orange-800">
-                            ستظهر رسالة تأكيد مع تفاصيل الحساب
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ملاحظة مهمة -->
-        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-yellow-900 mb-6 text-center">⚠️ ملاحظة مهمة</h2>
-            
-            <div class="space-y-4">
-                <div class="bg-white rounded-lg p-4">
-                    <p class="font-bold text-yellow-900 mb-2">🧪 هذا اختبار يدوي</p>
-                    <p class="text-yellow-800 text-sm">
-                        هذا الاختبار يربط الحساب يدوياً بدون استخدام Telegram Bot
-                    </p>
-                </div>
-                
-                <div class="bg-white rounded-lg p-4">
-                    <p class="font-bold text-blue-900 mb-2">🤖 للاختبار الحقيقي</p>
-                    <p class="text-blue-800 text-sm">
-                        لاختبار البوت بشكل حقيقي، تحتاج إلى استخدام ngrok أو نشر الموقع على خادم حقيقي
-                    </p>
-                </div>
-                
-                <div class="bg-white rounded-lg p-4">
-                    <p class="font-bold text-green-900 mb-2">✅ لكن الكود يعمل!</p>
-                    <p class="text-green-800 text-sm">
-                        هذا الاختبار يثبت أن الكود يعمل بشكل صحيح - فقط Webhook يحتاج إلى رابط عام
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- الخطوات التالية -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🎯 الخطوات التالية</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="http://localhost:8080/tekrit_municipality/public/test_telegram_link.php?code=TKT-121683E2" 
-                   target="_blank"
-                   class="block bg-green-50 hover:bg-green-100 border-2 border-green-300 rounded-lg p-6 text-center transition">
-                    <p class="text-4xl mb-3">🧪</p>
-                    <p class="font-bold text-green-900 text-lg">اختبار ربط الحساب</p>
-                    <p class="text-sm text-green-700 mt-2">اختبار يدوي - يعمل الآن!</p>
-                </a>
-                
-                <a href="http://localhost:8080/tekrit_municipality/public/check_telegram_debug.php" 
-                   target="_blank"
-                   class="block bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-lg p-6 text-center transition">
-                    <p class="text-4xl mb-3">🔍</p>
-                    <p class="font-bold text-blue-900 text-lg">صفحة الفحص</p>
-                    <p class="text-sm text-blue-700 mt-2">تحقق من الإعدادات</p>
-                </a>
-                
-                <a href="http://localhost:8080/tekrit_municipality/START_HERE_TELEGRAM_ISSUE.html" 
-                   target="_blank"
-                   class="block bg-orange-50 hover:bg-orange-100 border-2 border-orange-300 rounded-lg p-6 text-center transition">
-                    <p class="text-4xl mb-3">📖</p>
-                    <p class="font-bold text-orange-900 text-lg">دليل المشكلة</p>
-                    <p class="text-sm text-orange-700 mt-2">شرح مشكلة localhost</p>
-                </a>
-                
-                <a href="http://localhost:8080/tekrit_municipality/modules/citizens_accounts.php" 
-                   target="_blank"
-                   class="block bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 rounded-lg p-6 text-center transition">
-                    <p class="text-4xl mb-3">👥</p>
-                    <p class="font-bold text-purple-900 text-lg">حسابات المواطنين</p>
-                    <p class="text-sm text-purple-700 mt-2">تحقق من حالة الربط</p>
-                </a>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="bg-white rounded-2xl shadow-xl p-6 text-center">
-            <p class="font-bold text-2xl text-gray-800 mb-2">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
-            <p class="text-green-600 font-bold text-xl mt-4">
-                ✅ تم إصلاح الخطأ - جرّب الآن!
-            </p>
-        </div>
-    </div>
-</body>
-</html>
-

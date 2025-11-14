@@ -175,6 +175,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_session'])) {
     }
 }
 
+// معالجة تعديل محضر جلسة
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_session'])) {
+    $sessionId = intval($_POST['session_id'] ?? 0);
+    try {
+        $stmt = $db->prepare("SELECT committee_id FROM committee_sessions WHERE id = ?");
+        $stmt->execute([$sessionId]);
+        $session = $stmt->fetch();
+        if (!$session || $session['committee_id'] != $committeeId) {
+            throw new Exception('الجلسة غير موجودة أو لا تنتمي لهذه اللجنة');
+        }
+
+        $sessionNumber = trim($_POST['session_number'] ?? '');
+        $sessionTitle = trim($_POST['session_title'] ?? '');
+        $sessionDate = $_POST['session_date'] ?: date('Y-m-d');
+        $sessionTime = $_POST['session_time'] ?: null;
+        $location = trim($_POST['location'] ?? '');
+        $agenda = trim($_POST['agenda'] ?? '');
+        $minutes = trim($_POST['minutes'] ?? '');
+        $attachments = trim($_POST['attachments'] ?? '');
+
+        if (empty($sessionTitle)) {
+            throw new Exception('عنوان الجلسة مطلوب');
+        }
+
+        $stmt = $db->prepare("
+            UPDATE committee_sessions
+            SET session_number = ?, session_title = ?, session_date = ?, session_time = ?,
+                location = ?, agenda = ?, minutes = ?, attachments = ?
+            WHERE id = ? AND committee_id = ?
+        ");
+        $stmt->execute([
+            $sessionNumber ?: null,
+            $sessionTitle,
+            $sessionDate,
+            $sessionTime ?: null,
+            $location ?: null,
+            $agenda ?: null,
+            $minutes ?: null,
+            $attachments ?: null,
+            $sessionId,
+            $committeeId
+        ]);
+
+        redirectWithTab($committeeId, 'sessions', ['success' => 'تم تحديث محضر الجلسة بنجاح']);
+    } catch (Exception $e) {
+        redirectWithTab($committeeId, 'sessions', ['error' => $e->getMessage()]);
+    }
+}
+
+// معالجة حذف محضر جلسة
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_session'])) {
+    $sessionId = intval($_POST['session_id'] ?? 0);
+    try {
+        $stmt = $db->prepare("DELETE FROM committee_sessions WHERE id = ? AND committee_id = ?");
+        $stmt->execute([$sessionId, $committeeId]);
+        redirectWithTab($committeeId, 'sessions', ['success' => 'تم حذف محضر الجلسة بنجاح']);
+    } catch (Exception $e) {
+        redirectWithTab($committeeId, 'sessions', ['error' => $e->getMessage()]);
+    }
+}
+
 // معالجة إضافة قرار
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_decision'])) {
     $targetId = intval($_POST['committee_id'] ?? 0);
@@ -217,6 +278,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_decision'])) {
     } catch (Exception $e) {
         redirectWithTab($committeeId, 'decisions', ['error' => $e->getMessage()]);
     }
+}
+
+// معالجة تعديل قرار
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_decision'])) {
+    $decisionId = intval($_POST['decision_id'] ?? 0);
+    try {
+        $stmt = $db->prepare("SELECT committee_id FROM committee_decisions WHERE id = ?");
+        $stmt->execute([$decisionId]);
+        $decision = $stmt->fetch();
+        if (!$decision || $decision['committee_id'] != $committeeId) {
+            throw new Exception('القرار غير موجود أو لا ينتمي لهذه اللجنة');
+        }
+
+        $sessionId = !empty($_POST['session_id']) ? intval($_POST['session_id']) : null;
+        $decisionNumber = trim($_POST['decision_number'] ?? '');
+        $decisionTitle = trim($_POST['decision_title'] ?? '');
+        $decisionText = trim($_POST['decision_text'] ?? '');
+        $dueDate = $_POST['due_date'] ?: null;
+        $status = $_POST['status'] ?? 'قيد المتابعة';
+        $notes = trim($_POST['notes'] ?? '');
+
+        if (empty($decisionTitle) || empty($decisionText)) {
+            throw new Exception('عنوان القرار ونص القرار مطلوبان');
+        }
+
+        $stmt = $db->prepare("
+            UPDATE committee_decisions
+            SET session_id = ?, decision_number = ?, decision_title = ?, decision_text = ?,
+                status = ?, due_date = ?, notes = ?
+            WHERE id = ? AND committee_id = ?
+        ");
+        $stmt->execute([
+            $sessionId ?: null,
+            $decisionNumber ?: null,
+            $decisionTitle,
+            $decisionText,
+            $status,
+            $dueDate ?: null,
+            $notes ?: null,
+            $decisionId,
+            $committeeId
+        ]);
+
+        redirectWithTab($committeeId, 'decisions', ['success' => 'تم تحديث القرار بنجاح']);
+    } catch (Exception $e) {
+        redirectWithTab($committeeId, 'decisions', ['error' => $e->getMessage()]);
+    }
+}
+
+// معالجة حذف قرار
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_decision'])) {
+    $decisionId = intval($_POST['decision_id'] ?? 0);
+    try {
+        $stmt = $db->prepare("DELETE FROM committee_decisions WHERE id = ? AND committee_id = ?");
+        $stmt->execute([$decisionId, $committeeId]);
+        redirectWithTab($committeeId, 'decisions', ['success' => 'تم حذف القرار بنجاح']);
+    } catch (Exception $e) {
+        redirectWithTab($committeeId, 'decisions', ['error' => $e->getMessage()]);
+    }
+}
+
+// جلب بيانات الجلسة/القرار للعرض/التعديل
+$view_session = null;
+$edit_session = null;
+$view_decision = null;
+$edit_decision = null;
+
+if (isset($_GET['view_session'])) {
+    $stmt = $db->prepare("SELECT * FROM committee_sessions WHERE id = ? AND committee_id = ?");
+    $stmt->execute([$_GET['view_session'], $committeeId]);
+    $view_session = $stmt->fetch();
+}
+
+if (isset($_GET['edit_session'])) {
+    $stmt = $db->prepare("SELECT * FROM committee_sessions WHERE id = ? AND committee_id = ?");
+    $stmt->execute([$_GET['edit_session'], $committeeId]);
+    $edit_session = $stmt->fetch();
+}
+
+if (isset($_GET['view_decision'])) {
+    $stmt = $db->prepare("
+        SELECT cd.*, cs.session_title, cs.session_date
+        FROM committee_decisions cd
+        LEFT JOIN committee_sessions cs ON cd.session_id = cs.id
+        WHERE cd.id = ? AND cd.committee_id = ?
+    ");
+    $stmt->execute([$_GET['view_decision'], $committeeId]);
+    $view_decision = $stmt->fetch();
+}
+
+if (isset($_GET['edit_decision'])) {
+    $stmt = $db->prepare("SELECT * FROM committee_decisions WHERE id = ? AND committee_id = ?");
+    $stmt->execute([$_GET['edit_decision'], $committeeId]);
+    $edit_decision = $stmt->fetch();
 }
 
 // رسائل من عمليات سابقة
@@ -388,6 +543,28 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
             border-radius: 9999px;
             padding-inline: 1.5rem;
             background: rgba(243, 244, 246, 0.8);
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -870,6 +1047,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">التاريخ</th>
                                 <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">الموقع</th>
                                 <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">جدول الأعمال</th>
+                                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -889,11 +1067,23 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <td class="px-4 py-2 text-xs text-gray-500">
                                         <?= nl2br(htmlspecialchars($session['agenda'] ?? '—')) ?>
                                     </td>
+                                    <td class="px-4 py-2 text-sm font-medium space-x-2 space-x-reverse">
+                                        <a href="?id=<?= $committeeId ?>&tab=sessions&view_session=<?= $session['id'] ?>" 
+                                           class="text-indigo-600 hover:text-indigo-900">👁️ عرض</a>
+                                        <a href="?id=<?= $committeeId ?>&tab=sessions&edit_session=<?= $session['id'] ?>" 
+                                           class="text-blue-600 hover:text-blue-900">✏️ تعديل</a>
+                                        <form method="POST" style="display: inline;" 
+                                              onsubmit="return confirm('هل أنت متأكد من حذف هذه الجلسة؟')">
+                                            <input type="hidden" name="delete_session" value="1">
+                                            <input type="hidden" name="session_id" value="<?= $session['id'] ?>">
+                                            <button type="submit" class="text-red-600 hover:text-red-900">🗑️ حذف</button>
+                                        </form>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                             <?php if (empty($sessions)): ?>
                                 <tr>
-                                    <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+                                    <td colspan="5" class="px-4 py-6 text-center text-gray-500">
                                         لم يتم تسجيل أي جلسة لهذه اللجنة بعد.
                                     </td>
                                 </tr>
@@ -975,6 +1165,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">الحالة</th>
                                 <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">تاريخ الاستحقاق</th>
                                 <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">ملاحظات</th>
+                                <th class="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -1003,11 +1194,23 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     </td>
                                     <td class="px-4 py-2 text-sm text-gray-500"><?= htmlspecialchars($decision['due_date'] ?? '—') ?></td>
                                     <td class="px-4 py-2 text-xs text-gray-500"><?= nl2br(htmlspecialchars($decision['notes'] ?? '—')) ?></td>
+                                    <td class="px-4 py-2 text-sm font-medium space-x-2 space-x-reverse">
+                                        <a href="?id=<?= $committeeId ?>&tab=decisions&view_decision=<?= $decision['id'] ?>" 
+                                           class="text-indigo-600 hover:text-indigo-900">👁️ عرض</a>
+                                        <a href="?id=<?= $committeeId ?>&tab=decisions&edit_decision=<?= $decision['id'] ?>" 
+                                           class="text-blue-600 hover:text-blue-900">✏️ تعديل</a>
+                                        <form method="POST" style="display: inline;" 
+                                              onsubmit="return confirm('هل أنت متأكد من حذف هذا القرار؟')">
+                                            <input type="hidden" name="delete_decision" value="1">
+                                            <input type="hidden" name="decision_id" value="<?= $decision['id'] ?>">
+                                            <button type="submit" class="text-red-600 hover:text-red-900">🗑️ حذف</button>
+                                        </form>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                             <?php if (empty($decisions)): ?>
                                 <tr>
-                                    <td colspan="5" class="px-4 py-6 text-center text-gray-500">
+                                    <td colspan="6" class="px-4 py-6 text-center text-gray-500">
                                         لا توجد قرارات مسجلة لهذه اللجنة بعد.
                                     </td>
                                 </tr>
@@ -1136,6 +1339,202 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         }
     </script>
+
+    <!-- Modal عرض الجلسة -->
+    <?php if ($view_session): ?>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="glass-card p-6 space-y-4">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-xl font-bold">📄 تفاصيل الجلسة</h3>
+                    <div class="flex gap-2">
+                        <button onclick="window.print()" class="px-3 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">🖨️ طباعة</button>
+                        <a href="?id=<?= $committeeId ?>&tab=sessions" class="px-3 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100">إغلاق</a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                    <div><span class="font-semibold text-gray-900">رقم الجلسة:</span> <?= htmlspecialchars($view_session['session_number'] ?? '—') ?></div>
+                    <div><span class="font-semibold text-gray-900">التاريخ:</span> <?= htmlspecialchars($view_session['session_date']) ?></div>
+                    <div><span class="font-semibold text-gray-900">الوقت:</span> <?= htmlspecialchars($view_session['session_time'] ?? '—') ?></div>
+                    <div class="md:col-span-2"><span class="font-semibold text-gray-900">الموقع:</span> <?= htmlspecialchars($view_session['location'] ?? '—') ?></div>
+                </div>
+                <?php if (!empty($view_session['agenda'])): ?>
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-2">📋 جدول الأعمال</h4>
+                        <div class="bg-gray-50 border rounded-lg p-4 text-sm leading-relaxed">
+                            <?= nl2br(htmlspecialchars($view_session['agenda'])) ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($view_session['minutes'])): ?>
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-2">📝 محضر الجلسة</h4>
+                        <div class="bg-gray-50 border rounded-lg p-4 text-sm leading-relaxed">
+                            <?= nl2br(htmlspecialchars($view_session['minutes'])) ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($view_session['attachments'])): ?>
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-2">🔗 المرفقات</h4>
+                        <a href="<?= htmlspecialchars($view_session['attachments']) ?>" target="_blank" class="text-indigo-600 hover:text-indigo-800">عرض الروابط / المستندات</a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Modal تعديل الجلسة -->
+    <?php if ($edit_session): ?>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="glass-card p-6 space-y-4">
+                <h3 class="text-xl font-bold">✏️ تعديل محضر الجلسة</h3>
+                <form method="POST" class="space-y-4">
+                    <input type="hidden" name="edit_session" value="1">
+                    <input type="hidden" name="session_id" value="<?= $edit_session['id'] ?>">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">رقم الجلسة</label>
+                            <input type="text" name="session_number" value="<?= htmlspecialchars($edit_session['session_number'] ?? '') ?>" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">عنوان الجلسة *</label>
+                            <input type="text" name="session_title" value="<?= htmlspecialchars($edit_session['session_title']) ?>" class="w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">تاريخ الجلسة *</label>
+                            <input type="date" name="session_date" value="<?= $edit_session['session_date'] ?>" class="w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">الوقت</label>
+                            <input type="time" name="session_time" value="<?= $edit_session['session_time'] ?? '' ?>" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">الموقع</label>
+                            <input type="text" name="location" value="<?= htmlspecialchars($edit_session['location'] ?? '') ?>" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">جدول الأعمال</label>
+                            <textarea name="agenda" rows="3" class="w-full px-3 py-2 border rounded-lg"><?= htmlspecialchars($edit_session['agenda'] ?? '') ?></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">محضر الجلسة</label>
+                            <textarea name="minutes" rows="4" class="w-full px-3 py-2 border rounded-lg"><?= htmlspecialchars($edit_session['minutes'] ?? '') ?></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">مرفقات (روابط)</label>
+                            <input type="text" name="attachments" value="<?= htmlspecialchars($edit_session['attachments'] ?? '') ?>" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <a href="?id=<?= $committeeId ?>&tab=sessions" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100">إلغاء</a>
+                        <button type="submit" class="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Modal عرض القرار -->
+    <?php if ($view_decision): ?>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="glass-card p-6 space-y-4">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-xl font-bold">🗒️ تفاصيل القرار</h3>
+                    <div class="flex gap-2">
+                        <button onclick="window.print()" class="px-3 py-1 rounded-lg bg-yellow-600 text-white hover:bg-yellow-700">🖨️ طباعة</button>
+                        <a href="?id=<?= $committeeId ?>&tab=decisions" class="px-3 py-1 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100">إغلاق</a>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                    <div><span class="font-semibold text-gray-900">رقم القرار:</span> <?= htmlspecialchars($view_decision['decision_number'] ?? '—') ?></div>
+                    <div><span class="font-semibold text-gray-900">الحالة:</span> <?= htmlspecialchars($view_decision['status']) ?></div>
+                    <div><span class="font-semibold text-gray-900">الجلسة المرتبطة:</span> <?= htmlspecialchars($view_decision['session_title'] ?? '—') ?></div>
+                    <div><span class="font-semibold text-gray-900">تاريخ الاستحقاق:</span> <?= htmlspecialchars($view_decision['due_date'] ?? '—') ?></div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">📋 نص القرار</h4>
+                    <div class="bg-gray-50 border rounded-lg p-4 text-sm leading-relaxed">
+                        <?= nl2br(htmlspecialchars($view_decision['decision_text'])) ?>
+                    </div>
+                </div>
+                <?php if (!empty($view_decision['notes'])): ?>
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-2">📝 ملاحظات</h4>
+                        <div class="bg-gray-50 border rounded-lg p-4 text-sm leading-relaxed">
+                            <?= nl2br(htmlspecialchars($view_decision['notes'])) ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Modal تعديل القرار -->
+    <?php if ($edit_decision): ?>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="glass-card p-6 space-y-4">
+                <h3 class="text-xl font-bold">✏️ تعديل قرار</h3>
+                <form method="POST" class="space-y-4">
+                    <input type="hidden" name="edit_decision" value="1">
+                    <input type="hidden" name="decision_id" value="<?= $edit_decision['id'] ?>">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">الجلسة المرتبطة</label>
+                            <select name="session_id" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="">— بدون —</option>
+                                <?php foreach ($sessions as $session): ?>
+                                    <option value="<?= $session['id'] ?>" <?= ($edit_decision['session_id'] == $session['id']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($session['session_title']) ?> (<?= htmlspecialchars($session['session_date']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">رقم القرار</label>
+                            <input type="text" name="decision_number" value="<?= htmlspecialchars($edit_decision['decision_number'] ?? '') ?>" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">عنوان القرار *</label>
+                            <input type="text" name="decision_title" value="<?= htmlspecialchars($edit_decision['decision_title']) ?>" class="w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">نص القرار *</label>
+                            <textarea name="decision_text" rows="4" class="w-full px-3 py-2 border rounded-lg" required><?= htmlspecialchars($edit_decision['decision_text']) ?></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">تاريخ الاستحقاق</label>
+                            <input type="date" name="due_date" value="<?= $edit_decision['due_date'] ?? '' ?>" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">الحالة</label>
+                            <select name="status" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="قيد المتابعة" <?= ($edit_decision['status'] == 'قيد المتابعة') ? 'selected' : '' ?>>قيد المتابعة</option>
+                                <option value="منفذ" <?= ($edit_decision['status'] == 'منفذ') ? 'selected' : '' ?>>منفذ</option>
+                                <option value="مرفوض" <?= ($edit_decision['status'] == 'مرفوض') ? 'selected' : '' ?>>مرفوض</option>
+                                <option value="معلق" <?= ($edit_decision['status'] == 'معلق') ? 'selected' : '' ?>>معلق</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">ملاحظات</label>
+                            <textarea name="notes" rows="3" class="w-full px-3 py-2 border rounded-lg"><?= htmlspecialchars($edit_decision['notes'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <a href="?id=<?= $committeeId ?>&tab=decisions" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100">إلغاء</a>
+                        <button type="submit" class="px-5 py-2 rounded-lg bg-yellow-600 text-white hover:bg-yellow-700">حفظ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </body>
 </html>
 

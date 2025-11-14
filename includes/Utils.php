@@ -5,8 +5,16 @@ class Utils {
     
     /**
      * إنشاء رمز CSRF
+     * 
+     * @deprecated استخدم CsrfProtection::generateToken() بدلاً منه
      */
     public static function generateCSRFToken() {
+        // استخدام CsrfProtection إذا كان متاحاً
+        if (class_exists('CsrfProtection')) {
+            return CsrfProtection::generateToken();
+        }
+        
+        // Fallback للكود القديم
         if (!isset($_SESSION[CSRF_TOKEN_NAME])) {
             $_SESSION[CSRF_TOKEN_NAME] = bin2hex(random_bytes(32));
         }
@@ -15,8 +23,16 @@ class Utils {
     
     /**
      * التحقق من رمز CSRF
+     * 
+     * @deprecated استخدم CsrfProtection::validateToken() بدلاً منه
      */
     public static function validateCSRFToken($token) {
+        // استخدام CsrfProtection إذا كان متاحاً
+        if (class_exists('CsrfProtection')) {
+            return CsrfProtection::validateToken($token);
+        }
+        
+        // Fallback للكود القديم
         return isset($_SESSION[CSRF_TOKEN_NAME]) && 
                hash_equals($_SESSION[CSRF_TOKEN_NAME], $token);
     }

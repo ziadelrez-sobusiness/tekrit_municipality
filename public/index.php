@@ -131,7 +131,7 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                 </div>
 
                 <!-- Desktop Navigation -->
-                <nav class="hidden xl:flex items-center space-x-6 space-x-reverse">
+                <nav class="hidden lg:flex items-center space-x-6 space-x-reverse">
                     <a href="#" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">الرئيسية</a>
                     <a href="citizen-requests.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">طلبات المواطنين</a>
                     <a href="projects.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">المشاريع</a>
@@ -156,7 +156,7 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                 </nav>
                 
                 <!-- Desktop Login Buttons -->
-                <div class="hidden xl:flex items-center space-x-3 space-x-reverse flex-shrink-0">
+                <div class="hidden lg:flex items-center space-x-3 space-x-reverse flex-shrink-0">
                     <a href="login.php" class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold text-sm hover:from-green-600 hover:to-green-700 transition duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center whitespace-nowrap">
                         <span class="ml-2">👤</span>
                         المواطنين
@@ -168,7 +168,7 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                 </div>
 
                 <!-- Mobile menu button -->
-                <div class="xl:hidden flex-shrink-0">
+                <div class="lg:hidden flex-shrink-0">
                     <button id="mobile-menu-btn" class="text-gray-700 hover:text-blue-600 focus:outline-none focus:text-blue-600 p-2">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
