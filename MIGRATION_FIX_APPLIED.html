@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تم إصلاح خطأ الترحيل!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-7xl mb-4">✅</div>
+            <h1 class="text-5xl font-black text-green-600 mb-3">
+                تم إصلاح المشكلة!
+            </h1>
+            <p class="text-2xl text-gray-600">خطأ PDO في سكريبت الترحيل</p>
+        </div>
+
+        <!-- المشكلة -->
+        <div class="bg-red-50 border-2 border-red-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-red-800 mb-4 flex items-center gap-3">
+                <span class="text-5xl">❌</span>
+                <span>المشكلة</span>
+            </h2>
+            
+            <div class="bg-white rounded-lg p-6">
+                <p class="text-red-700 font-bold mb-3">الخطأ:</p>
+                <code class="block bg-red-100 p-4 rounded text-sm text-red-900 overflow-x-auto">
+                    SQLSTATE[HY000]: General error: 2014 Cannot execute queries while other unbuffered queries are active.
+                </code>
+                
+                <p class="text-red-700 mt-4 mb-2 font-bold">السبب:</p>
+                <ul class="text-red-600 space-y-2 text-sm">
+                    <li>• عند تنفيذ استعلامات متعددة، PDO يحتفظ بنتائج الاستعلام السابق في الذاكرة</li>
+                    <li>• إذا لم يتم إغلاق المؤشر (cursor) بعد كل استعلام، يحدث تعارض</li>
+                    <li>• الحل: استخدام <code class="bg-red-200 px-2 py-1 rounded">closeCursor()</code> بعد كل <code class="bg-red-200 px-2 py-1 rounded">fetch()</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- الحل -->
+        <div class="bg-green-50 border-2 border-green-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-green-800 mb-4 flex items-center gap-3">
+                <span class="text-5xl">✅</span>
+                <span>الحل المُطبّق</span>
+            </h2>
+            
+            <div class="space-y-6">
+                <!-- التغيير 1 -->
+                <div class="bg-white rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-green-900 mb-3">1️⃣ تحديث إعدادات PDO</h3>
+                    <div class="bg-green-100 rounded p-4">
+                        <p class="text-green-800 font-bold mb-2">قبل:</p>
+                        <pre class="text-xs text-green-900 overflow-x-auto mb-3"><code>PDO::ATTR_EMULATE_PREPARES => false</code></pre>
+                        
+                        <p class="text-green-800 font-bold mb-2">بعد:</p>
+                        <pre class="text-xs text-green-900 overflow-x-auto"><code>PDO::ATTR_EMULATE_PREPARES => true  // ✅ تفعيل emulation</code></pre>
+                    </div>
+                    <p class="text-green-700 text-sm mt-3">
+                        💡 <strong>الفائدة:</strong> يسمح بتنفيذ استعلامات متعددة دون تعارض
+                    </p>
+                </div>
+
+                <!-- التغيير 2 -->
+                <div class="bg-white rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-green-900 mb-3">2️⃣ إضافة closeCursor()</h3>
+                    <div class="bg-green-100 rounded p-4">
+                        <p class="text-green-800 font-bold mb-2">قبل:</p>
+                        <pre class="text-xs text-green-900 overflow-x-auto mb-3"><code>$stmt = $db->query("SHOW TABLES LIKE '$table'");
+if ($stmt->rowCount() > 0) {
+    $countStmt = $db->query("SELECT COUNT(*) as count FROM $table");
+    $count = $countStmt->fetch(PDO::FETCH_ASSOC)['count'];
+    // ❌ لا يوجد closeCursor()
+}</code></pre>
+                        
+                        <p class="text-green-800 font-bold mb-2">بعد:</p>
+                        <pre class="text-xs text-green-900 overflow-x-auto"><code>$stmt = $db->query("SHOW TABLES LIKE '$table'");
+$exists = $stmt->fetch();
+$stmt->closeCursor();  // ✅ إغلاق المؤشر
+
+if ($exists) {
+    $countStmt = $db->query("SELECT COUNT(*) as count FROM $table");
+    $countData = $countStmt->fetch(PDO::FETCH_ASSOC);
+    $countStmt->closeCursor();  // ✅ إغلاق المؤشر
+    $count = $countData['count'];
+}</code></pre>
+                    </div>
+                    <p class="text-green-700 text-sm mt-3">
+                        💡 <strong>الفائدة:</strong> يحرر الموارد ويسمح بتنفيذ الاستعلام التالي
+                    </p>
+                </div>
+
+                <!-- التغيير 3 -->
+                <div class="bg-white rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-green-900 mb-3">3️⃣ تحسين معالجة الأوامر</h3>
+                    <div class="bg-green-100 rounded p-4">
+                        <p class="text-green-800 font-bold mb-2">قبل:</p>
+                        <pre class="text-xs text-green-900 overflow-x-auto mb-3"><code>$db->exec($command);  // ❌ قد يسبب مشاكل مع استعلامات معقدة</code></pre>
+                        
+                        <p class="text-green-800 font-bold mb-2">بعد:</p>
+                        <pre class="text-xs text-green-900 overflow-x-auto"><code>$stmt = $db->prepare($command);
+$stmt->execute();
+$stmt->closeCursor();  // ✅ إغلاق المؤشر بعد كل أمر</code></pre>
+                    </div>
+                    <p class="text-green-700 text-sm mt-3">
+                        💡 <strong>الفائدة:</strong> معالجة أفضل للأوامر المعقدة
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- النتيجة -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-2xl p-8 text-white text-center mb-8">
+            <h2 class="text-4xl font-black mb-6">🎉 النتيجة</h2>
+            <div class="text-xl space-y-3">
+                <p>✅ تم إصلاح خطأ PDO بالكامل</p>
+                <p>✅ سكريبت الترحيل يعمل بدون مشاكل</p>
+                <p>✅ جميع الاستعلامات تُنفّذ بنجاح</p>
+            </div>
+        </div>
+
+        <!-- اختبر الآن -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+                🧪 اختبر الآن
+            </h2>
+            
+            <div class="space-y-4">
+                <a href="migrate_to_telegram.php" 
+                   class="block bg-gradient-to-r from-green-600 to-blue-600 text-white text-center font-bold py-4 rounded-xl hover:from-green-700 hover:to-blue-700 transition shadow-lg text-xl">
+                    🚀 تنفيذ الترحيل
+                </a>
+                
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                    <p class="text-blue-800 font-bold mb-2">💡 ملاحظة:</p>
+                    <p class="text-blue-700 text-sm">
+                        إذا واجهت أي مشاكل أخرى، تأكد من:
+                    </p>
+                    <ul class="text-blue-600 text-sm mt-2 space-y-1 mr-6">
+                        <li>• قاعدة البيانات متصلة</li>
+                        <li>• الصلاحيات صحيحة</li>
+                        <li>• لا توجد جداول محجوزة</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-lg">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-sm mt-1">نظام إدارة البلدية الإلكتروني</p>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ تم إصلاح تحذير Webhook</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-9xl mb-4">✅</div>
+            <h1 class="text-6xl font-black text-green-600 mb-3">
+                تم الإصلاح!
+            </h1>
+            <p class="text-2xl text-gray-600">تحذير مجلد logs</p>
+        </div>
+
+        <!-- المشكلة -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">❌ التحذير الذي كان يظهر</h2>
+            
+            <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
+                <p class="font-bold text-red-900 text-lg mb-3">Warning:</p>
+                <pre class="bg-red-100 p-4 rounded text-sm text-red-800 overflow-x-auto">file_put_contents(../logs/telegram_webhook.log): Failed to open stream: No such file or directory</pre>
+                
+                <div class="mt-4">
+                    <p class="font-bold text-red-900 mb-2">السبب:</p>
+                    <p class="text-red-800">
+                        مجلد <code class="bg-red-200 px-2 py-1 rounded">logs</code> غير موجود في المشروع
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- الإصلاح -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">🔧 الإصلاح</h2>
+            
+            <div class="space-y-6">
+                <!-- التعديل 1 -->
+                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
+                    <p class="font-bold text-green-900 text-xl mb-3">✅ 1. تعديل telegram_webhook.php</p>
+                    
+                    <div class="bg-white rounded p-4 mb-3">
+                        <p class="font-bold text-gray-800 mb-2">قبل الإصلاح:</p>
+                        <pre class="text-xs bg-red-50 p-3 rounded overflow-x-auto text-red-800">// تسجيل الطلب للتصحيح
+file_put_contents('../logs/telegram_webhook.log', ...);</pre>
+                        <p class="text-xs text-red-700 mt-2">❌ يفترض أن المجلد موجود</p>
+                    </div>
+                    
+                    <div class="bg-white rounded p-4">
+                        <p class="font-bold text-gray-800 mb-2">بعد الإصلاح:</p>
+                        <pre class="text-xs bg-green-50 p-3 rounded overflow-x-auto text-green-800">// تسجيل الطلب للتصحيح (إنشاء المجلد إذا لم يكن موجوداً)
+$logDir = __DIR__ . '/../logs';
+if (!file_exists($logDir)) {
+    mkdir($logDir, 0777, true);
+}
+$logFile = $logDir . '/telegram_webhook.log';
+file_put_contents($logFile, ...);</pre>
+                        <p class="text-xs text-green-700 mt-2">✅ يُنشئ المجلد تلقائياً إذا لم يكن موجوداً</p>
+                    </div>
+                </div>
+                
+                <!-- التعديل 2 -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
+                    <p class="font-bold text-blue-900 text-xl mb-3">✅ 2. إنشاء logs/.gitignore</p>
+                    
+                    <div class="bg-white rounded p-4">
+                        <p class="font-bold text-blue-900 mb-2">محتوى الملف:</p>
+                        <pre class="text-xs bg-blue-50 p-3 rounded overflow-x-auto text-blue-800"># تجاهل جميع ملفات السجلات
+*.log
+
+# لكن احتفظ بهذا المجلد
+!.gitignore</pre>
+                        <p class="text-xs text-blue-700 mt-2">✅ يمنع رفع ملفات السجلات إلى Git</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- اختبر الآن -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-4xl font-black mb-6 text-center">🧪 اختبر الآن!</h2>
+            
+            <div class="bg-white bg-opacity-20 rounded-xl p-6 text-center">
+                <p class="text-2xl font-bold mb-6">
+                    تم إصلاح التحذير - افتح الرابط مرة أخرى
+                </p>
+                
+                <a href="http://localhost:8080/tekrit_municipality/public/telegram_webhook.php" 
+                   target="_blank"
+                   class="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition shadow-lg text-xl">
+                    🔗 فتح telegram_webhook.php
+                </a>
+                
+                <p class="text-lg mt-6 opacity-90">
+                    يجب ألا يظهر أي تحذير الآن! ✅
+                </p>
+            </div>
+        </div>
+
+        <!-- ماذا يحدث الآن -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">✨ ماذا يحدث الآن؟</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-blue-50 rounded-lg p-4 flex items-start gap-3">
+                    <span class="text-3xl">1️⃣</span>
+                    <div>
+                        <p class="font-bold text-blue-900 mb-1">إنشاء المجلد تلقائياً</p>
+                        <p class="text-sm text-blue-800">
+                            عند أول زيارة للصفحة، سيتم إنشاء مجلد <code class="bg-blue-200 px-2 py-1 rounded">logs</code> تلقائياً
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-4 flex items-start gap-3">
+                    <span class="text-3xl">2️⃣</span>
+                    <div>
+                        <p class="font-bold text-green-900 mb-1">تسجيل الطلبات</p>
+                        <p class="text-sm text-green-800">
+                            جميع الطلبات من Telegram ستُسجل في <code class="bg-green-200 px-2 py-1 rounded">logs/telegram_webhook.log</code>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="bg-purple-50 rounded-lg p-4 flex items-start gap-3">
+                    <span class="text-3xl">3️⃣</span>
+                    <div>
+                        <p class="font-bold text-purple-900 mb-1">سهولة التصحيح</p>
+                        <p class="text-sm text-purple-800">
+                            يمكنك فتح ملف السجل لمعرفة ما يرسله Telegram للـ Webhook
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ملاحظة مهمة -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-yellow-900 mb-6 text-center">⚠️ ملاحظة مهمة</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-yellow-900 mb-2">📝 ملف السجل</p>
+                    <p class="text-yellow-800 text-sm mb-2">
+                        سيتم إنشاء ملف السجل في:
+                    </p>
+                    <pre class="bg-yellow-100 p-2 rounded text-xs">C:\xampp\htdocs\tekrit_municipality\logs\telegram_webhook.log</pre>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-blue-900 mb-2">🔍 لماذا نحتاج السجل؟</p>
+                    <p class="text-blue-800 text-sm">
+                        لتسجيل جميع الرسائل الواردة من Telegram - مفيد جداً للتصحيح ومعرفة ما يحدث
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-green-900 mb-2">🔒 الأمان</p>
+                    <p class="text-green-800 text-sm">
+                        ملف <code class="bg-green-200 px-2 py-1 rounded">.gitignore</code> يمنع رفع ملفات السجلات إلى Git
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ماذا تتوقع أن ترى -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">👀 ماذا تتوقع أن ترى؟</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="font-bold text-gray-900 mb-2">عند فتح الرابط في المتصفح:</p>
+                    <p class="text-gray-700 text-sm">
+                        صفحة فارغة أو بيضاء - هذا طبيعي! ✅
+                    </p>
+                    <p class="text-gray-600 text-xs mt-2">
+                        الصفحة مخصصة لاستقبال البيانات من Telegram، وليس للعرض في المتصفح
+                    </p>
+                </div>
+                
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <p class="font-bold text-blue-900 mb-2">في ملف السجل (بعد أن يرسل Telegram بيانات):</p>
+                    <pre class="bg-white p-3 rounded text-xs mt-2 overflow-x-auto">2025-11-12 10:30:45 - {"update_id":123456789,"message":{"message_id":1,"from":{"id":123456,"first_name":"زياد"},"chat":{"id":123456},"text":"TKT-121683E2"}}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوات التالية -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🎯 الخطوات التالية</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="http://localhost:8080/tekrit_municipality/public/telegram_webhook.php" 
+                   target="_blank"
+                   class="block bg-green-50 hover:bg-green-100 border-2 border-green-300 rounded-lg p-6 text-center transition">
+                    <p class="text-4xl mb-3">🔗</p>
+                    <p class="font-bold text-green-900 text-lg">اختبر الـ Webhook</p>
+                    <p class="text-sm text-green-700 mt-2">يجب ألا يظهر تحذير</p>
+                </a>
+                
+                <a href="http://localhost:8080/tekrit_municipality/NEXT_STEPS_AFTER_LINKING.html" 
+                   target="_blank"
+                   class="block bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-lg p-6 text-center transition">
+                    <p class="text-4xl mb-3">📖</p>
+                    <p class="font-bold text-blue-900 text-lg">الخطوات التالية</p>
+                    <p class="text-sm text-blue-700 mt-2">كيف تفعّل Webhook</p>
+                </a>
+                
+                <a href="http://localhost:8080/tekrit_municipality/modules/telegram_settings.php" 
+                   target="_blank"
+                   class="block bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 rounded-lg p-6 text-center transition">
+                    <p class="text-4xl mb-3">⚙️</p>
+                    <p class="font-bold text-purple-900 text-lg">إعدادات Telegram</p>
+                    <p class="text-sm text-purple-700 mt-2">تحديث Webhook URL</p>
+                </a>
+                
+                <a href="https://ngrok.com/download" 
+                   target="_blank"
+                   class="block bg-orange-50 hover:bg-orange-100 border-2 border-orange-300 rounded-lg p-6 text-center transition">
+                    <p class="text-4xl mb-3">📥</p>
+                    <p class="font-bold text-orange-900 text-lg">تحميل ngrok</p>
+                    <p class="text-sm text-orange-700 mt-2">للتطوير المحلي</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 text-center">
+            <p class="font-bold text-2xl text-gray-800 mb-2">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-green-600 font-bold text-xl mt-4">
+                ✅ تم إصلاح التحذير - Webhook جاهز!
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

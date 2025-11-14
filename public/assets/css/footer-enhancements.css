@@ -1,0 +1,73 @@
+/* Footer Enhancements for SoBusiness Group Attribution */
+
+/* تحسينات الفوتر */
+footer {
+    font-family: 'Cairo', Arial, sans-serif;
+}
+
+/* تحسين شكل لوغو الشركة */
+footer img[alt="SoBusiness Group"] {
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+}
+
+footer img[alt="SoBusiness Group"]:hover {
+    filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.3)) brightness(1.1);
+    transform: translateY(-1px);
+}
+
+/* تحسين النصوص */
+footer .text-gray-400 {
+    font-size: 0.9rem;
+}
+
+/* تجاوب مع الأجهزة المختلفة */
+@media (max-width: 768px) {
+    footer .flex.flex-col.md\\:flex-row {
+        gap: 1rem;
+    }
+    
+    footer .text-center.md\\:text-right {
+        margin-right: 0;
+    }
+    
+    footer .text-center.md\\:text-left {
+        margin-bottom: 1rem;
+    }
+}
+
+/* تأثير الحركة على الرابط */
+footer a[href*="sobusiness.group"] {
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+footer a[href*="sobusiness.group"]:hover {
+    filter: brightness(1.1);
+}
+
+/* تحسين الخط العربي */
+footer {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* إضافة تأثير تركيز للوصولية */
+footer a[href*="sobusiness.group"]:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* تحسينات إضافية للوغو */
+footer img[alt="SoBusiness Group"] {
+    max-height: 32px;
+    height: auto;
+    width: auto;
+}
+
+/* تأثير النقر */
+footer a[href*="sobusiness.group"]:active img {
+    transform: translateY(1px);
+} 

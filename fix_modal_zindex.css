@@ -1,0 +1,39 @@
+/* إصلاح مشكلة ظهور النافذة المنبثقة خلف الخريطة */
+
+/* نافذة التفاصيل يجب أن تظهر أمام كل شيء */
+#facilityModal {
+    z-index: 99999 !important;
+    position: fixed !important;
+}
+
+#facilityModal > div {
+    z-index: 99999 !important;
+}
+
+#facilityModal .bg-white {
+    z-index: 99999 !important;
+    position: relative !important;
+}
+
+/* الخريطة وعناصرها يجب أن تكون خلف النافذة */
+#map {
+    z-index: 1 !important;
+    position: relative;
+}
+
+.leaflet-control-container {
+    z-index: 1000 !important;
+}
+
+.leaflet-popup-pane {
+    z-index: 1100 !important;
+}
+
+.leaflet-marker-pane {
+    z-index: 600 !important;
+}
+
+/* تأكد من أن طبقة الخلفية شفافة تظهر فوق الخريطة */
+#facilityModal .bg-gray-600 {
+    z-index: 99998 !important;
+} 

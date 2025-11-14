@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إجابات الأسئلة الثلاثة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-8xl mb-4">❓</div>
+            <h1 class="text-5xl font-black text-blue-600 mb-3">
+                إجابات الأسئلة الثلاثة
+            </h1>
+            <p class="text-xl text-gray-600">شرح مفصّل ومباشر</p>
+        </div>
+
+        <!-- السؤال 1 -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
+                <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                    <span class="text-5xl">1️⃣</span>
+                    <span>لا تظهر الطلبات في الحساب الشخصي</span>
+                </h2>
+            </div>
+            <div class="p-8">
+                <div class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-6">
+                    <p class="text-red-800 font-bold mb-2">❌ المشكلة:</p>
+                    <p class="text-red-700">عند فتح الرابط:</p>
+                    <code class="text-red-800 text-sm block mt-2 bg-red-100 p-2 rounded">
+                        http://localhost:8080/tekrit_municipality/public/citizen-dashboard.php?code=TKT-121683E2
+                    </code>
+                    <p class="text-red-700 mt-2">لا تظهر أي طلبات</p>
+                </div>
+                
+                <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 mb-6">
+                    <p class="text-yellow-900 font-bold mb-3">🔍 الأسباب المحتملة:</p>
+                    <ol class="text-yellow-800 space-y-2">
+                        <li><strong>1.</strong> رقم الهاتف في <code class="bg-yellow-200 px-2 py-1 rounded">citizens_accounts</code> مختلف عن رقم الهاتف في <code class="bg-yellow-200 px-2 py-1 rounded">citizen_requests</code></li>
+                        <li><strong>2.</strong> الطلبات تم تقديمها قبل إنشاء الحساب برمز مختلف</li>
+                        <li><strong>3.</strong> رمز الدخول غير مرتبط بالهاتف الصحيح</li>
+                    </ol>
+                </div>
+                
+                <div class="bg-blue-50 border-2 border-blue-400 rounded-lg p-6 mb-6">
+                    <p class="text-blue-900 font-bold mb-3">🔄 كيف يعمل النظام؟</p>
+                    <div class="space-y-3 text-blue-800">
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="font-bold mb-1">الخطوة 1: تقديم الطلب</p>
+                            <p class="text-sm">المواطن يدخل رقم الهاتف (مثال: 03670065) ويقدم الطلب</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="font-bold mb-1">الخطوة 2: إنشاء الحساب</p>
+                            <p class="text-sm">النظام يبحث في <code class="bg-blue-200 px-2 py-1 rounded">citizens_accounts</code> عن هذا الرقم</p>
+                            <p class="text-sm mt-1">• إذا موجود → يستخدم رمز الدخول الموجود</p>
+                            <p class="text-sm">• إذا غير موجود → ينشئ حساب جديد برمز دخول جديد</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="font-bold mb-1">الخطوة 3: حفظ الطلب</p>
+                            <p class="text-sm">يتم حفظ الطلب في <code class="bg-blue-200 px-2 py-1 rounded">citizen_requests</code> مع رقم الهاتف</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="font-bold mb-1">الخطوة 4: عرض الطلبات</p>
+                            <p class="text-sm">عند الدخول برمز الدخول، النظام:</p>
+                            <p class="text-sm mt-1">1. يجلب رقم الهاتف من <code class="bg-blue-200 px-2 py-1 rounded">citizens_accounts</code></p>
+                            <p class="text-sm">2. يبحث عن جميع الطلبات بهذا الرقم في <code class="bg-blue-200 px-2 py-1 rounded">citizen_requests</code></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 border-2 border-green-400 rounded-lg p-6">
+                    <p class="text-green-800 font-bold mb-4">✅ الحل:</p>
+                    <p class="text-green-700 mb-4">شغّل هذا الفحص لمعرفة السبب بالضبط:</p>
+                    <a href="debug_system.php" 
+                       class="inline-block bg-green-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-green-700 transition text-lg">
+                        🔍 فحص شامل للنظام
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- السؤال 2 -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
+                <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                    <span class="text-5xl">2️⃣</span>
+                    <span>هل الرمز مبني على رقم الموبايل؟</span>
+                </h2>
+            </div>
+            <div class="p-8">
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-6">
+                    <p class="text-blue-800 font-bold mb-2">❓ السؤال:</p>
+                    <p class="text-blue-700 text-xl">هل إعطاء رمز للمواطن يكون مبني على رقم الموبايل؟</p>
+                </div>
+                
+                <div class="bg-green-50 border-2 border-green-400 rounded-lg p-6 mb-6">
+                    <p class="text-green-800 font-bold mb-4 text-2xl">✅ الجواب: نعم!</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-lg p-4">
+                            <p class="text-green-900 font-bold mb-2">📱 رقم الموبايل هو المفتاح الأساسي</p>
+                            <p class="text-green-800">كل رقم موبايل له رمز دخول واحد فقط</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4">
+                            <p class="text-green-900 font-bold mb-2">🔐 رمز الدخول ثابت</p>
+                            <p class="text-green-800">بمجرد إنشاء الرمز لرقم معين، يبقى نفس الرمز للأبد</p>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4">
+                            <p class="text-green-900 font-bold mb-2">🔄 كيف يعمل؟</p>
+                            <div class="text-green-800 text-sm space-y-2 mt-2">
+                                <p><strong>مثال:</strong></p>
+                                <p>• المواطن رقمه: <code class="bg-green-200 px-2 py-1 rounded">03670065</code></p>
+                                <p>• يقدم طلب أول مرة → النظام ينشئ رمز: <code class="bg-green-200 px-2 py-1 rounded">TKT-ABC12345</code></p>
+                                <p>• يقدم طلب ثاني → النظام يستخدم نفس الرمز: <code class="bg-green-200 px-2 py-1 rounded">TKT-ABC12345</code></p>
+                                <p>• يقدم طلب ثالث → نفس الرمز: <code class="bg-green-200 px-2 py-1 rounded">TKT-ABC12345</code></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-purple-50 border-2 border-purple-400 rounded-lg p-6">
+                    <p class="text-purple-900 font-bold mb-3">💡 الفائدة:</p>
+                    <ul class="text-purple-800 space-y-2">
+                        <li>✅ المواطن يحفظ رمز واحد فقط</li>
+                        <li>✅ يستطيع رؤية جميع طلباته (القديمة والجديدة)</li>
+                        <li>✅ لا يحتاج تسجيل دخول معقد</li>
+                        <li>✅ سهل للمواطنين غير المتمرسين بالتكنولوجيا</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- السؤال 3 -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-6">
+                <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                    <span class="text-5xl">3️⃣</span>
+                    <span>رسائل Telegram لا تظهر</span>
+                </h2>
+            </div>
+            <div class="p-8">
+                <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 mb-6">
+                    <p class="text-purple-800 font-bold mb-2">❌ المشكلة:</p>
+                    <p class="text-purple-700">الرسالة لا ترسل عبر Telegram ولا تظهر في:</p>
+                    <code class="text-purple-800 text-sm block mt-2 bg-purple-100 p-2 rounded">
+                        http://localhost:8080/tekrit_municipality/modules/telegram_messages.php
+                    </code>
+                </div>
+                
+                <div class="bg-red-50 border-2 border-red-400 rounded-lg p-6 mb-6">
+                    <p class="text-red-900 font-bold mb-3">⚠️ السبب الرئيسي:</p>
+                    <p class="text-red-800 text-xl font-bold">جدول <code class="bg-red-200 px-2 py-1 rounded">telegram_log</code> غير موجود!</p>
+                    <p class="text-red-700 mt-3">هذا يعني أن سكريبت الترحيل لم يتم تشغيله بعد</p>
+                </div>
+                
+                <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 mb-6">
+                    <p class="text-yellow-900 font-bold mb-3">🔍 ماذا يحدث الآن؟</p>
+                    <div class="space-y-3 text-yellow-800">
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="font-bold mb-1">1. المواطن يقدم طلب</p>
+                            <p class="text-sm">الطلب يُحفظ في <code class="bg-yellow-200 px-2 py-1 rounded">citizen_requests</code> ✅</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="font-bold mb-1">2. النظام يحاول تسجيل رسالة Telegram</p>
+                            <p class="text-sm">يبحث عن جدول <code class="bg-yellow-200 px-2 py-1 rounded">telegram_log</code> ❌</p>
+                            <p class="text-sm text-red-600 mt-1">الجدول غير موجود → خطأ!</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-3">
+                            <p class="font-bold mb-1">3. النتيجة</p>
+                            <p class="text-sm">لا يتم تسجيل أي رسالة → لا تظهر في صفحة الرسائل</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 border-2 border-green-400 rounded-lg p-6">
+                    <p class="text-green-800 font-bold mb-4 text-2xl">✅ الحل الوحيد:</p>
+                    <p class="text-green-700 mb-4 text-lg">يجب تشغيل سكريبت الترحيل لإنشاء جدول <code class="bg-green-200 px-2 py-1 rounded">telegram_log</code></p>
+                    
+                    <div class="space-y-3">
+                        <a href="debug_system.php" 
+                           class="block bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 transition text-center text-lg">
+                            1️⃣ فحص النظام أولاً
+                        </a>
+                        
+                        <a href="migrate_to_telegram.php" 
+                           class="block bg-green-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-green-700 transition text-center text-lg">
+                            2️⃣ تشغيل سكريبت الترحيل
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخلاصة -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white">
+            <h2 class="text-4xl font-black mb-6 text-center">📝 الخلاصة</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                    <div class="text-5xl mb-3">1️⃣</div>
+                    <p class="font-bold text-xl mb-2">الطلبات لا تظهر</p>
+                    <p class="text-sm">السبب: رقم الهاتف غير متطابق أو الحساب غير مرتبط</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                    <div class="text-5xl mb-3">2️⃣</div>
+                    <p class="font-bold text-xl mb-2">الرمز والموبايل</p>
+                    <p class="text-sm">نعم! كل رقم موبايل له رمز دخول واحد ثابت</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                    <div class="text-5xl mb-3">3️⃣</div>
+                    <p class="font-bold text-xl mb-2">رسائل Telegram</p>
+                    <p class="text-sm">السبب: جدول telegram_log مفقود</p>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <p class="text-2xl font-bold mb-4">🎯 الخطوة التالية:</p>
+                <a href="debug_system.php" 
+                   class="inline-block bg-white text-blue-600 px-10 py-5 rounded-xl font-bold hover:bg-gray-100 transition text-xl">
+                    🔍 فحص شامل للنظام الآن
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-lg">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-sm mt-1">نظام إدارة البلدية الإلكتروني</p>
+        </div>
+    </div>
+</body>
+</html>
+

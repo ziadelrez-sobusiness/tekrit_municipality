@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ المرحلة 2 مكتملة - تحديث قاعدة البيانات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .card { transition: transform 0.3s, box-shadow 0.3s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .check-item { padding: 0.75rem; margin: 0.5rem 0; border-radius: 0.5rem; background: #f0fdf4; border-right: 4px solid #10b981; }
+        .step-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-green-50 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 mb-6 text-center">
+            <div class="text-6xl mb-4">🎉</div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">المرحلة 2 مكتملة بنجاح!</h1>
+            <p class="text-xl text-gray-600 mb-4">تحديثات قاعدة البيانات - نظام الحساب الشخصي للمواطن</p>
+            <div class="inline-block bg-green-100 text-green-800 px-6 py-2 rounded-full font-bold">
+                ✅ جاهز للتثبيت
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <a href="setup_citizen_accounts_system.php" class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 text-center hover:from-blue-600 hover:to-blue-700">
+                <div class="text-4xl mb-3">🚀</div>
+                <h3 class="text-xl font-bold mb-2">ابدأ التثبيت الآن</h3>
+                <p class="text-sm opacity-90">تثبيت قاعدة البيانات</p>
+            </a>
+            
+            <a href="CITIZEN_ACCOUNTS_DATABASE_DOCUMENTATION.md" class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 text-center hover:from-purple-600 hover:to-purple-700">
+                <div class="text-4xl mb-3">📚</div>
+                <h3 class="text-xl font-bold mb-2">التوثيق الكامل</h3>
+                <p class="text-sm opacity-90">دليل شامل للنظام</p>
+            </a>
+            
+            <a href="database/test_queries.sql" class="card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 text-center hover:from-green-600 hover:to-green-700">
+                <div class="text-4xl mb-3">🧪</div>
+                <h3 class="text-xl font-bold mb-2">اختبار النظام</h3>
+                <p class="text-sm opacity-90">18 اختبار شامل</p>
+            </a>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="grid md:grid-cols-4 gap-4 mb-6">
+            <div class="card bg-white rounded-xl p-6 text-center">
+                <div class="text-4xl mb-2">🗄️</div>
+                <div class="text-3xl font-bold text-blue-600">6</div>
+                <div class="text-gray-600">جداول جديدة</div>
+            </div>
+            
+            <div class="card bg-white rounded-xl p-6 text-center">
+                <div class="text-4xl mb-2">👁️</div>
+                <div class="text-3xl font-bold text-purple-600">3</div>
+                <div class="text-gray-600">Views</div>
+            </div>
+            
+            <div class="card bg-white rounded-xl p-6 text-center">
+                <div class="text-4xl mb-2">🔧</div>
+                <div class="text-3xl font-bold text-green-600">3</div>
+                <div class="text-gray-600">Stored Procedures</div>
+            </div>
+            
+            <div class="card bg-white rounded-xl p-6 text-center">
+                <div class="text-4xl mb-2">⚡</div>
+                <div class="text-3xl font-bold text-orange-600">2</div>
+                <div class="text-gray-600">Triggers</div>
+            </div>
+        </div>
+
+        <!-- Files Created -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <span class="text-3xl ml-3">📁</span>
+                الملفات المُنشأة (7 ملفات)
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="check-item">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-gray-800">citizen_accounts_system.sql</div>
+                            <div class="text-sm text-gray-600">السكريبت الكامل للنظام</div>
+                        </div>
+                        <span class="text-green-600 text-2xl">✅</span>
+                    </div>
+                </div>
+                
+                <div class="check-item">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-gray-800">setup_citizen_accounts_system.php</div>
+                            <div class="text-sm text-gray-600">صفحة التثبيت التفاعلية</div>
+                        </div>
+                        <span class="text-green-600 text-2xl">✅</span>
+                    </div>
+                </div>
+                
+                <div class="check-item">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-gray-800">test_queries.sql</div>
+                            <div class="text-sm text-gray-600">18 اختبار شامل</div>
+                        </div>
+                        <span class="text-green-600 text-2xl">✅</span>
+                    </div>
+                </div>
+                
+                <div class="check-item">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-gray-800">DATABASE_SCHEMA_DIAGRAM.md</div>
+                            <div class="text-sm text-gray-600">مخططات بصرية</div>
+                        </div>
+                        <span class="text-green-600 text-2xl">✅</span>
+                    </div>
+                </div>
+                
+                <div class="check-item">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-gray-800">CITIZEN_ACCOUNTS_DATABASE_DOCUMENTATION.md</div>
+                            <div class="text-sm text-gray-600">التوثيق الكامل (18 KB)</div>
+                        </div>
+                        <span class="text-green-600 text-2xl">✅</span>
+                    </div>
+                </div>
+                
+                <div class="check-item">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-gray-800">CITIZEN_ACCOUNTS_SETUP_README.md</div>
+                            <div class="text-sm text-gray-600">دليل التثبيت السريع</div>
+                        </div>
+                        <span class="text-green-600 text-2xl">✅</span>
+                    </div>
+                </div>
+                
+                <div class="check-item">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-gray-800">DATABASE_UPDATE_SUMMARY.md</div>
+                            <div class="text-sm text-gray-600">ملخص التحديثات</div>
+                        </div>
+                        <span class="text-green-600 text-2xl">✅</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables Created -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <span class="text-3xl ml-3">🗄️</span>
+                الجداول المُنشأة (6 جداول)
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="border-r-4 border-blue-500 bg-blue-50 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg text-gray-800">citizens_accounts</h3>
+                        <span class="step-badge bg-blue-100 text-blue-800">12 عمود</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">حسابات المواطنين الأساسية مع معلومات الاتصال وإعدادات الإشعارات</p>
+                </div>
+                
+                <div class="border-r-4 border-purple-500 bg-purple-50 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg text-gray-800">magic_links</h3>
+                        <span class="step-badge bg-purple-100 text-purple-800">10 أعمدة</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">روابط الدخول السحرية للدخول السريع من WhatsApp (صلاحية 7 أيام)</p>
+                </div>
+                
+                <div class="border-r-4 border-green-500 bg-green-50 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg text-gray-800">citizen_messages</h3>
+                        <span class="step-badge bg-green-100 text-green-800">13 عمود</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">رسائل وإشعارات من البلدية للمواطنين (عامة وخاصة)</p>
+                </div>
+                
+                <div class="border-r-4 border-orange-500 bg-orange-50 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg text-gray-800">whatsapp_log</h3>
+                        <span class="step-badge bg-orange-100 text-orange-800">12 عمود</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">سجل كامل لجميع رسائل WhatsApp المرسلة مع حالة التسليم</p>
+                </div>
+                
+                <div class="border-r-4 border-pink-500 bg-pink-50 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg text-gray-800">notification_preferences</h3>
+                        <span class="step-badge bg-pink-100 text-pink-800">9 أعمدة</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">إعدادات تفضيلات الإشعارات لكل مواطن</p>
+                </div>
+                
+                <div class="border-r-4 border-indigo-500 bg-indigo-50 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-bold text-lg text-gray-800">citizen_sessions</h3>
+                        <span class="step-badge bg-indigo-100 text-indigo-800">8 أعمدة</span>
+                    </div>
+                    <p class="text-gray-600 text-sm">جلسات تسجيل الدخول النشطة مع تتبع النشاط</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Installation Steps -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <span class="text-3xl ml-3">📋</span>
+                خطوات التثبيت
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold ml-4">1</div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg mb-2">تشغيل سكريبت التثبيت</h3>
+                        <div class="bg-gray-100 p-3 rounded-lg font-mono text-sm mb-2">
+                            http://localhost:8080/tekrit_municipality/setup_citizen_accounts_system.php
+                        </div>
+                        <p class="text-gray-600 text-sm">أو استخدم phpMyAdmin لاستيراد: <code class="bg-gray-100 px-2 py-1 rounded">database/citizen_accounts_system.sql</code></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold ml-4">2</div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg mb-2">التحقق من النجاح</h3>
+                        <p class="text-gray-600">يجب أن ترى رسالة: <span class="text-green-600 font-bold">"🎉 التثبيت مكتمل بنجاح!"</span></p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-10 h-10 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold ml-4">3</div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg mb-2">إعداد WhatsApp</h3>
+                        <p class="text-gray-600">اذهب إلى إعدادات النظام وأدخل رقم WhatsApp للبلدية</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold ml-4">4</div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg mb-2">اختبار النظام</h3>
+                        <p class="text-gray-600">قم بتشغيل: <code class="bg-gray-100 px-2 py-1 rounded">database/test_queries.sql</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-6">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <span class="text-3xl ml-3">🎯</span>
+                الخطوات التالية
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="text-2xl mb-2">📝</div>
+                    <h3 class="font-bold mb-2">المرحلة 3: ملفات PHP</h3>
+                    <ul class="text-sm space-y-1 opacity-90">
+                        <li>• CitizenAccount.php</li>
+                        <li>• WhatsAppHelper.php</li>
+                        <li>• MagicLink.php</li>
+                        <li>• my-account-login.php</li>
+                        <li>• my-account.php</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="text-2xl mb-2">🎨</div>
+                    <h3 class="font-bold mb-2">المرحلة 4: الواجهات</h3>
+                    <ul class="text-sm space-y-1 opacity-90">
+                        <li>• صفحة تسجيل الدخول</li>
+                        <li>• الصفحة الشخصية</li>
+                        <li>• إدارة المواطنين</li>
+                        <li>• إرسال رسائل WhatsApp</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <span class="text-3xl ml-3">✨</span>
+                المميزات الرئيسية
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="text-center p-4">
+                    <div class="text-4xl mb-3">🔐</div>
+                    <h3 class="font-bold mb-2">Magic Links</h3>
+                    <p class="text-sm text-gray-600">دخول سريع وآمن من WhatsApp</p>
+                </div>
+                
+                <div class="text-center p-4">
+                    <div class="text-4xl mb-3">💬</div>
+                    <h3 class="font-bold mb-2">WhatsApp مجاني</h3>
+                    <p class="text-sm text-gray-600">إشعارات فورية بدون تكلفة</p>
+                </div>
+                
+                <div class="text-center p-4">
+                    <div class="text-4xl mb-3">📊</div>
+                    <h3 class="font-bold mb-2">تتبع شامل</h3>
+                    <p class="text-sm text-gray-600">متابعة جميع الطلبات والرسائل</p>
+                </div>
+                
+                <div class="text-center p-4">
+                    <div class="text-4xl mb-3">⚡</div>
+                    <h3 class="font-bold mb-2">تسجيل تلقائي</h3>
+                    <p class="text-sm text-gray-600">حساب تلقائي عند أول طلب</p>
+                </div>
+                
+                <div class="text-center p-4">
+                    <div class="text-4xl mb-3">🔔</div>
+                    <h3 class="font-bold mb-2">إشعارات ذكية</h3>
+                    <p class="text-sm text-gray-600">تحكم كامل في التفضيلات</p>
+                </div>
+                
+                <div class="text-center p-4">
+                    <div class="text-4xl mb-3">🛡️</div>
+                    <h3 class="font-bold mb-2">أمان عالي</h3>
+                    <p class="text-sm text-gray-600">روابط منتهية وجلسات آمنة</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-gray-600">
+            <p class="mb-2">🏛️ <strong>بلدية تكريت - عكار، شمال لبنان</strong> 🇱🇧</p>
+            <p class="text-sm">نظام إدارة البلدية الإلكتروني</p>
+            <p class="text-xs mt-4 text-gray-500">آخر تحديث: 2025-11-10 | الإصدار: 1.0</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate cards on scroll
+            const cards = document.querySelectorAll('.card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '0';
+                        entry.target.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            entry.target.style.transition = 'all 0.5s ease';
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+                        }, 100);
+                    }
+                });
+            });
+            
+            cards.forEach(card => observer.observe(card));
+        });
+    </script>
+</body>
+</html>
+

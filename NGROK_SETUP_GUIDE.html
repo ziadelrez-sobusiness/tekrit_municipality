@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📘 دليل ربط ngrok</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- العنوان الرئيسي -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center border-4 border-purple-500">
+            <div class="text-9xl mb-4">🚀</div>
+            <h1 class="text-6xl font-black text-purple-600 mb-3">
+                دليل ربط ngrok
+            </h1>
+            <p class="text-3xl text-gray-800 font-bold">خطوة بخطوة بالتفصيل</p>
+        </div>
+
+        <!-- ما هو ngrok -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🤔 ما هو ngrok؟</h2>
+            
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                <p class="text-xl text-gray-800 mb-4">
+                    ngrok هو أداة تُنشئ <strong>رابط عام مؤقت</strong> يشير إلى خادمك المحلي (localhost)
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <div class="bg-white rounded-lg p-4">
+                        <p class="font-bold text-red-900 mb-2">❌ بدون ngrok:</p>
+                        <p class="text-sm text-red-800">localhost:8080</p>
+                        <p class="text-xs text-red-700 mt-2">Telegram لا يمكنه الوصول إليه</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4">
+                        <p class="font-bold text-green-900 mb-2">✅ مع ngrok:</p>
+                        <p class="text-sm text-green-800">https://abc123.ngrok.io</p>
+                        <p class="text-xs text-green-700 mt-2">Telegram يمكنه الوصول إليه</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوة 1: التحميل -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-start gap-6">
+                <div class="step-number">1</div>
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">تحميل ngrok</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 rounded-lg p-6">
+                            <p class="font-bold text-blue-900 mb-3 text-xl">أ. افتح موقع ngrok:</p>
+                            <a href="https://ngrok.com/download" target="_blank"
+                               class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg text-lg">
+                                📥 https://ngrok.com/download
+                            </a>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-6">
+                            <p class="font-bold text-green-900 mb-3 text-xl">ب. اختر نظام التشغيل:</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div class="bg-white rounded p-3 text-center">
+                                    <p class="text-3xl mb-2">🪟</p>
+                                    <p class="font-bold text-gray-800">Windows</p>
+                                    <p class="text-xs text-gray-600 mt-1">ملف .zip</p>
+                                </div>
+                                <div class="bg-white rounded p-3 text-center opacity-50">
+                                    <p class="text-3xl mb-2">🍎</p>
+                                    <p class="font-bold text-gray-800">macOS</p>
+                                    <p class="text-xs text-gray-600 mt-1">ملف .zip</p>
+                                </div>
+                                <div class="bg-white rounded p-3 text-center opacity-50">
+                                    <p class="text-3xl mb-2">🐧</p>
+                                    <p class="font-bold text-gray-800">Linux</p>
+                                    <p class="text-xs text-gray-600 mt-1">ملف .zip</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-green-800 mt-3">✅ اختر <strong>Windows</strong> (أنت تستخدم Windows)</p>
+                        </div>
+                        
+                        <div class="bg-purple-50 rounded-lg p-6">
+                            <p class="font-bold text-purple-900 mb-3 text-xl">ج. فك الضغط:</p>
+                            <ol class="text-sm text-purple-800 space-y-2 mr-4">
+                                <li>1. بعد التحميل، افتح ملف <code class="bg-purple-200 px-2 py-1 rounded">ngrok.zip</code></li>
+                                <li>2. استخرج ملف <code class="bg-purple-200 px-2 py-1 rounded">ngrok.exe</code></li>
+                                <li>3. ضعه في مكان سهل الوصول (مثلاً: <code class="bg-purple-200 px-2 py-1 rounded">C:\ngrok\</code>)</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوة 2: التسجيل (اختياري) -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-start gap-6">
+                <div class="step-number">2</div>
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">التسجيل في ngrok (اختياري)</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
+                            <p class="font-bold text-yellow-900 mb-2">⚠️ ملاحظة:</p>
+                            <p class="text-yellow-800 text-sm">
+                                يمكنك استخدام ngrok بدون تسجيل، لكن التسجيل يعطيك مميزات إضافية
+                            </p>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg p-6">
+                            <p class="font-bold text-blue-900 mb-3 text-xl">مميزات التسجيل:</p>
+                            <ul class="text-sm text-blue-800 space-y-2 mr-4">
+                                <li>✅ جلسات أطول (بدون قطع)</li>
+                                <li>✅ روابط مخصصة</li>
+                                <li>✅ إحصائيات أفضل</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-6">
+                            <p class="font-bold text-green-900 mb-3 text-xl">للتسجيل:</p>
+                            <ol class="text-sm text-green-800 space-y-2 mr-4">
+                                <li>1. اذهب إلى: <a href="https://dashboard.ngrok.com/signup" target="_blank" class="underline font-bold">https://dashboard.ngrok.com/signup</a></li>
+                                <li>2. سجّل بالبريد الإلكتروني أو Google</li>
+                                <li>3. انسخ الـ Authtoken من لوحة التحكم</li>
+                                <li>4. شغّل: <code class="bg-green-200 px-2 py-1 rounded">ngrok authtoken YOUR_TOKEN</code></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوة 3: تشغيل ngrok -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-start gap-6">
+                <div class="step-number">3</div>
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">تشغيل ngrok</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-purple-50 rounded-lg p-6">
+                            <p class="font-bold text-purple-900 mb-3 text-xl">أ. افتح Command Prompt (CMD):</p>
+                            <div class="bg-white rounded p-4">
+                                <p class="text-sm text-purple-800 mb-2">اضغط <kbd class="bg-purple-200 px-2 py-1 rounded">Win + R</kbd> ثم اكتب:</p>
+                                <pre class="bg-gray-100 p-3 rounded text-sm">cmd</pre>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg p-6">
+                            <p class="font-bold text-blue-900 mb-3 text-xl">ب. انتقل لمجلد ngrok:</p>
+                            <div class="bg-white rounded p-4">
+                                <p class="text-sm text-blue-800 mb-2">إذا وضعت ngrok في <code class="bg-blue-200 px-2 py-1 rounded">C:\ngrok\</code>:</p>
+                                <pre class="bg-gray-100 p-3 rounded text-sm">cd C:\ngrok</pre>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-lg p-6 text-white">
+                            <p class="font-bold mb-3 text-2xl">ج. شغّل ngrok:</p>
+                            <div class="bg-white bg-opacity-20 rounded p-4">
+                                <pre class="text-lg font-bold">ngrok http 8080</pre>
+                            </div>
+                            <p class="text-sm mt-3 opacity-90">
+                                ✅ هذا الأمر يُنشئ رابط عام يشير إلى localhost:8080
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوة 4: نسخ الرابط -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-start gap-6">
+                <div class="step-number">4</div>
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">نسخ الرابط</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-green-50 rounded-lg p-6">
+                            <p class="font-bold text-green-900 mb-3 text-xl">بعد تشغيل ngrok، ستظهر شاشة مثل هذه:</p>
+                            <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-xs overflow-x-auto">
+<pre>ngrok                                                           (Ctrl+C to quit)
+
+Session Status                online
+Account                       your@email.com (Plan: Free)
+Version                       3.3.0
+Region                        United States (us)
+Latency                       45ms
+Web Interface                 http://127.0.0.1:4040
+Forwarding                    https://abc123.ngrok.io -> http://localhost:8080
+
+Connections                   ttl     opn     rt1     rt5     p50     p90
+                              0       0       0.00    0.00    0.00    0.00</pre>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg p-6">
+                            <p class="font-bold text-blue-900 mb-3 text-xl">انسخ الرابط:</p>
+                            <div class="bg-white rounded p-4">
+                                <p class="text-sm text-blue-800 mb-2">ابحث عن السطر:</p>
+                                <pre class="bg-blue-100 p-3 rounded text-sm mb-3">Forwarding    https://abc123.ngrok.io -> http://localhost:8080</pre>
+                                <p class="text-sm text-blue-800">انسخ الرابط: <code class="bg-blue-200 px-2 py-1 rounded font-bold">https://abc123.ngrok.io</code></p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
+                            <p class="font-bold text-yellow-900 mb-2">⚠️ مهم جداً:</p>
+                            <ul class="text-sm text-yellow-800 space-y-1 mr-4">
+                                <li>• الرابط يتغير كل مرة تشغل ngrok</li>
+                                <li>• احتفظ بنافذة CMD مفتوحة - لا تغلقها!</li>
+                                <li>• إذا أغلقت CMD، سيتوقف ngrok</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوة 5: تحديث Webhook URL -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-start gap-6">
+                <div class="step-number">5</div>
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">تحديث Webhook URL في Telegram</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-purple-50 rounded-lg p-6">
+                            <p class="font-bold text-purple-900 mb-3 text-xl">أ. افتح صفحة إعدادات Telegram:</p>
+                            <a href="http://localhost:8080/tekrit_municipality/modules/telegram_settings.php" 
+                               target="_blank"
+                               class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition shadow-lg">
+                                ⚙️ فتح إعدادات Telegram
+                            </a>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg p-6">
+                            <p class="font-bold text-blue-900 mb-3 text-xl">ب. أدخل Webhook URL:</p>
+                            <div class="bg-white rounded p-4">
+                                <p class="text-sm text-blue-800 mb-2">في حقل "Webhook URL"، أدخل:</p>
+                                <div class="bg-blue-100 p-3 rounded mb-3">
+                                    <p class="text-sm font-mono break-all">https://abc123.ngrok.io/tekrit_municipality/public/telegram_webhook.php</p>
+                                </div>
+                                <p class="text-xs text-blue-700">⚠️ استبدل <code class="bg-blue-200 px-2 py-1 rounded">abc123</code> برابط ngrok الخاص بك</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-6">
+                            <p class="font-bold text-green-900 mb-3 text-xl">ج. احفظ الإعدادات:</p>
+                            <p class="text-sm text-green-800">اضغط زر "حفظ الإعدادات" في أسفل الصفحة</p>
+                        </div>
+                        
+                        <div class="bg-orange-50 rounded-lg p-6">
+                            <p class="font-bold text-orange-900 mb-3 text-xl">د. تحقق من التسجيل:</p>
+                            <p class="text-sm text-orange-800 mb-2">يجب أن تظهر رسالة:</p>
+                            <div class="bg-white rounded p-3">
+                                <p class="text-green-600 font-bold">✅ تم تسجيل Webhook بنجاح</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوة 6: اختبار البوت -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-start gap-6">
+                <div class="step-number">6</div>
+                <div class="flex-1">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6">اختبار البوت</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg p-6 text-white">
+                            <p class="font-bold mb-3 text-2xl text-center">🎉 الآن جرّب البوت!</p>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg p-6">
+                            <p class="font-bold text-blue-900 mb-3 text-xl">الخطوات:</p>
+                            <ol class="text-sm text-blue-800 space-y-3 mr-4">
+                                <li class="flex items-start gap-2">
+                                    <span class="font-bold">1️⃣</span>
+                                    <span>افتح تطبيق <strong>Telegram</strong> على هاتفك</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="font-bold">2️⃣</span>
+                                    <span>ابحث عن: <code class="bg-blue-200 px-2 py-1 rounded font-bold">@TekritAkkarBot</code></span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="font-bold">3️⃣</span>
+                                    <span>اضغط زر <strong class="text-green-600">Start</strong></span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="font-bold">4️⃣</span>
+                                    <span>أرسل رمز الدخول: <code class="bg-blue-200 px-2 py-1 rounded font-bold">TKT-121683E2</code></span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="font-bold">5️⃣</span>
+                                    <span class="text-green-600 font-bold">يجب أن يرد البوت فوراً! ✅</span>
+                                </li>
+                            </ol>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-6">
+                            <p class="font-bold text-green-900 mb-3 text-xl">ماذا يجب أن يحدث:</p>
+                            <div class="bg-white rounded p-4 space-y-2 text-sm text-green-800">
+                                <p>✅ البوت يرد برسالة ترحيب</p>
+                                <p>✅ يتم ربط حسابك تلقائياً</p>
+                                <p>✅ تستلم جميع الرسائل المعلقة</p>
+                                <p>✅ تظهر أزرار تفاعلية (حسابي، تقديم طلب)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نصائح مهمة -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-yellow-900 mb-6 text-center">💡 نصائح مهمة</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-yellow-900 mb-2">⚠️ لا تغلق نافذة CMD</p>
+                    <p class="text-sm text-yellow-800">
+                        طالما ngrok يعمل، يجب أن تبقى نافذة CMD مفتوحة
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-blue-900 mb-2">🔄 الرابط يتغير</p>
+                    <p class="text-sm text-blue-800">
+                        كل مرة تشغل ngrok، سيتغير الرابط - يجب تحديث Webhook URL
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-green-900 mb-2">📊 Web Interface</p>
+                    <p class="text-sm text-green-800 mb-2">
+                        يمكنك مراقبة الطلبات من:
+                    </p>
+                    <a href="http://127.0.0.1:4040" target="_blank" class="text-green-600 underline font-bold">
+                        http://127.0.0.1:4040
+                    </a>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-purple-900 mb-2">🔒 HTTPS تلقائياً</p>
+                    <p class="text-sm text-purple-800">
+                        ngrok يوفر HTTPS تلقائياً - مطلوب من Telegram
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- استكشاف الأخطاء -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🔧 استكشاف الأخطاء</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-red-50 rounded-lg p-4">
+                    <p class="font-bold text-red-900 mb-2">❌ البوت لا يرد</p>
+                    <ul class="text-sm text-red-800 space-y-1 mr-4">
+                        <li>• تأكد من أن ngrok يعمل (نافذة CMD مفتوحة)</li>
+                        <li>• تأكد من أن Webhook URL صحيح</li>
+                        <li>• تحقق من Web Interface: http://127.0.0.1:4040</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-orange-50 rounded-lg p-4">
+                    <p class="font-bold text-orange-900 mb-2">⚠️ خطأ في تسجيل Webhook</p>
+                    <ul class="text-sm text-orange-800 space-y-1 mr-4">
+                        <li>• تأكد من أن الرابط يبدأ بـ https://</li>
+                        <li>• تأكد من أن المسار صحيح: /tekrit_municipality/public/telegram_webhook.php</li>
+                        <li>• جرّب نسخ الرابط مرة أخرى من ngrok</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <p class="font-bold text-blue-900 mb-2">🔍 للتحقق من الإعدادات</p>
+                    <a href="http://localhost:8080/tekrit_municipality/public/check_telegram_debug.php" 
+                       target="_blank"
+                       class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm mt-2">
+                        🔍 فتح صفحة الفحص
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ملخص سريع -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-4xl font-black mb-6 text-center">📋 ملخص سريع</h2>
+            
+            <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                <div class="space-y-3 text-lg">
+                    <p>1️⃣ حمّل ngrok من ngrok.com/download</p>
+                    <p>2️⃣ فك الضغط وضع ngrok.exe في مجلد</p>
+                    <p>3️⃣ افتح CMD واذهب لمجلد ngrok</p>
+                    <p>4️⃣ شغّل: <code class="bg-white bg-opacity-30 px-2 py-1 rounded">ngrok http 8080</code></p>
+                    <p>5️⃣ انسخ الرابط (https://abc123.ngrok.io)</p>
+                    <p>6️⃣ أدخل Webhook URL في إعدادات Telegram</p>
+                    <p>7️⃣ جرّب البوت في Telegram!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 text-center">
+            <p class="font-bold text-2xl text-gray-800 mb-2">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-purple-600 font-bold text-xl mt-4">
+                🚀 اتبع الخطوات وسيعمل البوت بشكل مثالي!
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

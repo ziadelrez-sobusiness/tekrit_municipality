@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار خريطة جوجل</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>اختبار خريطة جوجل - بلدية تكريت</h1>
+    
+    <div id="status" class="status info">جاري تحميل الخريطة...</div>
+    
+    <div id="map"></div>
+    
+    <div style="margin-top: 20px;">
+        <h3>معلومات الاختبار:</h3>
+        <p><strong>الإحداثيات:</strong> 33.4384, 43.6793</p>
+        <p><strong>الموقع:</strong> تكريت، العراق</p>
+        <p><strong>مفتاح API:</strong> AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw</p>
+    </div>
+
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+
+        function initMap() {
+            try {
+                updateStatus('بدء تهيئة الخريطة...', 'info');
+                
+                // Check if Google Maps API is loaded
+                if (!window.google || !window.google.maps) {
+                    throw new Error('Google Maps API not loaded');
+                }
+
+                const lat = 33.4384;
+                const lng = 43.6793;
+                const location = { lat: lat, lng: lng };
+
+                updateStatus('إنشاء الخريطة...', 'info');
+
+                const map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 15,
+                    center: location,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                });
+
+                updateStatus('إضافة العلامة...', 'info');
+
+                const marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    title: 'بلدية تكريت',
+                    animation: google.maps.Animation.DROP
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: '<div style="text-align: center;"><h3>بلدية تكريت</h3><p>تكريت، العراق</p></div>'
+                });
+
+                marker.addListener('click', function() {
+                    infoWindow.open(map, marker);
+                });
+
+                updateStatus('تم تحميل الخريطة بنجاح! ✅', 'success');
+                
+            } catch (error) {
+                console.error('خطأ في تحميل الخريطة:', error);
+                updateStatus('خطأ في تحميل الخريطة: ' + error.message, 'error');
+                
+                document.getElementById('map').innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; background-color: #f8f9fa; border-radius: 8px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🗺️</div>
+                            <p>عذراً، لا يمكن تحميل الخريطة</p>
+                            <p style="font-size: 14px; color: #666;">` + error.message + `</p>
+                            <a href="https://www.google.com/maps?q=33.4384,43.6793" target="_blank" 
+                               style="display: inline-block; margin-top: 12px; padding: 8px 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">
+                                فتح في خرائط جوجل
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Load Google Maps API
+        function loadGoogleMaps() {
+            updateStatus('تحميل Google Maps API...', 'info');
+            
+            const script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw&callback=initMap';
+            script.async = true;
+            script.defer = true;
+            
+            script.onload = function() {
+                updateStatus('تم تحميل Google Maps API بنجاح', 'success');
+            };
+            
+            script.onerror = function() {
+                updateStatus('فشل في تحميل Google Maps API', 'error');
+                console.error('فشل في تحميل Google Maps API');
+            };
+
+            document.head.appendChild(script);
+        }
+
+        // Make initMap globally available
+        window.initMap = initMap;
+
+        // Start loading when page is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGoogleMaps();
+        });
+    </script>
+</body>
+</html> 

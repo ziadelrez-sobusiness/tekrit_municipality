@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تم إضافة البحث الذكي!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-8xl mb-4">🧠</div>
+            <h1 class="text-5xl font-black text-green-600 mb-3">
+                تم إضافة البحث الذكي!
+            </h1>
+            <p class="text-xl text-gray-600">الآن يبحث تلقائياً بدون مسافات وأصفار</p>
+        </div>
+
+        <!-- ما تم إضافته -->
+        <div class="bg-green-50 border-2 border-green-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-green-900 mb-6 flex items-center gap-3">
+                <span class="text-5xl">✨</span>
+                <span>ما تم إضافته</span>
+            </h2>
+            
+            <div class="space-y-6">
+                <div class="bg-white rounded-xl p-6">
+                    <h3 class="text-2xl font-bold text-green-900 mb-4">1️⃣ البحث الذكي التلقائي</h3>
+                    <p class="text-green-800 mb-4">الآن الدالة <code class="bg-green-200 px-2 py-1 rounded">getCitizenRequests()</code> تعمل بطريقتين:</p>
+                    
+                    <div class="space-y-3">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <p class="font-bold text-blue-900 mb-2">المحاولة الأولى: البحث المباشر</p>
+                            <code class="text-blue-800 text-sm">WHERE citizen_phone = '03670065'</code>
+                        </div>
+                        
+                        <div class="text-center text-2xl">⬇️</div>
+                        
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <p class="font-bold text-purple-900 mb-2">إذا لم يجد نتائج → المحاولة الثانية: البحث الذكي</p>
+                            <code class="text-purple-800 text-sm">WHERE REPLACE(LTRIM(citizen_phone, '0'), ' ', '') = '3670065'</code>
+                            <p class="text-purple-700 text-xs mt-2">يزيل المسافات والأصفار من البداية</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6">
+                    <h3 class="text-2xl font-bold text-blue-900 mb-4">2️⃣ تسجيل مفصّل (Logging)</h3>
+                    <p class="text-blue-800 mb-3">تم إضافة تسجيل تفصيلي لكل خطوة:</p>
+                    <ul class="text-blue-700 space-y-1 text-sm">
+                        <li>✅ رقم الهاتف المدخل</li>
+                        <li>✅ عدد النتائج من البحث المباشر</li>
+                        <li>✅ الرقم المنظف (بدون مسافات/أصفار)</li>
+                        <li>✅ عدد النتائج من البحث الذكي</li>
+                        <li>✅ البيانات الكاملة للطلبات</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- كيف يعمل -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🔄 كيف يعمل البحث الذكي؟</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-blue-50 border-r-4 border-blue-500 rounded-lg p-6">
+                    <p class="font-bold text-blue-900 mb-3">مثال 1: الرقم في الحساب مع صفر</p>
+                    <div class="space-y-2 text-blue-800 text-sm">
+                        <p>• في الحساب: <code class="bg-blue-200 px-2 py-1 rounded">03670065</code></p>
+                        <p>• في الطلبات: <code class="bg-blue-200 px-2 py-1 rounded">3670065</code> (بدون صفر)</p>
+                        <p class="text-green-700 font-bold mt-2">✅ البحث الذكي سيجدها!</p>
+                    </div>
+                </div>
+                
+                <div class="bg-purple-50 border-r-4 border-purple-500 rounded-lg p-6">
+                    <p class="font-bold text-purple-900 mb-3">مثال 2: الرقم في الطلبات بمسافات</p>
+                    <div class="space-y-2 text-purple-800 text-sm">
+                        <p>• في الحساب: <code class="bg-purple-200 px-2 py-1 rounded">03670065</code></p>
+                        <p>• في الطلبات: <code class="bg-purple-200 px-2 py-1 rounded">036 700 65</code> (بمسافات)</p>
+                        <p class="text-green-700 font-bold mt-2">✅ البحث الذكي سيجدها!</p>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 border-r-4 border-green-500 rounded-lg p-6">
+                    <p class="font-bold text-green-900 mb-3">مثال 3: الرقم مختلف بالأصفار والمسافات</p>
+                    <div class="space-y-2 text-green-800 text-sm">
+                        <p>• في الحساب: <code class="bg-green-200 px-2 py-1 rounded">03670065</code></p>
+                        <p>• في الطلبات: <code class="bg-green-200 px-2 py-1 rounded">00 3 67 00 65</code></p>
+                        <p class="text-green-700 font-bold mt-2">✅ البحث الذكي سيجدها!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوات التالية -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-4xl font-black mb-6 text-center">🎯 الخطوات التالية</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                    <div class="text-5xl mb-3">1️⃣</div>
+                    <h3 class="text-xl font-bold mb-3">افتح الحساب الشخصي</h3>
+                    <a href="public/citizen-dashboard.php?code=TKT-121683E2" 
+                       class="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
+                        👤 افتح الآن
+                    </a>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                    <div class="text-5xl mb-3">2️⃣</div>
+                    <h3 class="text-xl font-bold mb-3">تحقق من النتائج</h3>
+                    <p class="text-sm opacity-90">يجب أن تظهر الطلبات الآن!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ملاحظة مهمة -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8">
+            <h2 class="text-2xl font-bold text-yellow-900 mb-4 flex items-center gap-3">
+                <span class="text-4xl">💡</span>
+                <span>ملاحظة مهمة</span>
+            </h2>
+            
+            <div class="space-y-3 text-yellow-800">
+                <p class="text-lg">إذا لم تظهر الطلبات بعد:</p>
+                <ol class="space-y-2 mr-6">
+                    <li>1. افتح ملف <code class="bg-yellow-200 px-2 py-1 rounded">error_log</code> في مجلد XAMPP</li>
+                    <li>2. ابحث عن: <code class="bg-yellow-200 px-2 py-1 rounded">getCitizenRequests DEBUG</code></li>
+                    <li>3. أرسل لي السطور التي تظهر</li>
+                </ol>
+                <p class="text-sm mt-4">الموقع: <code class="bg-yellow-200 px-2 py-1 rounded">C:\xampp\apache\logs\error.log</code></p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-lg">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-sm mt-1">نظام إدارة البلدية الإلكتروني</p>
+        </div>
+    </div>
+</body>
+</html>
+

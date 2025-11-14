@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حل مشكلة الجدول المفقود</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-7xl mb-4">🔧</div>
+            <h1 class="text-5xl font-black text-blue-600 mb-3">
+                حل مشكلة الجدول المفقود
+            </h1>
+            <p class="text-2xl text-gray-600">telegram_log غير موجود</p>
+        </div>
+
+        <!-- المشكلة -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-yellow-800 mb-4 flex items-center gap-3">
+                <span class="text-5xl">⚠️</span>
+                <span>المشكلة</span>
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="bg-white rounded-lg p-6">
+                    <p class="text-yellow-800 font-bold mb-3">السبب:</p>
+                    <p class="text-yellow-700 mb-3">
+                        جدول <code class="bg-yellow-200 px-2 py-1 rounded">whatsapp_log</code> غير موجود أصلاً في قاعدة البيانات!
+                    </p>
+                    <p class="text-yellow-700">
+                        لذلك، لا يمكن إعادة تسميته إلى <code class="bg-yellow-200 px-2 py-1 rounded">telegram_log</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- الحل -->
+        <div class="bg-green-50 border-2 border-green-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-green-800 mb-6 flex items-center gap-3">
+                <span class="text-5xl">✅</span>
+                <span>الحل</span>
+            </h2>
+            
+            <div class="space-y-6">
+                <!-- الخيار 1 -->
+                <div class="bg-white rounded-xl p-6 border-r-4 border-green-500">
+                    <h3 class="text-2xl font-bold text-green-900 mb-4">
+                        🎯 الحل الموصى به: إنشاء من الصفر
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <p class="text-green-700">
+                            تم إنشاء ملف SQL جديد يُنشئ نظام Telegram كاملاً من الصفر:
+                        </p>
+                        
+                        <div class="bg-green-100 rounded-lg p-4">
+                            <p class="font-bold text-green-900 mb-2">📄 الملف الجديد:</p>
+                            <code class="text-green-800">database/create_telegram_system.sql</code>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <p class="font-bold text-blue-900 mb-3">✨ ما يفعله:</p>
+                            <ul class="text-blue-800 space-y-2 text-sm">
+                                <li>✅ إنشاء جدول <code class="bg-blue-200 px-2 py-1 rounded">telegram_log</code> من الصفر</li>
+                                <li>✅ تحديث جدول <code class="bg-blue-200 px-2 py-1 rounded">citizens_accounts</code></li>
+                                <li>✅ إضافة أعمدة Telegram</li>
+                                <li>✅ إضافة <code class="bg-blue-200 px-2 py-1 rounded">permanent_access_code</code></li>
+                                <li>✅ إنشاء Views جديدة</li>
+                                <li>✅ إنشاء Stored Procedures</li>
+                                <li>✅ إنشاء Triggers</li>
+                                <li>✅ إضافة إعدادات Telegram</li>
+                                <li>✅ توليد رموز دخول للحسابات الموجودة</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- كيف يعمل -->
+                <div class="bg-white rounded-xl p-6 border-r-4 border-blue-500">
+                    <h3 class="text-xl font-bold text-blue-900 mb-4">
+                        🔄 كيف يعمل السكريبت المحدّث؟
+                    </h3>
+                    
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <pre class="text-sm text-blue-900 overflow-x-auto"><code>// السكريبت يتحقق تلقائياً:
+
+1. هل يوجد create_telegram_system.sql؟
+   ├─ نعم → يستخدمه (إنشاء من الصفر) ✅
+   └─ لا → يستخدم migrate_whatsapp_to_telegram.sql
+
+2. ينفذ الأوامر بالترتيب
+3. يتحقق من النتائج
+4. يعرض التقرير</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوات -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+                🚀 الخطوات
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex items-start gap-4 bg-blue-50 rounded-lg p-6">
+                    <div class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                        1
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-blue-900 mb-2">نفّذ السكريبت</h3>
+                        <p class="text-blue-700 mb-3">السكريبت الآن يستخدم الملف الجديد تلقائياً</p>
+                        <a href="migrate_to_telegram.php" 
+                           class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                            🚀 تنفيذ الآن
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4 bg-green-50 rounded-lg p-6">
+                    <div class="bg-green-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                        2
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-green-900 mb-2">تحقق من النتائج</h3>
+                        <p class="text-green-700">ستظهر رسالة نجاح عند اكتمال العملية</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-4 bg-purple-50 rounded-lg p-6">
+                    <div class="bg-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                        3
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-purple-900 mb-2">كوّن البوت</h3>
+                        <p class="text-purple-700 mb-3">انتقل لصفحة الإعدادات</p>
+                        <a href="modules/telegram_settings.php" 
+                           class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition">
+                            ⚙️ الإعدادات
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ما الجديد -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-4xl font-black mb-6 text-center">✨ ما الجديد في السكريبت</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="text-3xl mb-2">🆕</div>
+                    <h3 class="font-bold text-xl mb-2">إنشاء من الصفر</h3>
+                    <p class="text-sm">لا يحتاج جداول موجودة مسبقاً</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="text-3xl mb-2">🔐</div>
+                    <h3 class="font-bold text-xl mb-2">رموز دخول تلقائية</h3>
+                    <p class="text-sm">يولّد رموز للحسابات الموجودة</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="text-3xl mb-2">🛡️</div>
+                    <h3 class="font-bold text-xl mb-2">معالجة آمنة</h3>
+                    <p class="text-sm">IF NOT EXISTS لتجنب الأخطاء</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="text-3xl mb-2">⚡</div>
+                    <h3 class="font-bold text-xl mb-2">ذكي</h3>
+                    <p class="text-sm">يختار الملف المناسب تلقائياً</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات إضافية -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">💡 معلومات إضافية</h2>
+            
+            <div class="space-y-4 text-gray-700">
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <p class="font-bold text-blue-900 mb-2">📋 الجداول التي سيتم إنشاؤها:</p>
+                    <ul class="text-blue-800 text-sm space-y-1 mr-6">
+                        <li>• <code class="bg-blue-200 px-2 py-1 rounded">telegram_log</code> - سجل رسائل Telegram</li>
+                        <li>• تحديث <code class="bg-blue-200 px-2 py-1 rounded">citizens_accounts</code> - إضافة أعمدة جديدة</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-4">
+                    <p class="font-bold text-green-900 mb-2">✅ ما يضمنه السكريبت:</p>
+                    <ul class="text-green-800 text-sm space-y-1 mr-6">
+                        <li>• لن يحذف أي بيانات موجودة</li>
+                        <li>• سيحدّث الجداول الموجودة فقط</li>
+                        <li>• سيولّد رموز دخول للحسابات القديمة</li>
+                        <li>• آمن 100% للتنفيذ</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-lg">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-sm mt-1">نظام إدارة البلدية الإلكتروني</p>
+        </div>
+    </div>
+</body>
+</html>
+

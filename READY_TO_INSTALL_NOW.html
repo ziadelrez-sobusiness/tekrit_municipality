@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ جاهز للتثبيت الآن!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-3xl w-full">
+        
+        <!-- Main Card -->
+        <div class="bg-white rounded-3xl shadow-2xl p-12 text-center">
+            <div class="text-8xl mb-6 pulse">✅</div>
+            <h1 class="text-5xl font-bold text-green-600 mb-4">جاهز للتثبيت!</h1>
+            <p class="text-2xl text-gray-600 mb-8">تم إصلاح جميع المشاكل</p>
+            
+            <!-- What Was Fixed -->
+            <div class="bg-green-50 rounded-2xl p-6 mb-8 text-right">
+                <h2 class="text-xl font-bold text-green-800 mb-4">✅ ما تم إصلاحه:</h2>
+                <div class="space-y-2 text-gray-700">
+                    <p>✅ إصلاح <code class="bg-green-100 px-2 py-1 rounded">expires_at</code> في جدول <code>magic_links</code></p>
+                    <p>✅ إصلاح <code class="bg-green-100 px-2 py-1 rounded">expires_at</code> في جدول <code>citizen_sessions</code></p>
+                    <p>✅ تغيير من <code>TIMESTAMP NOT NULL</code> إلى <code>DATETIME NOT NULL</code></p>
+                </div>
+            </div>
+            
+            <!-- Action Button -->
+            <div class="mb-8">
+                <a href="drop_citizen_tables.php" class="inline-block bg-gradient-to-r from-red-500 to-red-600 text-white px-12 py-5 rounded-full text-2xl font-bold hover:from-red-600 hover:to-red-700 transition shadow-lg mb-4">
+                    🗑️ الخطوة 1: حذف الجداول القديمة
+                </a>
+                <p class="text-sm text-gray-500">اضغط هنا أولاً لحذف الجداول الخاطئة</p>
+            </div>
+            
+            <div class="border-t-2 border-gray-200 pt-6 mb-8"></div>
+            
+            <div>
+                <a href="setup_citizen_accounts_system.php" class="inline-block bg-gradient-to-r from-green-500 to-blue-500 text-white px-12 py-5 rounded-full text-2xl font-bold hover:from-green-600 hover:to-blue-600 transition shadow-lg">
+                    🚀 الخطوة 2: التثبيت من جديد
+                </a>
+                <p class="text-sm text-gray-500 mt-2">بعد حذف الجداول، اضغط هنا للتثبيت</p>
+            </div>
+            
+            <!-- Expected Result -->
+            <div class="bg-blue-50 rounded-2xl p-6 mt-8 text-right">
+                <h2 class="text-xl font-bold text-blue-800 mb-4">🎯 النتيجة المتوقعة:</h2>
+                <div class="space-y-2 text-gray-700">
+                    <p>✅ 6 جداول - جميعها ستُنشأ بنجاح</p>
+                    <p>✅ 10 إعدادات WhatsApp</p>
+                    <p>✅ 3 Views</p>
+                    <p class="text-2xl font-bold text-green-600 mt-4">🎉 التثبيت مكتمل بنجاح!</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Info -->
+        <div class="mt-6 grid grid-cols-2 gap-4">
+            <div class="bg-white rounded-xl p-4 text-center shadow-lg">
+                <div class="text-3xl mb-2">📄</div>
+                <p class="font-bold">ملف SQL محدّث</p>
+                <p class="text-sm text-gray-600">citizen_accounts_system_fixed.sql</p>
+            </div>
+            <div class="bg-white rounded-xl p-4 text-center shadow-lg">
+                <div class="text-3xl mb-2">🔧</div>
+                <p class="font-bold">المشاكل المُصلحة</p>
+                <p class="text-sm text-gray-600">expires_at في جدولين</p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center text-gray-600 mt-6">
+            <p class="mb-2">🏛️ <strong>بلدية تكريت - عكار، شمال لبنان</strong> 🇱🇧</p>
+            <p class="text-sm">نظام إدارة البلدية الإلكتروني</p>
+        </div>
+        
+    </div>
+    
+    <script>
+        // Auto redirect after 3 seconds if user doesn't click
+        setTimeout(function() {
+            if (confirm('هل تريد البدء بحذف الجداول القديمة الآن؟')) {
+                window.location.href = 'drop_citizen_tables.php';
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
+

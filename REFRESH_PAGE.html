@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعادة تحميل الصفحة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-8xl mb-4">🔄</div>
+            <h1 class="text-5xl font-black text-blue-600 mb-3">
+                إعادة تحميل الصفحة
+            </h1>
+            <p class="text-xl text-gray-600">لتحديث البيانات بعد الإصلاح</p>
+        </div>
+
+        <!-- المشكلة -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-yellow-900 mb-4 flex items-center gap-3">
+                <span class="text-5xl">⚠️</span>
+                <span>المشكلة</span>
+            </h2>
+            
+            <div class="bg-white rounded-lg p-6">
+                <p class="text-yellow-800 text-lg mb-3">الصفحة تستخدم بيانات قديمة من الـ Session!</p>
+                <p class="text-yellow-700">حتى بعد تحديث رقم الهاتف في قاعدة البيانات، الصفحة تعرض البيانات القديمة المحفوظة في الجلسة</p>
+            </div>
+        </div>
+
+        <!-- الحل -->
+        <div class="bg-green-50 border-2 border-green-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-green-900 mb-6 flex items-center gap-3">
+                <span class="text-5xl">✅</span>
+                <span>الحل</span>
+            </h2>
+            
+            <div class="space-y-6">
+                <div class="bg-white rounded-xl p-6">
+                    <h3 class="text-2xl font-bold text-green-900 mb-4">الطريقة 1: زر إعادة التحميل</h3>
+                    <p class="text-green-800 mb-4">تم إضافة زر "🔄 إعادة تحميل" في المربع الأصفر (معلومات التصحيح)</p>
+                    <div class="bg-green-100 rounded-lg p-4">
+                        <p class="text-green-900 font-bold mb-2">الخطوات:</p>
+                        <ol class="text-green-800 space-y-1">
+                            <li>1. افتح صفحة الحساب الشخصي</li>
+                            <li>2. انظر للمربع الأصفر في الأعلى</li>
+                            <li>3. اضغط على زر "🔄 إعادة تحميل"</li>
+                            <li>4. ستظهر الطلبات! ✅</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6">
+                    <h3 class="text-2xl font-bold text-blue-900 mb-4">الطريقة 2: افتح الرابط مباشرة</h3>
+                    <p class="text-blue-800 mb-4">افتح الرابط في نافذة جديدة أو تصفح خاص:</p>
+                    <a href="public/citizen-dashboard.php?code=TKT-121683E2" 
+                       class="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 transition text-lg">
+                        👤 فتح الحساب الشخصي
+                    </a>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6">
+                    <h3 class="text-2xl font-bold text-purple-900 mb-4">الطريقة 3: مسح الكاش</h3>
+                    <p class="text-purple-800 mb-3">اضغط على المتصفح:</p>
+                    <div class="bg-purple-100 rounded-lg p-4">
+                        <p class="text-purple-900 font-bold mb-2">Windows:</p>
+                        <code class="text-purple-800">Ctrl + Shift + R</code>
+                        <p class="text-purple-900 font-bold mt-3 mb-2">Mac:</p>
+                        <code class="text-purple-800">Cmd + Shift + R</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ما تم تحديثه -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-3xl font-black mb-6 text-center">✨ ما تم تحديثه في الكود</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                    <div class="text-4xl mb-3">🗑️</div>
+                    <h3 class="text-xl font-bold mb-2">مسح Session القديمة</h3>
+                    <p class="text-sm opacity-90">عند فتح الصفحة برمز الدخول، يتم مسح الجلسة القديمة أولاً</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                    <div class="text-4xl mb-3">🔄</div>
+                    <h3 class="text-xl font-bold mb-2">زر إعادة التحميل</h3>
+                    <p class="text-sm opacity-90">زر سريع لإعادة تحميل البيانات من قاعدة البيانات</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- التعليمات النهائية -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🎯 التعليمات النهائية</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-blue-50 border-r-4 border-blue-500 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-blue-900 mb-3">الخطوة 1️⃣</h3>
+                    <p class="text-blue-800 mb-3">افتح صفحة الحساب الشخصي:</p>
+                    <a href="public/citizen-dashboard.php?code=TKT-121683E2" 
+                       class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                        👤 افتح الآن
+                    </a>
+                </div>
+                
+                <div class="bg-green-50 border-r-4 border-green-500 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-green-900 mb-3">الخطوة 2️⃣</h3>
+                    <p class="text-green-800">انظر للمربع الأصفر واضغط "🔄 إعادة تحميل"</p>
+                </div>
+                
+                <div class="bg-purple-50 border-r-4 border-purple-500 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-purple-900 mb-3">الخطوة 3️⃣</h3>
+                    <p class="text-purple-800">يجب أن ترى:</p>
+                    <div class="bg-white rounded-lg p-3 mt-2">
+                        <p class="text-green-700">✅ عدد الطلبات: أكبر من 0</p>
+                        <p class="text-green-700">✅ الطلبات تظهر في القائمة</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-lg">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-sm mt-1">نظام إدارة البلدية الإلكتروني</p>
+        </div>
+    </div>
+</body>
+</html>
+

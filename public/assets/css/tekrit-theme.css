@@ -1,0 +1,274 @@
+/* نظام ألوان بلدية تكريت - مع هيدر أبيض وألوان أزرق */
+:root {
+    /* الألوان الأساسية الجديدة */
+    --primary-blue: #333333;              /* الأزرق الأساسي */
+    --primary-blue-light: #3B82F6;       /* الأزرق الفاتح */
+    --primary-blue-dark: #1D4ED8;        /* الأزرق الداكن */
+    
+    --primary-gray: #374151;             /* الرمادي الداكن */
+    --primary-gray-light: #6B7280;       /* الرمادي المتوسط */
+    --primary-gray-dark: #1F2937;        /* الرمادي الداكن جداً */
+    
+    /* ألوان مساعدة */
+    --wheat-gold: #D4A574;               /* لون القمح الذهبي */
+    --cream: #F8FAFC;                    /* كريمي فاتح */
+    --blue-50: #EFF6FF;                  /* أبيض أزرق */
+    --blue-100: #DBEAFE;                 /* أزرق فاتح جداً */
+    
+    /* ألوان الحالة */
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --info: var(--primary-blue);
+}
+
+/* خط القاهرة */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+
+body {
+    font-family: 'Cairo', sans-serif;
+    color: var(--primary-gray);
+}
+
+/* تصميم الهيدر - خلفية بيضاء */
+.tekrit-header {
+    background: white;
+    border-bottom: 2px solid var(--blue-100);
+    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
+}
+
+.tekrit-logo {
+    height: 80px; /* أو 100px حسب ما تراه مناسباً */
+    width: auto;
+    max-height: 100px;
+    border-radius: 8px;
+    background-color: transparent;
+	filter: none !important;
+    border: none !important;       /* إزالة أي حدود */
+    outline: none !important;     /* إزالة أي outline (مثل عند التركيز) */
+    box-shadow: none !important;  /* التأكد من عدم وجود ظل */
+}
+
+/* الأزرار الأساسية - أزرق بدلاً من برتقالي */
+.btn-primary-orange {
+    background: var(--primary-blue);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.btn-primary-orange:hover {
+    background: var(--primary-blue-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    color: white;
+}
+
+/* تحديث ألوان Tailwind إلى الأزرق */
+.bg-indigo-600 { background-color: var(--primary-blue) !important; }
+.bg-indigo-700 { background-color: var(--primary-blue-dark) !important; }
+.bg-indigo-800 { background-color: var(--primary-gray-dark) !important; }
+.bg-indigo-900 { background-color: var(--primary-gray-dark) !important; }
+.bg-indigo-500 { background-color: var(--primary-blue-light) !important; }
+
+.text-indigo-600 { color: var(--primary-blue) !important; }
+.text-indigo-700 { color: var(--primary-blue-dark) !important; }
+.text-indigo-800 { color: var(--primary-gray-dark) !important; }
+
+.border-indigo-500 { border-color: var(--primary-blue) !important; }
+.hover\:bg-indigo-700:hover { background-color: var(--primary-blue-dark) !important; }
+.hover\:text-indigo-600:hover { color: var(--primary-blue) !important; }
+.hover\:text-indigo-800:hover { color: var(--primary-blue-dark) !important; }
+
+/* تدرجات الخلفية - بدون تدرجات، لون واحد */
+.hero-gradient {
+    background: var(--primary-blue);
+}
+
+.stat-card {
+    background: var(--primary-blue);
+}
+
+/* البطاقات */
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -5px rgba(37, 99, 235, 0.15);
+}
+
+/* الجداول */
+.table-tekrit th {
+    background: var(--primary-blue);
+    color: white;
+}
+
+/* الشريط الجانبي */
+.sidebar {
+    background: linear-gradient(180deg, var(--primary-gray-dark) 0%, var(--primary-gray) 100%);
+}
+
+.sidebar .nav-item:hover,
+.sidebar .nav-item.active {
+    background: rgba(37, 99, 235, 0.2);
+    border-right: 3px solid var(--primary-blue);
+}
+
+/* النماذج */
+.focus\:ring-indigo-500:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+.focus\:border-indigo-500:focus {
+    border-color: var(--primary-blue) !important;
+}
+
+/* التنبيهات */
+.alert-info {
+    background: var(--blue-50);
+    border-left: 4px solid var(--primary-blue);
+    color: var(--primary-blue-dark);
+}
+
+/* تحسينات خاصة */
+.floating {
+    animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ألوان النصوص في الهيدر الأبيض */
+.tekrit-header .nav-link {
+    color: var(--primary-gray) !important;
+}
+
+.tekrit-header .nav-link:hover {
+    color: var(--primary-blue) !important;
+}
+
+.tekrit-header h1 {
+    color: var(--primary-gray-dark) !important;
+}
+
+.tekrit-header p {
+    color: var(--primary-gray-light) !important;
+}
+
+/* تحسينات للقائمة المتجاوبة */
+@media (max-width: 1023px) { /* شاشات متوسطة (تابلت) */
+    .tekrit-logo {
+        height: 60px; /* حجم أصغر قليلاً من الديسكتوب */
+    }
+    .tekrit-header h1 { /* تعديل حجم العنوان ليتناسق مع اللوجو */
+        font-size: 1.5rem; /* 24px */
+    }
+    .tekrit-header p {
+        font-size: 0.875rem; /* 14px */
+    }
+}
+
+@media (max-width: 767px) { /* شاشات صغيرة (موبايل) */
+    .tekrit-logo {
+        height: 50px; /* حجم أصغر للموبايل */
+    }
+    .tekrit-header h1 {
+        font-size: 1.25rem; /* 20px */
+    }
+}
+
+/* تأثيرات للأزرار المتجاوبة */
+#mobile-menu-btn {
+    transition: all 0.3s ease;
+}
+
+#mobile-menu-btn:hover {
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: 6px;
+}
+
+/* تحسينات للقائمة المنسدلة في الموبايل */
+#mobile-menu {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* تدوير السهم للقائمة الفرعية */
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* تحسين القائمة الفرعية للبلدية في الموبايل */
+#mobile-municipality-menu {
+    animation: slideDown 0.2s ease-out;
+}
+
+/* تحسينات للقسم البطولي مع الصورة */
+.hero-section {
+    position: relative;
+    min-height: 400px;
+}
+
+/* تحسينات للأزرار في القسم البطولي */
+.hero-button {
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.hero-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* تحسينات للأزرار السريعة في الأسفل */
+.quick-access-btn {
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.quick-access-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* تحسينات متجاوبة للقسم البطولي */
+@media (max-width: 640px) {
+    .hero-section {
+        min-height: 350px;
+    }
+    
+    .hero-button {
+        padding: 12px 24px !important;
+        font-size: 16px !important;
+    }
+    
+    .quick-access-btn {
+        padding: 8px 16px !important;
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section {
+        min-height: 300px;
+    }
+    
+    .hero-button {
+        padding: 10px 20px !important;
+        font-size: 14px !important;
+    }
+}

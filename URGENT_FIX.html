@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إصلاح عاجل - جدول المواطنين</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: #dc3545;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        .error-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .btn {
+            display: inline-block;
+            padding: 20px 40px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(40,167,69,0.4);
+            animation: pulse 2s infinite;
+        }
+        .btn:hover {
+            background: #218838;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(40,167,69,0.6);
+        }
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        .steps {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: right;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-right: 5px solid #007bff;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">⚠️</div>
+        <h1>يجب إصلاح قاعدة البيانات أولاً!</h1>
+        
+        <div class="message">
+            <p><strong>المشكلة:</strong> عمود <code>income_currency_id</code> غير موجود في جدول المواطنين</p>
+            <p><strong>الحل:</strong> اضغط على الزر أدناه لإضافة العمود تلقائياً</p>
+        </div>
+        
+        <a href="fix_citizens_add_currency.php" class="btn">
+            🔧 إصلاح الآن
+        </a>
+        
+        <div class="steps">
+            <h3 style="color: #007bff; margin-top: 0;">📋 الخطوات:</h3>
+            <div class="step">✅ الخطوة 1: اضغط على زر "إصلاح الآن"</div>
+            <div class="step">✅ الخطوة 2: انتظر حتى يتم الإصلاح (5 ثواني)</div>
+            <div class="step">✅ الخطوة 3: اضغط على "فتح صفحة المواطنين"</div>
+            <div class="step">✅ الخطوة 4: جرّب التعديل مرة أخرى</div>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-radius: 10px;">
+            <p style="margin: 0; color: #856404;">
+                💡 <strong>ملاحظة:</strong> هذا الإصلاح يضيف عمود العملة لجدول المواطنين ويحدث البيانات الموجودة تلقائياً
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // إعادة التوجيه التلقائي بعد 3 ثواني
+        setTimeout(function() {
+            if (confirm('هل تريد الانتقال لصفحة الإصلاح الآن؟')) {
+                window.location.href = 'fix_citizens_add_currency.php';
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
+

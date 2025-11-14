@@ -1,0 +1,67 @@
+# ===========================================
+# ملف .htaccess لمجلد المستندات
+# ===========================================
+
+# منع تنفيذ ملفات PHP
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phps|pht|phar)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# السماح بملفات المستندات والصور فقط
+<FilesMatch "\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|jpg|jpeg|png|gif|webp)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# منع الوصول لأي ملفات أخرى
+<FilesMatch "^(?!.*\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|jpg|jpeg|png|gif|webp)$).*$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# تعيين أنواع MIME
+<IfModule mod_mime.c>
+    # المستندات
+    AddType application/pdf .pdf
+    AddType application/msword .doc
+    AddType application/vnd.openxmlformats-officedocument.wordprocessingml.document .docx
+    AddType application/vnd.ms-excel .xls
+    AddType application/vnd.openxmlformats-officedocument.spreadsheetml.sheet .xlsx
+    AddType application/vnd.ms-powerpoint .ppt
+    AddType application/vnd.openxmlformats-officedocument.presentationml.presentation .pptx
+    AddType text/plain .txt
+    
+    # الصور
+    AddType image/jpeg .jpg .jpeg
+    AddType image/png .png
+    AddType image/gif .gif
+    AddType image/webp .webp
+</IfModule>
+
+# رؤوس الأمان
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+    
+    # رؤوس خاصة بالمستندات
+    <FilesMatch "\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$">
+        Header set Cache-Control "public, max-age=604800"
+        Header set Content-Disposition "inline"
+    </FilesMatch>
+    
+    # رؤوس خاصة بالصور
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
+
+# منع عرض قائمة الملفات
+Options -Indexes
+
+# إعدادات خاصة بـ Apache 2.4+
+<IfModule mod_authz_core.c>
+    <FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phps|pht|phar)$">
+        Require all denied
+    </FilesMatch>
+</IfModule> 

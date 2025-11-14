@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حل المشاكل الثلاث</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-8xl mb-4">🔧</div>
+            <h1 class="text-5xl font-black text-blue-600 mb-3">
+                حل المشاكل الثلاث
+            </h1>
+            <p class="text-xl text-gray-600">دليل شامل لحل جميع المشاكل</p>
+        </div>
+
+        <!-- المشكلة 1 -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
+                <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                    <span class="text-5xl">1️⃣</span>
+                    <span>رمز الدخول لا يظهر</span>
+                </h2>
+            </div>
+            <div class="p-8">
+                <div class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-6">
+                    <p class="text-red-800 font-bold mb-2">❌ المشكلة:</p>
+                    <p class="text-red-700">عند تقديم طلب، يظهر فقط رقم التتبع ولا يظهر رمز الدخول</p>
+                </div>
+                
+                <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 mb-6">
+                    <p class="text-yellow-900 font-bold mb-3">🔍 السبب المحتمل:</p>
+                    <p class="text-yellow-800 mb-3">جدول <code class="bg-yellow-200 px-2 py-1 rounded">citizens_accounts</code> لا يحتوي على عمود <code class="bg-yellow-200 px-2 py-1 rounded">permanent_access_code</code></p>
+                    <p class="text-yellow-700 text-sm">أو لم يتم تشغيل سكريبت الترحيل إلى Telegram</p>
+                </div>
+                
+                <div class="bg-green-50 border-2 border-green-400 rounded-lg p-6">
+                    <p class="text-green-800 font-bold mb-4">✅ الحل:</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-lg p-4 border-r-4 border-green-500">
+                            <p class="font-bold text-green-900 mb-2">الخطوة 1: تحقق من الجدول</p>
+                            <a href="check_citizens_table.php" 
+                               class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition">
+                                🔍 فحص الجدول
+                            </a>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4 border-r-4 border-green-500">
+                            <p class="font-bold text-green-900 mb-2">الخطوة 2: شغّل سكريبت الترحيل</p>
+                            <p class="text-green-700 text-sm mb-3">إذا كان العمود مفقود، شغّل هذا السكريبت:</p>
+                            <a href="migrate_to_telegram.php" 
+                               class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                                🚀 تشغيل سكريبت الترحيل
+                            </a>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4 border-r-4 border-green-500">
+                            <p class="font-bold text-green-900 mb-2">الخطوة 3: جرّب تقديم طلب جديد</p>
+                            <a href="public/citizen-requests.php" 
+                               class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition">
+                                📝 تقديم طلب
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- المشكلة 2 -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
+                <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                    <span class="text-5xl">2️⃣</span>
+                    <span>صفحة دخول المواطن</span>
+                </h2>
+            </div>
+            <div class="p-8">
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-6">
+                    <p class="text-blue-800 font-bold mb-2">📋 المطلوب:</p>
+                    <p class="text-blue-700">صفحة معروفة الرابط للمواطن ليدخل ويتابع طلباته</p>
+                </div>
+                
+                <div class="bg-green-50 border-2 border-green-400 rounded-lg p-6">
+                    <p class="text-green-800 font-bold mb-4">✅ الحل:</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-lg p-4">
+                            <p class="font-bold text-green-900 mb-3">تم إنشاء صفحة دخول جديدة:</p>
+                            <div class="bg-green-100 rounded-lg p-4 mb-3">
+                                <code class="text-green-900 font-bold text-lg">public/login.php</code>
+                            </div>
+                            <a href="public/login.php" 
+                               class="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 transition text-lg">
+                                🔐 افتح صفحة الدخول
+                            </a>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4">
+                            <p class="font-bold text-green-900 mb-2">الميزات:</p>
+                            <ul class="text-green-700 space-y-2 text-sm">
+                                <li>✅ رابط ثابت وسهل الحفظ</li>
+                                <li>✅ واجهة بسيطة وجميلة</li>
+                                <li>✅ إدخال رمز الدخول فقط</li>
+                                <li>✅ روابط لتقديم طلب أو تتبع طلب</li>
+                                <li>✅ تعليمات واضحة</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-blue-100 rounded-lg p-4">
+                            <p class="font-bold text-blue-900 mb-2">📱 الرابط المباشر:</p>
+                            <div class="bg-white rounded-lg p-3">
+                                <code class="text-blue-800 font-bold">http://localhost:8080/tekrit_municipality/public/login.php</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- المشكلة 3 -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-6">
+                <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                    <span class="text-5xl">3️⃣</span>
+                    <span>رسائل Telegram لا تظهر</span>
+                </h2>
+            </div>
+            <div class="p-8">
+                <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 mb-6">
+                    <p class="text-purple-800 font-bold mb-2">❌ المشكلة:</p>
+                    <p class="text-purple-700">عند إرسال طلب، لا يظهر في صفحة رسائل Telegram</p>
+                </div>
+                
+                <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 mb-6">
+                    <p class="text-yellow-900 font-bold mb-3">🔍 الأسباب المحتملة:</p>
+                    <ul class="text-yellow-800 space-y-2 text-sm">
+                        <li>1️⃣ جدول <code class="bg-yellow-200 px-2 py-1 rounded">telegram_log</code> غير موجود</li>
+                        <li>2️⃣ الكود في <code class="bg-yellow-200 px-2 py-1 rounded">citizen-requests.php</code> لا يسجل الرسائل</li>
+                        <li>3️⃣ خطأ في <code class="bg-yellow-200 px-2 py-1 rounded">TelegramService</code></li>
+                    </ul>
+                </div>
+                
+                <div class="bg-green-50 border-2 border-green-400 rounded-lg p-6">
+                    <p class="text-green-800 font-bold mb-4">✅ الحل:</p>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-lg p-4 border-r-4 border-green-500">
+                            <p class="font-bold text-green-900 mb-2">الخطوة 1: تحقق من الجدول</p>
+                            <a href="check_citizens_table.php" 
+                               class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition">
+                                🔍 فحص الجداول
+                            </a>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4 border-r-4 border-green-500">
+                            <p class="font-bold text-green-900 mb-2">الخطوة 2: شغّل سكريبت الترحيل</p>
+                            <p class="text-green-700 text-sm mb-3">هذا السكريبت سينشئ جدول <code class="bg-green-200 px-2 py-1 rounded">telegram_log</code>:</p>
+                            <a href="migrate_to_telegram.php" 
+                               class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                                🚀 تشغيل سكريبت الترحيل
+                            </a>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4 border-r-4 border-green-500">
+                            <p class="font-bold text-green-900 mb-2">الخطوة 3: قدّم طلب تجريبي</p>
+                            <a href="public/citizen-requests.php" 
+                               class="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition">
+                                📝 تقديم طلب
+                            </a>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4 border-r-4 border-green-500">
+                            <p class="font-bold text-green-900 mb-2">الخطوة 4: تحقق من الرسائل</p>
+                            <a href="modules/telegram_messages.php" 
+                               class="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition">
+                                📱 رسائل Telegram
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوات الموصى بها -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white">
+            <h2 class="text-4xl font-black mb-6 text-center">🎯 الخطوات الموصى بها</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white bg-opacity-20 rounded-xl p-6 text-center">
+                    <div class="text-5xl mb-3">1️⃣</div>
+                    <p class="font-bold mb-2">فحص الجداول</p>
+                    <a href="check_citizens_table.php" 
+                       class="inline-block mt-2 bg-white text-green-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition text-sm">
+                        فحص
+                    </a>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-xl p-6 text-center">
+                    <div class="text-5xl mb-3">2️⃣</div>
+                    <p class="font-bold mb-2">تشغيل الترحيل</p>
+                    <a href="migrate_to_telegram.php" 
+                       class="inline-block mt-2 bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition text-sm">
+                        تشغيل
+                    </a>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-xl p-6 text-center">
+                    <div class="text-5xl mb-3">3️⃣</div>
+                    <p class="font-bold mb-2">تقديم طلب</p>
+                    <a href="public/citizen-requests.php" 
+                       class="inline-block mt-2 bg-white text-purple-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition text-sm">
+                        تجربة
+                    </a>
+                </div>
+                
+                <div class="bg-white bg-opacity-20 rounded-xl p-6 text-center">
+                    <div class="text-5xl mb-3">4️⃣</div>
+                    <p class="font-bold mb-2">التحقق</p>
+                    <a href="modules/telegram_messages.php" 
+                       class="inline-block mt-2 bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold hover:bg-gray-100 transition text-sm">
+                        متابعة
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-lg">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-sm mt-1">نظام إدارة البلدية الإلكتروني</p>
+        </div>
+    </div>
+</body>
+</html>
+

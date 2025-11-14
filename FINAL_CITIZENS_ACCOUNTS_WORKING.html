@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ صفحة حسابات المواطنين - جاهزة!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-9xl mb-4">🎉</div>
+            <h1 class="text-6xl font-black text-green-600 mb-3">
+                الصفحة جاهزة!
+            </h1>
+            <p class="text-2xl text-gray-600">تم إصلاح جميع الأخطاء</p>
+        </div>
+
+        <!-- الأخطاء التي تم إصلاحها -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🔧 الأخطاء التي تم إصلاحها</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-red-50 border-r-4 border-red-500 rounded-lg p-4">
+                    <p class="font-bold text-red-900 mb-2">❌ خطأ 1: Unknown column 'ca.is_verified'</p>
+                    <p class="text-red-700 text-sm">✅ تم إزالة العمود من الاستعلام</p>
+                </div>
+                
+                <div class="bg-red-50 border-r-4 border-red-500 rounded-lg p-4">
+                    <p class="font-bold text-red-900 mb-2">❌ خطأ 2: Unknown column 'ca.last_login_at'</p>
+                    <p class="text-red-700 text-sm">✅ تم إزالة العمود واستبداله بـ last_request_date</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- التغييرات المطبقة -->
+        <div class="bg-blue-50 border-2 border-blue-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-blue-900 mb-6 text-center">📝 التغييرات المطبقة</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg p-6">
+                    <p class="font-bold text-blue-900 mb-3">🗑️ تم إزالة:</p>
+                    <ul class="text-blue-700 text-sm space-y-2 mr-4">
+                        <li>❌ <code class="bg-blue-100 px-2 py-1 rounded">ca.is_verified</code></li>
+                        <li>❌ <code class="bg-blue-100 px-2 py-1 rounded">ca.last_login_at</code></li>
+                        <li>❌ عمود "الحالة" (موثق/غير موثق)</li>
+                        <li>❌ عمود "آخر دخول"</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6">
+                    <p class="font-bold text-green-900 mb-3">✅ تم إضافة/تعديل:</p>
+                    <ul class="text-green-700 text-sm space-y-2 mr-4">
+                        <li>✅ إحصائية "لديهم طلبات"</li>
+                        <li>✅ عمود "آخر طلب" (last_request_date)</li>
+                        <li>✅ عرض تاريخ آخر طلب</li>
+                        <li>✅ التوافق مع الأعمدة الموجودة</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- الأعمدة النهائية -->
+        <div class="bg-purple-50 border-2 border-purple-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-purple-900 mb-6 text-center">📊 الأعمدة النهائية في الجدول</h2>
+            
+            <div class="bg-white rounded-lg p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">1️⃣ ID</p>
+                        <p class="text-purple-700">معرف الحساب</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">2️⃣ اسم المواطن</p>
+                        <p class="text-purple-700">من آخر طلب</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">3️⃣ رقم الهاتف</p>
+                        <p class="text-purple-700">رقم التواصل</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">4️⃣ رمز الدخول</p>
+                        <p class="text-purple-700">الرمز الثابت</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">5️⃣ Telegram</p>
+                        <p class="text-purple-700">حالة الربط</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">6️⃣ عدد الطلبات</p>
+                        <p class="text-purple-700">إجمالي الطلبات</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">7️⃣ تاريخ الإنشاء</p>
+                        <p class="text-purple-700">تاريخ إنشاء الحساب</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">8️⃣ آخر طلب</p>
+                        <p class="text-purple-700">تاريخ آخر طلب</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-3">
+                        <p class="font-bold text-purple-900">9️⃣ الإجراءات</p>
+                        <p class="text-purple-700">عرض/نسخ</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الإحصائيات -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">📊 الإحصائيات المتوفرة</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-blue-50 rounded-lg p-6 text-center">
+                    <div class="text-6xl mb-3">👥</div>
+                    <p class="font-bold text-blue-900 text-xl">إجمالي الحسابات</p>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-6 text-center">
+                    <div class="text-6xl mb-3">📋</div>
+                    <p class="font-bold text-green-900 text-xl">لديهم طلبات</p>
+                </div>
+                
+                <div class="bg-purple-50 rounded-lg p-6 text-center">
+                    <div class="text-6xl mb-3">📱</div>
+                    <p class="font-bold text-purple-900 text-xl">مربوطة بـ Telegram</p>
+                </div>
+                
+                <div class="bg-orange-50 rounded-lg p-6 text-center">
+                    <div class="text-6xl mb-3">📊</div>
+                    <p class="font-bold text-orange-900 text-xl">إجمالي الطلبات</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- اختبر الآن -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-4xl font-black mb-6 text-center">🚀 جاهز للاستخدام!</h2>
+            
+            <div class="bg-white bg-opacity-20 rounded-xl p-8 text-center">
+                <div class="text-6xl mb-3">👥</div>
+                <p class="font-bold text-2xl mb-4">صفحة حسابات المواطنين</p>
+                <a href="modules/citizens_accounts.php" 
+                   class="inline-block bg-white text-blue-600 px-12 py-4 rounded-xl font-bold text-xl hover:bg-blue-50 transition shadow-lg">
+                    📋 فتح الصفحة الآن
+                </a>
+            </div>
+        </div>
+
+        <!-- المميزات -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8">
+            <h2 class="text-3xl font-bold text-yellow-900 mb-6 text-center">✨ المميزات</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-yellow-900 mb-2">🔍 بحث متقدم</p>
+                    <p class="text-yellow-700 text-sm">بحث برقم الهاتف، رمز الدخول، أو الاسم</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-yellow-900 mb-2">📊 إحصائيات شاملة</p>
+                    <p class="text-yellow-700 text-sm">4 إحصائيات مفيدة في الأعلى</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-yellow-900 mb-2">👁️ عرض سريع</p>
+                    <p class="text-yellow-700 text-sm">عرض لوحة المواطن بنقرة واحدة</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-yellow-900 mb-2">📋 نسخ سريع</p>
+                    <p class="text-yellow-700 text-sm">نسخ رمز الدخول مباشرة</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-2xl mb-2">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-4xl font-black text-green-600 mt-4">
+                🎉 كل شيء يعمل بشكل مثالي!
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

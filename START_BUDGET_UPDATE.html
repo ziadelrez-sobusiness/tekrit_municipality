@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 تطبيق تحديثات نظام الميزانيات</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            padding: 40px;
+        }
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status {
+            background: #f0f9ff;
+            border-right: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .steps {
+            margin: 30px 0;
+        }
+        .step {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s;
+        }
+        .step:hover {
+            border-color: #667eea;
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+        .step-content {
+            display: inline-block;
+            vertical-align: middle;
+            width: calc(100% - 60px);
+        }
+        .code {
+            background: #1e293b;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            margin: 10px;
+            text-align: center;
+        }
+        .btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        .btn-success {
+            background: #10b981;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .warning {
+            background: #fef3c7;
+            border-right: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success-box {
+            background: #d1fae5;
+            border-right: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 تطبيق تحديثات نظام الميزانيات</h1>
+        
+        <div class="status">
+            <strong>📊 الحالة الحالية:</strong><br>
+            ✅ تم تحديث صفحة الميزانيات بنجاح!<br>
+            ✅ تم إضافة وظائف التعديل والحذف!<br>
+            ⏳ يتبقى: تطبيق تحديثات قاعدة البيانات
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ مهم جداً:</strong><br>
+            يجب تطبيق تحديثات قاعدة البيانات لكي تعمل جميع الميزات الجديدة!
+        </div>
+
+        <div class="steps">
+            <h2 style="color: #667eea; margin-bottom: 20px;">📝 خطوات التطبيق:</h2>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <strong>افتح phpMyAdmin</strong><br>
+                    <a href="http://localhost/phpmyadmin" target="_blank" class="btn" style="display: inline-block; margin-top: 10px;">
+                        🔗 افتح phpMyAdmin
+                    </a>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <strong>اختر قاعدة البيانات</strong><br>
+                    اضغط على <code style="background: #e2e8f0; padding: 3px 8px; border-radius: 4px;">tekrit_municipality</code> من القائمة اليمنى
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                    <strong>افتح تبويب SQL</strong><br>
+                    اضغط على تبويب "SQL" في الأعلى
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <div class="step-content">
+                    <strong>افتح ملف SQL</strong><br>
+                    افتح الملف التالي وانسخ محتواه كاملاً:<br>
+                    <div class="code">COMPLETE_BUDGET_SYSTEM_SETUP.sql</div>
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">5</span>
+                <div class="step-content">
+                    <strong>الصق في phpMyAdmin</strong><br>
+                    الصق كل المحتوى في صندوق SQL واضغط "Go"
+                </div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">6</span>
+                <div class="step-content">
+                    <strong>انتظر النتيجة</strong><br>
+                    يجب أن ترى رسائل نجاح خضراء ✅
+                </div>
+            </div>
+        </div>
+
+        <div class="success-box">
+            <h2 style="color: #10b981; margin-bottom: 15px;">🎉 بعد التطبيق الناجح</h2>
+            <p style="margin-bottom: 20px;">ستحصل على هذه الميزات الجديدة:</p>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">✏️</div>
+                    <strong>تعديل الميزانيات</strong><br>
+                    <small>تعديل بيانات أي ميزانية</small>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🗑️</div>
+                    <strong>حذف الميزانيات</strong><br>
+                    <small>حذف الميزانيات غير المطلوبة</small>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <strong>إنشاء تلقائي</strong><br>
+                    <small>ميزانيات اللجان تلقائياً</small>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💱</div>
+                    <strong>عملات متعددة</strong><br>
+                    <small>بنود بعملات مختلفة</small>
+                </div>
+            </div>
+
+            <a href="modules/budgets.php" class="btn btn-success" style="margin-top: 20px;">
+                🎯 انتقل إلى صفحة الميزانيات
+            </a>
+        </div>
+
+        <div class="warning" style="margin-top: 30px;">
+            <strong>💡 ملاحظة:</strong><br>
+            إذا واجهت أي مشكلة، يمكنك نسخ محتوى الملف <code>COMPLETE_BUDGET_SYSTEM_SETUP.sql</code> وتشغيله مرة أخرى - لن يسبب أي مشاكل!
+        </div>
+    </div>
+</body>
+</html>

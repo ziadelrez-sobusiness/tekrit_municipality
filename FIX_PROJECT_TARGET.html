@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحديث هدف المساهمات</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .problem {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .solution {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #5568d3;
+        }
+        .button.danger {
+            background: #dc3545;
+        }
+        .button.danger:hover {
+            background: #c82333;
+        }
+        .code-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .steps {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+        .steps li {
+            counter-increment: step-counter;
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+        .steps li:before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 إصلاح هدف المساهمات للمشروع</h1>
+        
+        <div class="info-box problem">
+            <h3>❌ المشكلة:</h3>
+            <p><strong>المشروع "إنشاء حديقة عامة جديدة في تكريت وسط البلدة"</strong></p>
+            <ul>
+                <li>الهدف: <strong>0 $</strong> ❌</li>
+                <li>المُجمّع: <strong>0 $</strong></li>
+                <li>الرسالة: <strong>⚠️ لم يتم تحديد هدف المساهمات</strong></li>
+            </ul>
+            <p><strong>السبب:</strong> حقل <code>target_amount</code> في قاعدة البيانات = 0</p>
+        </div>
+
+        <div class="info-box solution">
+            <h3>💡 الحل:</h3>
+            <p>تحديث حقل <code>target_amount</code> في جدول <code>projects</code></p>
+            <p><strong>الهدف المقترح:</strong> 2,300 دولار أمريكي</p>
+        </div>
+
+        <div class="info-box">
+            <h3>📋 طريقة التنفيذ:</h3>
+            
+            <ol class="steps">
+                <li>افتح <strong>phpMyAdmin</strong>
+                    <br><a href="http://localhost/phpmyadmin" target="_blank" class="button">فتح phpMyAdmin</a>
+                </li>
+                
+                <li>اختر قاعدة البيانات: <strong>tekrit_municipality</strong></li>
+                
+                <li>انقر على تبويب <strong>SQL</strong></li>
+                
+                <li>انسخ والصق هذا الكود:</li>
+            </ol>
+
+            <div class="code-box">-- إضافة الأعمدة المطلوبة
+ALTER TABLE `projects` 
+ADD COLUMN IF NOT EXISTS `target_amount` DECIMAL(15,2) DEFAULT 0.00;
+
+ALTER TABLE `projects` 
+ADD COLUMN IF NOT EXISTS `contributions_collected` DECIMAL(15,2) DEFAULT 0.00;
+
+ALTER TABLE `projects` 
+ADD COLUMN IF NOT EXISTS `allow_public_contributions` TINYINT(1) DEFAULT 0;
+
+-- تحديث المشروع
+UPDATE projects 
+SET 
+    target_amount = 2300,
+    contributions_collected = 0,
+    currency_id = (SELECT id FROM currencies WHERE currency_code = 'USD' LIMIT 1),
+    allow_public_contributions = 1
+WHERE id = 2;</div>
+
+            <button class="button" onclick="copyCode()">📋 نسخ الكود</button>
+            <br>
+            <a href="ADD_CONTRIBUTIONS_COLUMNS.sql" class="button" download>💾 تحميل الملف الكامل</a>
+        </div>
+
+        <div class="info-box success">
+            <h3>✅ النتيجة المتوقعة:</h3>
+            <p>بعد تنفيذ الكود، عند فتح صفحة المساهمات سيظهر:</p>
+            <ul>
+                <li>الهدف: <strong>2,300 $</strong> ✅</li>
+                <li>المُجمّع: <strong>0 $</strong></li>
+                <li>المتبقي: <strong>2,300 $</strong></li>
+                <li>نسبة الإنجاز: <strong>0%</strong></li>
+                <li>الحالة: <strong>📊 جاري جمع المساهمات</strong></li>
+            </ul>
+        </div>
+
+        <div class="center">
+            <h3>🔗 روابط سريعة:</h3>
+            <a href="http://localhost/phpmyadmin" target="_blank" class="button">phpMyAdmin</a>
+            <a href="http://localhost:8080/tekrit_municipality/modules/contributions.php?project_id=2" target="_blank" class="button">صفحة المساهمات</a>
+            <a href="http://localhost:8080/tekrit_municipality/check_project_data.php" target="_blank" class="button">فحص البيانات</a>
+        </div>
+
+        <div class="info-box">
+            <h3>📝 ملاحظات:</h3>
+            <ul>
+                <li>يمكنك تغيير المبلغ <code>2300</code> إلى أي مبلغ آخر حسب الحاجة</li>
+                <li>العملة الافتراضية: <strong>USD (دولار أمريكي)</strong></li>
+                <li>تم تفعيل <code>allow_public_contributions = 1</code> للسماح بالمساهمات</li>
+                <li>إذا كنت تريد استخدام عملة أخرى، غيّر <code>currency_code = 'USD'</code> إلى <code>'LBP'</code> أو <code>'EUR'</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = `-- إضافة الأعمدة المطلوبة
+ALTER TABLE \`projects\` 
+ADD COLUMN IF NOT EXISTS \`target_amount\` DECIMAL(15,2) DEFAULT 0.00;
+
+ALTER TABLE \`projects\` 
+ADD COLUMN IF NOT EXISTS \`contributions_collected\` DECIMAL(15,2) DEFAULT 0.00;
+
+ALTER TABLE \`projects\` 
+ADD COLUMN IF NOT EXISTS \`allow_public_contributions\` TINYINT(1) DEFAULT 0;
+
+-- تحديث المشروع
+UPDATE projects 
+SET 
+    target_amount = 2300,
+    contributions_collected = 0,
+    currency_id = (SELECT id FROM currencies WHERE currency_code = 'USD' LIMIT 1),
+    allow_public_contributions = 1
+WHERE id = 2;`;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ تم نسخ الكود! الآن الصقه في phpMyAdmin');
+            }).catch(err => {
+                console.error('فشل النسخ:', err);
+                prompt('انسخ هذا الكود:', code);
+            });
+        }
+    </script>
+</body>
+</html>
+

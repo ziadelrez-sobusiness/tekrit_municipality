@@ -1,0 +1,326 @@
+<?php
+header('Content-Type: text/html; charset=utf-8');
+require_once '../includes/auth.php';
+require_once '../config/database.php';
+
+$auth->requireLogin();
+if (!$auth->checkPermission('employee')) {
+    die('غير مسموح لك بالوصول لهذه الصفحة');
+}
+
+$database = new Database();
+$db = $database->getConnection();
+$db->exec("SET NAMES utf8mb4");
+
+$request_id = $_GET['id'] ?? 0;
+$success_message = '';
+$error_message = '';
+
+// معالجة التحديث
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    if ($action == 'update_request') {
+        $new_status = $_POST['request_status'];
+        $assigned_department = $_POST['assigned_to_department_id'] ?: null;
+        $assigned_user = $_POST['assigned_to_user_id'] ?: null;
+        $admin_notes = trim($_POST['admin_notes']);
+        
+        try {
+            // تحديث الطلب
+            $stmt = $db->prepare("UPDATE citizen_requests SET request_status = ?, assigned_to_department_id = ?, assigned_to_user_id = ?, admin_notes = ?, response_date = NOW() WHERE id = ?");
+            $stmt->execute([$new_status, $assigned_department, $assigned_user, $admin_notes, $request_id]);
+            
+            // إذا كان الطلب مكتملاً، تحديث تاريخ الإنجاز
+            if ($new_status == 'مكتمل') {
+                $stmt = $db->prepare("UPDATE citizen_requests SET completion_date = NOW() WHERE id = ?");
+                $stmt->execute([$request_id]);
+            }
+            
+            $success_message = "تم تحديث الطلب بنجاح";
+        } catch (Exception $e) {
+            $error_message = "خطأ في تحديث الطلب: " . $e->getMessage();
+        }
+    }
+}
+
+// جلب تفاصيل الطلب
+$stmt = $db->prepare("
+    SELECT cr.id, cr.tracking_number, cr.citizen_name, cr.citizen_phone, 
+           cr.citizen_email, cr.citizen_address, cr.national_id, cr.request_type, cr.request_title, 
+           cr.request_description, cr.priority_level, cr.request_status, cr.project_id,
+           cr.assigned_to_department_id, cr.assigned_to_user_id, cr.attachments,
+           cr.admin_notes, cr.citizen_rating, cr.citizen_feedback,
+           cr.created_at, cr.response_date, cr.completion_date,
+           d.department_name, 
+           u.full_name as assigned_to_name,
+           dp.project_name, dp.project_description, dp.project_status,
+           DATEDIFF(NOW(), cr.created_at) as days_since_created
+    FROM citizen_requests cr 
+    LEFT JOIN departments d ON cr.assigned_to_department_id = d.id 
+    LEFT JOIN users u ON cr.assigned_to_user_id = u.id 
+    LEFT JOIN development_projects dp ON cr.project_id = dp.id
+    WHERE cr.id = ?
+");
+$stmt->execute([$request_id]);
+$request = $stmt->fetch();
+
+if (!$request) {
+    die('الطلب غير موجود');
+}
+
+// جلب الأقسام والموظفين
+$departments = $db->query("SELECT id, department_name FROM departments WHERE is_active = 1 ORDER BY department_name")->fetchAll();
+$users = $db->query("SELECT id, full_name, department_id FROM users WHERE is_active = 1 ORDER BY full_name")->fetchAll();
+?>
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحديث طلب المواطن - بلدية تكريت</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-4xl mx-auto py-6 px-4">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">✏️ تحديث طلب المواطن</h1>
+                <button onclick="window.close()" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                    ✖️ إغلاق
+                </button>
+            </div>
+
+            <!-- الرسائل -->
+            <?php if ($success_message): ?>
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                    <p class="font-bold">✅ نجح! <?= $success_message ?></p>
+                </div>
+            <?php endif; ?>
+            
+            <?php if ($error_message): ?>
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                    <p class="font-bold">❌ خطأ! <?= $error_message ?></p>
+                </div>
+            <?php endif; ?>
+
+            <!-- معلومات الطلب الأساسية -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-sm font-medium text-blue-600">رقم التتبع:</span>
+                        <div class="text-lg font-bold text-blue-800"><?= htmlspecialchars($request['tracking_number']) ?></div>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-blue-600">المواطن:</span>
+                        <div class="text-lg font-bold text-blue-800"><?= htmlspecialchars($request['citizen_name']) ?></div>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-blue-600">نوع الطلب:</span>
+                        <div class="text-lg font-bold text-blue-800"><?= htmlspecialchars($request['request_type']) ?></div>
+                        <?php if ($request['request_type'] == 'المساهمة في المشروع' && $request['project_name']): ?>
+                            <div class="text-sm text-blue-600 mt-1">🏗️ المشروع: <?= htmlspecialchars($request['project_name']) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-blue-600">تاريخ الإرسال:</span>
+                        <div class="text-lg font-bold text-blue-800"><?= date('Y/m/d', strtotime($request['created_at'])) ?> (منذ <?= $request['days_since_created'] ?> يوم)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تفاصيل الطلب -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">📋 تفاصيل الطلب</h3>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-600 mb-1">عنوان الطلب</label>
+                        <div class="text-gray-900 font-medium"><?= htmlspecialchars($request['request_title']) ?></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">تفاصيل الطلب</label>
+                        <div class="text-gray-900 whitespace-pre-wrap"><?= htmlspecialchars($request['request_description'] ?? 'لا توجد تفاصيل') ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نموذج التحديث -->
+            <form method="POST" class="space-y-6">
+                <input type="hidden" name="action" value="update_request">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- حالة الطلب -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">حالة الطلب</label>
+                        <select name="request_status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="جديد" <?= $request['request_status'] == 'جديد' ? 'selected' : '' ?>>🆕 جديد</option>
+                            <option value="قيد المراجعة" <?= $request['request_status'] == 'قيد المراجعة' ? 'selected' : '' ?>>🔍 قيد المراجعة</option>
+                            <option value="قيد التنفيذ" <?= $request['request_status'] == 'قيد التنفيذ' ? 'selected' : '' ?>>⚙️ قيد التنفيذ</option>
+                            <option value="مكتمل" <?= $request['request_status'] == 'مكتمل' ? 'selected' : '' ?>>✅ مكتمل</option>
+                            <option value="مرفوض" <?= $request['request_status'] == 'مرفوض' ? 'selected' : '' ?>>❌ مرفوض</option>
+                            <option value="معلق" <?= $request['request_status'] == 'معلق' ? 'selected' : '' ?>>⏸️ معلق</option>
+                        </select>
+                    </div>
+
+                    <!-- القسم المسؤول -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">القسم المسؤول</label>
+                        <select name="assigned_to_department_id" id="department_select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="filterUsers()">
+                            <option value="">-- اختر القسم --</option>
+                            <?php foreach ($departments as $dept): ?>
+                                <option value="<?= $dept['id'] ?>" <?= $request['assigned_to_department_id'] == $dept['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($dept['department_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- الموظف المسؤول -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الموظف المسؤول</label>
+                        <select name="assigned_to_user_id" id="user_select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- اختر الموظف --</option>
+                            <?php foreach ($users as $user): ?>
+                                <option value="<?= $user['id'] ?>" data-department="<?= $user['department_id'] ?>" <?= $request['assigned_to_user_id'] == $user['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($user['full_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- الأولوية -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">مستوى الأولوية</label>
+                        <select name="priority_level" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="عادي" <?= $request['priority_level'] == 'عادي' ? 'selected' : '' ?>>🟢 عادي</option>
+                            <option value="مهم" <?= $request['priority_level'] == 'مهم' ? 'selected' : '' ?>>🟡 مهم</option>
+                            <option value="عاجل" <?= $request['priority_level'] == 'عاجل' ? 'selected' : '' ?>>🔴 عاجل</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- الملاحظات الإدارية والرد -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الملاحظات الإدارية والرد على المواطن</label>
+                    <textarea name="admin_notes" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="اكتب ملاحظاتك والرد على المواطن هنا..."><?= htmlspecialchars($request['admin_notes'] ?? '') ?></textarea>
+                    <p class="text-sm text-gray-500 mt-1">سيتم عرض هذا النص للمواطن في صفحة تتبع الطلب</p>
+                </div>
+
+                <!-- الحالة الحالية -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-800 mb-2">الحالة الحالية:</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <span class="font-medium">الحالة:</span>
+                            <span class="px-2 py-1 rounded-full text-xs <?php 
+                                switch($request['request_status']) {
+                                    case 'جديد': echo 'bg-blue-100 text-blue-800'; break;
+                                    case 'قيد المراجعة': echo 'bg-yellow-100 text-yellow-800'; break;
+                                    case 'قيد التنفيذ': echo 'bg-purple-100 text-purple-800'; break;
+                                    case 'مكتمل': echo 'bg-green-100 text-green-800'; break;
+                                    case 'مرفوض': echo 'bg-red-100 text-red-800'; break;
+                                    default: echo 'bg-gray-100 text-gray-800';
+                                }
+                            ?>"><?= $request['request_status'] ?></span>
+                        </div>
+                        <div>
+                            <span class="font-medium">القسم:</span>
+                            <span class="text-gray-600"><?= htmlspecialchars($request['department_name'] ?: 'غير محدد') ?></span>
+                        </div>
+                        <div>
+                            <span class="font-medium">الموظف:</span>
+                            <span class="text-gray-600"><?= htmlspecialchars($request['assigned_to_name'] ?: 'غير محدد') ?></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الإجراءات -->
+                <div class="flex justify-center space-x-4 space-x-reverse border-t pt-6">
+                    <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        💾 حفظ التحديثات
+                    </button>
+                    <button type="button" onclick="window.close()" class="px-8 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                        ❌ إلغاء
+                    </button>
+                    <button type="button" onclick="viewRequest(<?= $request['id'] ?>)" class="px-8 py-3 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        👁️ عرض التفاصيل
+                    </button>
+                </div>
+            </form>
+
+            <!-- نماذج الردود السريعة -->
+            <div class="mt-8 border-t pt-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">📝 نماذج الردود السريعة</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="insertQuickResponse('تم استلام طلبكم وسيتم مراجعته خلال 3 أيام عمل.')" class="p-3 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 text-right">
+                        📥 رد استلام الطلب
+                    </button>
+                    <button onclick="insertQuickResponse('طلبكم قيد المراجعة من قبل القسم المختص وسيتم التواصل معكم قريباً.')" class="p-3 bg-yellow-50 text-yellow-700 rounded-md hover:bg-yellow-100 text-right">
+                        🔍 رد المراجعة
+                    </button>
+                    <button onclick="insertQuickResponse('تم البدء في تنفيذ طلبكم وسيتم إنجازه خلال المدة المحددة.')" class="p-3 bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 text-right">
+                        ⚙️ رد التنفيذ
+                    </button>
+                    <button onclick="insertQuickResponse('تم إنجاز طلبكم بنجاح. شكراً لكم لثقتكم ببلدية تكريت.')" class="p-3 bg-green-50 text-green-700 rounded-md hover:bg-green-100 text-right">
+                        ✅ رد الإنجاز
+                    </button>
+                    <button onclick="insertQuickResponse('نعتذر، لا يمكن تنفيذ طلبكم للأسباب التالية: [يرجى تحديد السبب]')" class="p-3 bg-red-50 text-red-700 rounded-md hover:bg-red-100 text-right">
+                        ❌ رد الرفض
+                    </button>
+                    <button onclick="insertQuickResponse('طلبكم معلق حالياً بانتظار: [يرجى تحديد المطلوب]')" class="p-3 bg-gray-50 text-gray-700 rounded-md hover:bg-gray-100 text-right">
+                        ⏸️ رد التعليق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterUsers() {
+            const deptSelect = document.getElementById('department_select');
+            const userSelect = document.getElementById('user_select');
+            const selectedDept = deptSelect.value;
+            
+            // إعادة تعيين اختيار المستخدم
+            userSelect.value = '';
+            
+            // إظهار/إخفاء المستخدمين حسب القسم
+            Array.from(userSelect.options).forEach(option => {
+                if (option.value === '') {
+                    option.style.display = 'block';
+                } else {
+                    const userDept = option.getAttribute('data-department');
+                    option.style.display = (selectedDept === '' || userDept === selectedDept) ? 'block' : 'none';
+                }
+            });
+        }
+        
+        function insertQuickResponse(text) {
+            const textarea = document.querySelector('textarea[name="admin_notes"]');
+            const currentText = textarea.value;
+            textarea.value = currentText ? currentText + '\n\n' + text : text;
+            textarea.focus();
+        }
+        
+        function viewRequest(requestId) {
+            window.open('view_citizen_request.php?id=' + requestId, '_blank', 'width=800,height=600');
+        }
+        
+        // إخفاء الرسائل بعد 5 ثوان
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.bg-green-100, .bg-red-100');
+            messages.forEach(msg => msg.style.display = 'none');
+        }, 5000);
+        
+        // تحديث المستخدمين عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            filterUsers();
+        });
+    </script>
+</body>
+</html> 

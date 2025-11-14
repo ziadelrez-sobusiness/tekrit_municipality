@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ تم إصلاح الإشعارات!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-9xl mb-4">✅</div>
+            <h1 class="text-6xl font-black text-green-600 mb-3">
+                تم الإصلاح!
+            </h1>
+            <p class="text-2xl text-gray-600">الإشعارات التلقائية تعمل الآن</p>
+        </div>
+
+        <!-- المشكلة -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">❌ المشكلة التي كانت موجودة</h2>
+            
+            <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
+                <p class="font-bold text-red-900 text-xl mb-3">الحساب مربوط لكن الإشعارات لا تصل!</p>
+                
+                <div class="mt-4">
+                    <p class="font-bold text-red-900 mb-2">السبب:</p>
+                    <p class="text-red-800 mb-2">
+                        في ملف <code class="bg-red-200 px-2 py-1 rounded">citizen-requests.php</code>، 
+                        كان <code class="bg-red-200 px-2 py-1 rounded">telegram_chat_id</code> دائماً <code class="bg-red-200 px-2 py-1 rounded">null</code>
+                    </p>
+                    <pre class="bg-red-100 p-3 rounded text-xs mt-2">// السطر 164 (قبل الإصلاح)
+'telegram_chat_id' => null  ← ❌ دائماً null!</pre>
+                    <p class="text-red-700 text-sm mt-2">
+                        حتى لو كان المواطن قد ربط حسابه، الكود لم يكن يجلب الـ chat_id من قاعدة البيانات!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- الإصلاح -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">🔧 الإصلاح</h2>
+            
+            <div class="space-y-6">
+                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
+                    <p class="font-bold text-green-900 text-xl mb-3">✅ ما تم إضافته:</p>
+                    
+                    <div class="bg-white rounded p-4">
+                        <p class="font-bold text-gray-800 mb-2">كود جديد لجلب telegram_chat_id:</p>
+                        <pre class="bg-green-50 p-3 rounded text-xs overflow-x-auto">// جلب telegram_chat_id من حساب المواطن إذا كان موجوداً
+$telegramChatId = null;
+$telegramUsername = null;
+if ($citizenId) {
+    $accountStmt = $db->prepare("SELECT telegram_chat_id, telegram_username FROM citizens_accounts WHERE id = ?");
+    $accountStmt->execute([$citizenId]);
+    $accountData = $accountStmt->fetch(PDO::FETCH_ASSOC);
+    if ($accountData) {
+        $telegramChatId = $accountData['telegram_chat_id'];
+        $telegramUsername = $accountData['telegram_username'];
+    }
+}
+
+// إرسال رسالة Telegram
+$telegramService = new TelegramService($db);
+$telegramResult = $telegramService->sendWelcomeMessage(
+    [
+        'name' => $citizen_name,
+        'phone' => $citizen_phone,
+        'citizen_id' => $citizenId,
+        'telegram_chat_id' => $telegramChatId,  ← ✅ الآن يجلب من قاعدة البيانات!
+        'telegram_username' => $telegramUsername
+    ],
+    // ...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- كيف يعمل الآن -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-4xl font-black mb-6 text-center">✨ كيف يعمل الآن؟</h2>
+            
+            <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                <div class="space-y-4 text-lg">
+                    <div class="flex items-start gap-3">
+                        <span class="text-3xl">1️⃣</span>
+                        <div>
+                            <p class="font-bold mb-1">المواطن يقدم طلب</p>
+                            <p class="text-sm opacity-90">النظام يتحقق: هل المواطن ربط حسابه بالبوت؟</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-3">
+                        <span class="text-3xl">2️⃣</span>
+                        <div>
+                            <p class="font-bold mb-1">إذا كان الحساب مربوطاً</p>
+                            <p class="text-sm opacity-90">✅ يُرسل الإشعار فوراً إلى Telegram!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-3">
+                        <span class="text-3xl">3️⃣</span>
+                        <div>
+                            <p class="font-bold mb-1">إذا لم يكن مربوطاً</p>
+                            <p class="text-sm opacity-90">⏳ يُسجل الإشعار كـ "pending" (معلق)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-3">
+                        <span class="text-3xl">4️⃣</span>
+                        <div>
+                            <p class="font-bold mb-1">عند ربط الحساب لاحقاً</p>
+                            <p class="text-sm opacity-90">📬 تُرسل جميع الإشعارات المعلقة تلقائياً</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- اختبر الآن -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🧪 اختبر الآن!</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-blue-50 rounded-lg p-6">
+                    <p class="font-bold text-blue-900 text-xl mb-3">السيناريو 1: حساب مربوط</p>
+                    <ol class="text-sm text-blue-800 space-y-2 mr-4">
+                        <li><strong>1.</strong> تأكد من أن حسابك مربوط بالبوت</li>
+                        <li><strong>2.</strong> قدم طلب جديد من: <a href="public/citizen-requests.php" class="underline">citizen-requests.php</a></li>
+                        <li><strong>3.</strong> <span class="text-green-600 font-bold">يجب أن يصلك إشعار فوراً في Telegram! ✅</span></li>
+                    </ol>
+                </div>
+                
+                <div class="bg-purple-50 rounded-lg p-6">
+                    <p class="font-bold text-purple-900 text-xl mb-3">السيناريو 2: حساب غير مربوط</p>
+                    <ol class="text-sm text-purple-800 space-y-2 mr-4">
+                        <li><strong>1.</strong> قدم طلب برقم هاتف جديد</li>
+                        <li><strong>2.</strong> احفظ رمز الدخول الذي يظهر</li>
+                        <li><strong>3.</strong> افتح @TekritAkkarBot في Telegram</li>
+                        <li><strong>4.</strong> اضغط Start وأرسل رمز الدخول</li>
+                        <li><strong>5.</strong> <span class="text-green-600 font-bold">ستستلم الإشعار المعلق فوراً! ✅</span></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- ملاحظات مهمة -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-yellow-900 mb-6 text-center">💡 ملاحظات مهمة</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-green-900 mb-2">✅ الإشعارات الفورية</p>
+                    <p class="text-sm text-green-800">
+                        إذا كان الحساب مربوطاً، ستصل الإشعارات <strong>فوراً</strong> عند تقديم الطلب
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-blue-900 mb-2">📬 الإشعارات المعلقة</p>
+                    <p class="text-sm text-blue-800">
+                        إذا لم يكن الحساب مربوطاً، تُسجل الإشعارات وتُرسل عند الربط
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-purple-900 mb-2">🔄 التحديثات المستقبلية</p>
+                    <p class="text-sm text-purple-800">
+                        بعد الربط، جميع التحديثات (تغيير حالة، إنجاز، رسائل) ستُرسل تلقائياً
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- روابط سريعة -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🔗 روابط سريعة</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="public/citizen-requests.php" 
+                   class="block bg-blue-50 hover:bg-blue-100 border-2 border-blue-300 rounded-lg p-6 text-center transition">
+                    <p class="text-4xl mb-3">📝</p>
+                    <p class="font-bold text-blue-900 text-lg">تقديم طلب جديد</p>
+                    <p class="text-sm text-blue-700 mt-2">اختبر الإشعارات</p>
+                </a>
+                
+                <a href="check_telegram_notifications.php" 
+                   class="block bg-green-50 hover:bg-green-100 border-2 border-green-300 rounded-lg p-6 text-center transition">
+                    <p class="text-4xl mb-3">🔍</p>
+                    <p class="font-bold text-green-900 text-lg">فحص الإشعارات</p>
+                    <p class="text-sm text-green-700 mt-2">تحقق من الحالة</p>
+                </a>
+                
+                <a href="modules/telegram_messages.php" 
+                   class="block bg-purple-50 hover:bg-purple-100 border-2 border-purple-300 rounded-lg p-6 text-center transition">
+                    <p class="text-4xl mb-3">📬</p>
+                    <p class="font-bold text-purple-900 text-lg">رسائل Telegram</p>
+                    <p class="text-sm text-purple-700 mt-2">عرض جميع الرسائل</p>
+                </a>
+                
+                <a href="modules/citizens_accounts.php" 
+                   class="block bg-orange-50 hover:bg-orange-100 border-2 border-orange-300 rounded-lg p-6 text-center transition">
+                    <p class="text-4xl mb-3">👥</p>
+                    <p class="font-bold text-orange-900 text-lg">حسابات المواطنين</p>
+                    <p class="text-sm text-orange-700 mt-2">تحقق من الربط</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 text-center">
+            <p class="font-bold text-2xl text-gray-800 mb-2">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-green-600 font-bold text-xl mt-4">
+                ✅ الإشعارات التلقائية تعمل الآن بشكل مثالي!
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

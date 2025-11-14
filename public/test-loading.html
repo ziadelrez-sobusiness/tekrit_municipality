@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار شاشة التحميل - بلدية تكريت</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="assets/css/loading-screen.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f3f4f6;
+        }
+        .main-content {
+            padding: 2rem;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .content-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 1rem;
+        }
+        .reload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 1rem;
+        }
+        .reload-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-overlay" id="loadingScreen">
+        <div class="loading-container">
+            <div class="city-icon">
+                <div class="city-circle">
+                    <div class="city-buildings">
+                        <div class="building building-1"></div>
+                        <div class="building building-2"></div>
+                        <div class="building building-3"></div>
+                        <div class="building building-4"></div>
+                        <div class="building building-5"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <h1 class="loading-text">بلدية تكريت</h1>
+            <p class="loading-subtext">جاري التحميل
+                <span class="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </p>
+            
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-card">
+            <h1>🎉 مرحباً بكم في موقع بلدية تكريت</h1>
+            <p>تم تحميل الصفحة بنجاح! شاشة التحميل تعمل بشكل مثالي.</p>
+            <p>الميزات المتضمنة في شاشة التحميل:</p>
+            <ul style="text-align: right; list-style: none; padding: 0;">
+                <li>🏢 رسوم متحركة لأيقونة المدينة</li>
+                <li>✨ تأثير النبض والتوهج</li>
+                <li>📊 شريط التقدم المتحرك</li>
+                <li>⚡ نقاط التحميل المتحركة</li>
+                <li>🎨 ألوان متدرجة جميلة</li>
+                <li>📱 تصميم متجاوب للجوال</li>
+            </ul>
+            <button class="reload-btn" onclick="location.reload()">
+                🔄 إعادة تحميل لرؤية الأنيميشن مرة أخرى
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Screen JavaScript -->
+    <script>
+        // إدارة شاشة التحميل
+        class LoadingScreen {
+            constructor() {
+                this.loadingOverlay = document.getElementById('loadingScreen');
+                this.minimumLoadTime = 3000; // 3 ثوانٍ للعرض التوضيحي
+                this.startTime = Date.now();
+                this.isComplete = false;
+                
+                this.init();
+            }
+
+            init() {
+                // إخفاء محتوى الصفحة مؤقتاً
+                document.body.style.overflow = 'hidden';
+                
+                // انتظار تحميل DOM
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        this.onDOMReady();
+                    });
+                } else {
+                    this.onDOMReady();
+                }
+                
+                // انتظار تحميل جميع الموارد
+                window.addEventListener('load', () => {
+                    this.onPageFullyLoaded();
+                });
+            }
+
+            onDOMReady() {
+                console.log('🎯 DOM محمل بالكامل');
+            }
+
+            onPageFullyLoaded() {
+                // حساب الوقت المنقضي
+                const elapsedTime = Date.now() - this.startTime;
+                const remainingTime = Math.max(0, this.minimumLoadTime - elapsedTime);
+                
+                console.log(`⏱️ وقت التحميل: ${elapsedTime}ms، الوقت المتبقي: ${remainingTime}ms`);
+                
+                // انتظار الحد الأدنى للوقت ثم إخفاء شاشة التحميل
+                setTimeout(() => {
+                    this.hideLoadingScreen();
+                }, remainingTime);
+            }
+
+            hideLoadingScreen() {
+                if (this.loadingOverlay && !this.isComplete) {
+                    this.isComplete = true;
+                    
+                    console.log('🎭 إخفاء شاشة التحميل');
+                    
+                    // إضافة كلاس الإخفاء
+                    this.loadingOverlay.classList.add('fade-out');
+                    
+                    // إعادة تفعيل التمرير
+                    document.body.style.overflow = '';
+                    
+                    // إزالة العنصر من DOM بعد انتهاء الأنيميشن
+                    setTimeout(() => {
+                        if (this.loadingOverlay && this.loadingOverlay.parentNode) {
+                            this.loadingOverlay.remove();
+                            console.log('✅ تم إزالة شاشة التحميل من DOM');
+                        }
+                    }, 500);
+                    
+                    // تشغيل أنيميشن ظهور المحتوى
+                    this.animatePageContent();
+                }
+            }
+
+            animatePageContent() {
+                // إضافة أنيميشن ظهور للمحتوى
+                const elementsToAnimate = document.querySelectorAll('.content-card');
+                
+                elementsToAnimate.forEach((element, index) => {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(30px)';
+                    element.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                    
+                    setTimeout(() => {
+                        element.style.opacity = '1';
+                        element.style.transform = 'translateY(0)';
+                    }, 100 + (index * 100));
+                });
+            }
+        }
+
+        // تشغيل شاشة التحميل
+        const loadingScreen = new LoadingScreen();
+    </script>
+</body>
+</html> 

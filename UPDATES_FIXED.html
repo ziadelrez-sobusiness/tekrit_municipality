@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ تم إصلاح عرض التحديثات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-9xl mb-4">✅</div>
+            <h1 class="text-6xl font-black text-green-600 mb-3">
+                تم إصلاح عرض التحديثات!
+            </h1>
+            <p class="text-2xl text-gray-600">الآن التفاصيل ستظهر كاملة</p>
+        </div>
+
+        <!-- المشكلة -->
+        <div class="bg-red-50 border-2 border-red-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-red-900 mb-4 flex items-center gap-3">
+                <span class="text-5xl">❌</span>
+                <span>المشكلة</span>
+            </h2>
+            
+            <div class="bg-white rounded-lg p-6 mb-4">
+                <p class="text-red-800 mb-3"><strong>ما كان يظهر:</strong></p>
+                <div class="bg-red-100 rounded-lg p-4">
+                    <p class="font-bold text-red-900">📅 سجل التحديثات</p>
+                    <div class="mt-2 space-y-2">
+                        <div class="bg-white rounded p-3">
+                            <p class="font-bold">2</p>
+                            <p>تحديث</p>
+                            <p class="text-sm text-gray-600">2025-11-11 23:53</p>
+                        </div>
+                        <div class="bg-white rounded p-3">
+                            <p class="font-bold">1</p>
+                            <p>تحديث</p>
+                            <p class="text-sm text-gray-600">2025-11-11 22:39</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg p-6">
+                <p class="text-red-800 mb-2"><strong>المشكلة:</strong></p>
+                <ul class="text-red-700 space-y-1 mr-6">
+                    <li>❌ فقط كلمة "تحديث" تظهر</li>
+                    <li>❌ لا يظهر العنوان (update_type)</li>
+                    <li>❌ لا يظهر الوصف (update_text)</li>
+                    <li>❌ المواطن لا يرى تفاصيل التحديث</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- السبب -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-yellow-900 mb-4 flex items-center gap-3">
+                <span class="text-5xl">🔍</span>
+                <span>السبب</span>
+            </h2>
+            
+            <div class="bg-white rounded-lg p-6">
+                <p class="text-yellow-800 mb-4"><strong>عدم تطابق أسماء الأعمدة:</strong></p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <p class="font-bold text-red-900 mb-2">❌ الكود القديم يبحث عن:</p>
+                        <code class="text-sm bg-red-200 px-2 py-1 rounded block mb-1">update_title</code>
+                        <code class="text-sm bg-red-200 px-2 py-1 rounded block">update_description</code>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <p class="font-bold text-green-900 mb-2">✅ الأعمدة الفعلية في الجدول:</p>
+                        <code class="text-sm bg-green-200 px-2 py-1 rounded block mb-1">update_type</code>
+                        <code class="text-sm bg-green-200 px-2 py-1 rounded block">update_text</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الحل -->
+        <div class="bg-green-50 border-2 border-green-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-green-900 mb-6 flex items-center gap-3">
+                <span class="text-5xl">✅</span>
+                <span>الحل المطبق</span>
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="bg-white rounded-lg p-6">
+                    <p class="text-green-800 mb-3"><strong>1️⃣ تحديث العنوان:</strong></p>
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <p class="text-sm text-gray-700 mb-2"><strong>قبل:</strong></p>
+                        <code class="text-red-600 text-sm">
+                            $update['update_title'] ?? 'تحديث'
+                        </code>
+                        
+                        <p class="text-sm text-gray-700 mb-2 mt-4"><strong>بعد:</strong></p>
+                        <code class="text-green-600 text-sm">
+                            $update['update_type'] ?? $update['update_title'] ?? 'تحديث'
+                        </code>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6">
+                    <p class="text-green-800 mb-3"><strong>2️⃣ تحديث الوصف:</strong></p>
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <p class="text-sm text-gray-700 mb-2"><strong>قبل:</strong></p>
+                        <code class="text-red-600 text-sm">
+                            $update['update_description']
+                        </code>
+                        
+                        <p class="text-sm text-gray-700 mb-2 mt-4"><strong>بعد:</strong></p>
+                        <code class="text-green-600 text-sm">
+                            $update['update_text'] ?? $update['update_description'] ?? ''
+                        </code>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6">
+                    <p class="text-green-800 mb-2"><strong>3️⃣ التوافق:</strong></p>
+                    <p class="text-green-700 text-sm">
+                        ✅ الكود الآن يدعم كلا الاسمين (القديم والجديد)<br>
+                        ✅ يعمل مع جميع التحديثات الموجودة<br>
+                        ✅ متوافق مع التحديثات المستقبلية
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- النتيجة المتوقعة -->
+        <div class="bg-blue-50 border-2 border-blue-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-blue-900 mb-6 text-center">🎯 النتيجة المتوقعة</h2>
+            
+            <div class="bg-white rounded-lg p-6">
+                <p class="font-bold text-blue-900 mb-4">📅 سجل التحديثات</p>
+                
+                <div class="space-y-4">
+                    <div class="bg-blue-50 rounded-lg p-4 border-r-4 border-blue-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-bold text-gray-800">تحديث الحالة</h3>
+                            <span class="text-sm text-gray-500">2025-11-11 23:53</span>
+                        </div>
+                        <p class="text-gray-700">
+                            تم تحديث حالة الطلب إلى: جديد<br>
+                            ملاحظات: نعم تم الموضوع
+                        </p>
+                    </div>
+                    
+                    <div class="bg-blue-50 rounded-lg p-4 border-r-4 border-blue-500">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-bold text-gray-800">تحديث الحالة</h3>
+                            <span class="text-sm text-gray-500">2025-11-11 22:39</span>
+                        </div>
+                        <p class="text-gray-700">
+                            تم تحديث حالة الطلب...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- اختبر الآن -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-4xl font-black mb-6 text-center">🚀 اختبر الآن</h2>
+            
+            <div class="bg-white bg-opacity-20 rounded-xl p-8 text-center">
+                <div class="text-6xl mb-3">👁️</div>
+                <p class="font-bold text-2xl mb-4">عرض الطلب مع التحديثات</p>
+                <a href="public/citizen-request-details.php?tracking=REQ-2025-35455" 
+                   class="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition">
+                    📋 عرض الطلب REQ-2025-35455
+                </a>
+            </div>
+        </div>
+
+        <!-- ملاحظة -->
+        <div class="bg-purple-50 border-2 border-purple-400 rounded-2xl p-8">
+            <h2 class="text-3xl font-bold text-purple-900 mb-4 text-center">💡 ملاحظة</h2>
+            
+            <div class="bg-white rounded-lg p-6">
+                <p class="text-purple-800 mb-4"><strong>الآن يمكن للمواطن رؤية:</strong></p>
+                <ul class="text-purple-700 space-y-2 mr-6">
+                    <li>✅ عنوان التحديث (مثلاً: "تحديث الحالة")</li>
+                    <li>✅ تفاصيل التحديث (الملاحظات الإدارية)</li>
+                    <li>✅ تاريخ ووقت التحديث</li>
+                    <li>✅ اسم الموظف (إذا كان متاحاً)</li>
+                </ul>
+                
+                <div class="mt-4 bg-purple-100 rounded-lg p-4">
+                    <p class="font-bold text-purple-900 mb-2">📝 النص الذي كتبته:</p>
+                    <p class="text-purple-800 italic">"نعم تم الموضوع"</p>
+                    <p class="text-sm text-purple-700 mt-2">✅ سيظهر الآن للمواطن في قسم التحديثات!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-2xl mb-2">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-3xl font-black text-green-600 mt-4">
+                🎉 التحديثات تظهر الآن بالكامل!
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

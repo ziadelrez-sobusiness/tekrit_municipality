@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ تم إصلاح صفحة حسابات المواطنين</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-9xl mb-4">✅</div>
+            <h1 class="text-6xl font-black text-green-600 mb-3">
+                تم إصلاح الصفحة!
+            </h1>
+            <p class="text-2xl text-gray-600">صفحة حسابات المواطنين تعمل الآن</p>
+        </div>
+
+        <!-- المشكلة -->
+        <div class="bg-red-50 border-2 border-red-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-red-900 mb-4 flex items-center gap-3">
+                <span class="text-5xl">❌</span>
+                <span>المشكلة</span>
+            </h2>
+            
+            <div class="bg-white rounded-lg p-6">
+                <p class="text-red-800 mb-3"><strong>الخطأ:</strong></p>
+                <code class="text-sm bg-red-100 px-3 py-2 rounded block break-all text-red-900">
+                    SQLSTATE[42S22]: Column not found: 1054 Unknown column 'ca.is_verified' in 'field list'
+                </code>
+                
+                <p class="text-red-700 mt-4">
+                    الكود كان يحاول الوصول إلى عمود <code class="bg-red-200 px-2 py-1 rounded">is_verified</code> 
+                    غير الموجود في جدول <code class="bg-red-200 px-2 py-1 rounded">citizens_accounts</code>
+                </p>
+            </div>
+        </div>
+
+        <!-- الحل -->
+        <div class="bg-green-50 border-2 border-green-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-green-900 mb-6 flex items-center gap-3">
+                <span class="text-5xl">✅</span>
+                <span>الحل المطبق</span>
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="bg-white rounded-lg p-6">
+                    <p class="text-green-800 mb-3"><strong>1️⃣ إزالة العمود من الاستعلام:</strong></p>
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <p class="text-sm text-gray-700 mb-2"><strong>قبل:</strong></p>
+                        <code class="text-red-600 text-sm">
+                            ca.is_verified,
+                        </code>
+                        
+                        <p class="text-sm text-gray-700 mb-2 mt-4"><strong>بعد:</strong></p>
+                        <code class="text-green-600 text-sm">
+                            // تم إزالته
+                        </code>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6">
+                    <p class="text-green-800 mb-3"><strong>2️⃣ تحديث الإحصائيات:</strong></p>
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <p class="text-sm text-gray-700 mb-2"><strong>قبل:</strong></p>
+                        <code class="text-red-600 text-sm">
+                            'verified_accounts' => count(array_filter($accounts, fn($a) => $a['is_verified']))
+                        </code>
+                        
+                        <p class="text-sm text-gray-700 mb-2 mt-4"><strong>بعد:</strong></p>
+                        <code class="text-green-600 text-sm">
+                            'with_requests' => count(array_filter($accounts, fn($a) => $a['total_requests'] > 0))
+                        </code>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6">
+                    <p class="text-green-800 mb-3"><strong>3️⃣ تحديث عرض الإحصائيات:</strong></p>
+                    <div class="bg-gray-100 rounded-lg p-4">
+                        <p class="text-sm text-gray-700 mb-2"><strong>قبل:</strong></p>
+                        <code class="text-red-600 text-sm">
+                            حسابات موثقة: ✅
+                        </code>
+                        
+                        <p class="text-sm text-gray-700 mb-2 mt-4"><strong>بعد:</strong></p>
+                        <code class="text-green-600 text-sm">
+                            لديهم طلبات: 📋
+                        </code>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6">
+                    <p class="text-green-800 mb-3"><strong>4️⃣ إزالة عمود "الحالة" من الجدول:</strong></p>
+                    <p class="text-green-700 text-sm">
+                        تم إزالة عمود "الحالة" (موثق/غير موثق) من جدول العرض
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- الإحصائيات الجديدة -->
+        <div class="bg-blue-50 border-2 border-blue-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-blue-900 mb-6 text-center">📊 الإحصائيات الجديدة</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg p-6 text-center">
+                    <div class="text-6xl mb-3">👥</div>
+                    <p class="font-bold text-blue-900 text-xl mb-2">إجمالي الحسابات</p>
+                    <p class="text-blue-700 text-sm">عدد جميع حسابات المواطنين</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 text-center">
+                    <div class="text-6xl mb-3">📋</div>
+                    <p class="font-bold text-green-900 text-xl mb-2">لديهم طلبات</p>
+                    <p class="text-green-700 text-sm">المواطنون الذين قدموا طلبات</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 text-center">
+                    <div class="text-6xl mb-3">📱</div>
+                    <p class="font-bold text-purple-900 text-xl mb-2">مربوطة بـ Telegram</p>
+                    <p class="text-purple-700 text-sm">الحسابات المربوطة بالبوت</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 text-center">
+                    <div class="text-6xl mb-3">📊</div>
+                    <p class="font-bold text-orange-900 text-xl mb-2">إجمالي الطلبات</p>
+                    <p class="text-orange-700 text-sm">مجموع جميع الطلبات</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- اختبر الآن -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white mb-8">
+            <h2 class="text-4xl font-black mb-6 text-center">🚀 اختبر الآن</h2>
+            
+            <div class="bg-white bg-opacity-20 rounded-xl p-8 text-center">
+                <div class="text-6xl mb-3">👥</div>
+                <p class="font-bold text-2xl mb-4">صفحة حسابات المواطنين</p>
+                <a href="modules/citizens_accounts.php" 
+                   class="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition">
+                    📋 فتح الصفحة
+                </a>
+            </div>
+        </div>
+
+        <!-- أداة الفحص -->
+        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-yellow-900 mb-4 text-center">🔍 أداة فحص الأعمدة</h2>
+            
+            <div class="bg-white rounded-lg p-6 text-center">
+                <p class="text-yellow-800 mb-4">
+                    إذا واجهت مشاكل مستقبلية مع الأعمدة، استخدم أداة الفحص:
+                </p>
+                <a href="check_citizens_accounts_columns.php" 
+                   class="inline-block bg-yellow-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-yellow-600 transition">
+                    🔍 فحص أعمدة الجدول
+                </a>
+                <p class="text-sm text-yellow-700 mt-4">
+                    ستعرض لك جميع الأعمدة الموجودة في جدول citizens_accounts
+                </p>
+            </div>
+        </div>
+
+        <!-- ملخص التغييرات -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">📝 ملخص التغييرات</h2>
+            
+            <div class="space-y-3">
+                <div class="bg-green-50 border-r-4 border-green-500 rounded-lg p-4">
+                    <p class="font-bold text-green-900">✅ إزالة ca.is_verified من الاستعلام</p>
+                </div>
+                
+                <div class="bg-green-50 border-r-4 border-green-500 rounded-lg p-4">
+                    <p class="font-bold text-green-900">✅ استبدال "حسابات موثقة" بـ "لديهم طلبات"</p>
+                </div>
+                
+                <div class="bg-green-50 border-r-4 border-green-500 rounded-lg p-4">
+                    <p class="font-bold text-green-900">✅ إزالة عمود "الحالة" من الجدول</p>
+                </div>
+                
+                <div class="bg-green-50 border-r-4 border-green-500 rounded-lg p-4">
+                    <p class="font-bold text-green-900">✅ تحديث colspan من 10 إلى 9</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-2xl mb-2">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-3xl font-black text-green-600 mt-4">
+                🎉 الصفحة تعمل الآن بشكل صحيح!
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

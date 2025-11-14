@@ -1,0 +1,1 @@
+<?php echo 'Test redirect working'; header('Location: public/index.php'); ?>

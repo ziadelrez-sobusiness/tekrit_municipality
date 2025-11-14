@@ -1,0 +1,48 @@
+# ===========================================
+# ملف .htaccess لمجلد صور أعضاء المجلس
+# ===========================================
+
+# منع تنفيذ ملفات PHP
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phps|pht|phar)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# السماح فقط بملفات الصور
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|bmp|ico)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# منع الوصول لأي ملفات أخرى
+<FilesMatch "^(?!.*\.(jpg|jpeg|png|gif|webp|bmp|ico)$).*$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# تعيين أنواع MIME للصور
+<IfModule mod_mime.c>
+    AddType image/jpeg .jpg .jpeg
+    AddType image/png .png
+    AddType image/gif .gif
+    AddType image/webp .webp
+    AddType image/bmp .bmp
+    AddType image/x-icon .ico
+</IfModule>
+
+# رؤوس الأمان
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options SAMEORIGIN
+    Header set Cache-Control "public, max-age=2592000"
+</IfModule>
+
+# منع عرض قائمة الملفات
+Options -Indexes
+
+# إعدادات خاصة بـ Apache 2.4+
+<IfModule mod_authz_core.c>
+    <FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phps|pht|phar)$">
+        Require all denied
+    </FilesMatch>
+</IfModule> 

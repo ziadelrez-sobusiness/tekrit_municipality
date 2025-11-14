@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار خريطة المرافق</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <h1>🧪 اختبار خريطة المرافق</h1>
+    <div id="map" style="height: 400px; border: 2px solid #ddd; margin: 20px 0;"></div>
+    <div id="status"></div>
+    
+    <script>
+        // إنشاء الخريطة
+        const map = L.map("map").setView([34.6137, 43.6793], 13);
+        
+        // إضافة طبقة الخريطة
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors"
+        }).addTo(map);
+        
+        // جلب البيانات من API
+        fetch("modules/facilities_api.php?action=get_facilities")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("status").innerHTML = "<h3>📊 نتيجة API:</h3><pre>" + JSON.stringify(data, null, 2) + "</pre>";
+                
+                if (data.success && data.facilities) {
+                    data.facilities.forEach(facility => {
+                        const marker = L.marker([facility.latitude, facility.longitude]).addTo(map);
+                        marker.bindPopup(`
+                            <strong>${facility.name_ar}</strong><br>
+                            ${facility.description_ar || "لا يوجد وصف"}<br>
+                            الفئة: ${facility.category_name_ar}
+                        `);
+                    });
+                    
+                    if (data.facilities.length > 0) {
+                        document.getElementById("status").innerHTML += `<p style="color: green;">✅ تم عرض ${data.facilities.length} مرفق على الخريطة</p>`;
+                    }
+                } else {
+                    document.getElementById("status").innerHTML += `<p style="color: red;">❌ فشل في جلب البيانات: ${data.error || "خطأ غير معروف"}</p>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById("status").innerHTML += `<p style="color: red;">❌ خطأ في الشبكة: ${error.message}</p>`;
+            });
+    </script>
+</body>
+</html>

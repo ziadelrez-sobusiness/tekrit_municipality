@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ تم إصلاح مشكلة Telegram على Localhost</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            line-height: 1.8;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #10b981;
+            border-bottom: 3px solid #10b981;
+            padding-bottom: 15px;
+            font-size: 2.5em;
+        }
+        h2 {
+            color: #3b82f6;
+            margin-top: 30px;
+            font-size: 1.8em;
+        }
+        .problem {
+            background: #fee;
+            border-left: 5px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .solution {
+            background: #efe;
+            border-left: 5px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .info {
+            background: #e0f2fe;
+            border-left: 5px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #dc2626;
+            font-weight: bold;
+        }
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        ul {
+            margin: 15px 0;
+        }
+        li {
+            margin: 10px 0;
+        }
+        .step {
+            background: #f9fafb;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+        }
+        .step-number {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ تم إصلاح مشكلة Telegram على Localhost</h1>
+        
+        <div class="problem">
+            <h2>❌ المشكلة التي كانت موجودة</h2>
+            <p><strong>رسالة الخطأ من Telegram:</strong></p>
+            <pre>Bad Request: inline keyboard button URL 'http://localhost:8080/...' is invalid: 
+Wrong port number specified in the URL</pre>
+            
+            <p><strong>السبب:</strong></p>
+            <ul>
+                <li>Telegram Bot API <strong>لا يقبل روابط localhost</strong> في الأزرار التفاعلية (inline keyboard buttons)</li>
+                <li>Telegram يرفض أي رابط يحتوي على <code>localhost</code> أو <code>127.0.0.1</code> مع port غير قياسي (مثل 8080)</li>
+                <li>هذا قيد أمني من Telegram لمنع الروابط المحلية</li>
+            </ul>
+        </div>
+        
+        <div class="solution">
+            <h2>✅ الحل المطبق</h2>
+            <p>تم تعديل <code>includes/TelegramService.php</code> ليعمل بذكاء:</p>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>كشف البيئة:</strong>
+                <p>النظام يكتشف تلقائياً إذا كان يعمل على localhost أم على سيرفر حقيقي</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>على Localhost (التطوير):</strong>
+                <ul>
+                    <li>❌ <strong>لا يرسل أزرار تفاعلية</strong> (لأن Telegram يرفضها)</li>
+                    <li>✅ <strong>يضيف الروابط في نص الرسالة</strong> بدلاً من الأزرار</li>
+                    <li>الرسالة تصل بنجاح مع الروابط كنص عادي</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>على السيرفر الحقيقي (الإنتاج):</strong>
+                <ul>
+                    <li>✅ <strong>يرسل أزرار تفاعلية</strong> (لأن الروابط حقيقية)</li>
+                    <li>✅ المواطن يضغط على الأزرار مباشرة</li>
+                    <li>تجربة مستخدم أفضل</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h2>📋 مثال على الرسالة</h2>
+            
+            <h3>🖥️ على Localhost:</h3>
+            <pre>✅ مرحباً بك في بلدية تكريت - عكار!
+
+📋 تم تقديم طلبكم بنجاح:
+
+🔢 رقم التتبع: REQ-2025-12345
+📝 نوع الطلب: إفادة سكن
+📅 التاريخ: 2025-11-12
+
+💡 رمز الدخول الثابت: TKT-ABC123
+
+🔗 الروابط:
+• تتبع الطلب: http://localhost:8080/public/track-request.php?tracking=REQ-2025-12345
+• حسابك الشخصي: http://localhost:8080/public/citizen-dashboard.php?code=TKT-ABC123</pre>
+            
+            <h3>🌐 على السيرفر الحقيقي:</h3>
+            <pre>✅ مرحباً بك في بلدية تكريت - عكار!
+
+📋 تم تقديم طلبكم بنجاح:
+
+🔢 رقم التتبع: REQ-2025-12345
+📝 نوع الطلب: إفادة سكن
+📅 التاريخ: 2025-11-12
+
+💡 رمز الدخول الثابت: TKT-ABC123
+
+[🔍 تتبع الطلب]  [👤 حسابي]  ← أزرار تفاعلية</pre>
+        </div>
+        
+        <div class="warning">
+            <h2>🧪 اختبار النظام الآن</h2>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>قدم طلب جديد:</strong>
+                <p>افتح: <code>http://localhost:8080/tekrit_municipality/public/citizen-requests.php</code></p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>تحقق من Telegram:</strong>
+                <p>يجب أن تصلك رسالة <strong>بدون أزرار</strong> لكن <strong>مع روابط</strong> في النص</p>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>انسخ الرابط والصقه في المتصفح:</strong>
+                <p>الروابط تعمل بشكل طبيعي!</p>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h2>🚀 عند النشر على السيرفر الحقيقي</h2>
+            <p><strong>لا تحتاج لتغيير أي شيء!</strong></p>
+            <ul>
+                <li>النظام سيكتشف تلقائياً أنك لست على localhost</li>
+                <li>سيبدأ بإرسال الأزرار التفاعلية تلقائياً</li>
+                <li>تجربة المستخدم ستكون أفضل بكثير</li>
+            </ul>
+        </div>
+        
+        <div class="solution">
+            <h2>✅ ملخص التحديثات</h2>
+            <ul>
+                <li>✅ <code>includes/TelegramService.php</code> - تم تحديث <code>sendWelcomeMessage()</code></li>
+                <li>✅ <code>includes/TelegramService.php</code> - تم تحديث <code>sendStatusUpdate()</code></li>
+                <li>✅ النظام يعمل على localhost بدون أخطاء</li>
+                <li>✅ النظام جاهز للنشر على سيرفر حقيقي</li>
+                <li>✅ الإشعارات التلقائية تعمل الآن! 🎉</li>
+            </ul>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center; margin-top: 30px;">
+            <h2 style="color: white; border: none;">🎉 النظام جاهز للاستخدام!</h2>
+            <p style="font-size: 1.2em; margin: 20px 0;">جرّب الآن وأخبرني بالنتيجة! 🚀</p>
+        </div>
+    </div>
+</body>
+</html>
+

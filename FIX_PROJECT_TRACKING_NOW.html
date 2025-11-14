@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إصلاح التتبع المالي للمشاريع</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .problem-box {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: right;
+        }
+        .problem-box h2 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .problem-box p {
+            color: #856404;
+            line-height: 1.8;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+        .problem-box .highlight {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #d9534f;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        .solution-box {
+            background: #d4edda;
+            border: 3px solid #28a745;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: right;
+        }
+        .solution-box h2 {
+            color: #155724;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .solution-box p {
+            color: #155724;
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+        .steps {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: right;
+        }
+        .steps h3 {
+            color: #0d47a1;
+            margin-bottom: 15px;
+        }
+        .step {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-right: 4px solid #2196F3;
+        }
+        .step-number {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 50%;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 20px 50px;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: bold;
+            margin: 10px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        .icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .urgent {
+            color: #d9534f;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 20px 0;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">⚠️</div>
+        <h1>إصلاح التتبع المالي</h1>
+        <p class="subtitle">المشاريع لا تعرض المصروفات الصحيحة</p>
+        
+        <div class="problem-box">
+            <h2>❌ المشكلة الحالية</h2>
+            <p>عند فتح صفحة المشروع:</p>
+            <div class="highlight">
+                modules/projects_finance.php?project_id=2
+            </div>
+            <p>لا تظهر المصروفات الحقيقية!</p>
+            <p><strong>السبب:</strong> الفواتير المدفوعة لم تُحدّث المشروع</p>
+        </div>
+
+        <div class="solution-box">
+            <h2>✅ الحل</h2>
+            <p>تشغيل سكريبت إعادة الحساب مرة واحدة</p>
+            <p>سيعيد حساب جميع المصروفات من الدفعات القديمة</p>
+        </div>
+
+        <div class="steps">
+            <h3>📋 الخطوات (بسيطة جداً!)</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>اضغط الزر الأخضر بالأسفل</strong>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>انتظر 5-10 ثواني</strong>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>ارجع لصفحة المشروع</strong>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>ستجد المصروفات محدثة! ✅</strong>
+            </div>
+        </div>
+
+        <p class="urgent">⏰ هذا السكريبت يُشغّل مرة واحدة فقط!</p>
+        
+        <div style="margin-top: 30px;">
+            <a href="fix_old_invoice_payments.php" class="btn btn-primary">
+                🚀 إصلاح المصروفات الآن
+            </a>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="modules/projects_finance.php?project_id=2" class="btn btn-secondary">
+                ← العودة للمشروع
+            </a>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 10px; text-align: right;">
+            <h3 style="color: #495057; margin-bottom: 10px;">💡 ماذا سيحدث؟</h3>
+            <ul style="list-style: none; padding: 0; text-align: right;">
+                <li style="padding: 8px 0;">✅ قراءة جميع الدفعات من قاعدة البيانات</li>
+                <li style="padding: 8px 0;">✅ إعادة حساب المصروفات لكل بند ميزانية</li>
+                <li style="padding: 8px 0;">✅ <strong style="color: #28a745;">إعادة حساب المصروفات لكل مشروع</strong></li>
+                <li style="padding: 8px 0;">✅ تحديث قاعدة البيانات</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+
+

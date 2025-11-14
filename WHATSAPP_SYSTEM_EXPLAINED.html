@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شرح نظام WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .step-box {
+            transition: all 0.3s ease;
+        }
+        .step-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-blue-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- العنوان -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8 mb-8 text-center">
+            <div class="text-7xl mb-4">📱</div>
+            <h1 class="text-5xl font-black text-gray-800 mb-3">
+                كيف يعمل نظام WhatsApp؟
+            </h1>
+            <p class="text-2xl text-gray-600 mb-2">إرسال رسائل تلقائية للمواطنين</p>
+            <p class="text-lg text-gray-500">بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+        </div>
+
+        <!-- الدورة الكاملة -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+                🔄 الدورة الكاملة
+            </h2>
+            
+            <!-- الخطوات -->
+            <div class="space-y-6">
+                <!-- الخطوة 1 -->
+                <div class="step-box bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border-r-4 border-blue-500">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-blue-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                            1
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-blue-900 mb-2">المواطن يقدم طلب</h3>
+                            <p class="text-blue-800 mb-3">
+                                المواطن يملأ النموذج في <code class="bg-blue-200 px-2 py-1 rounded">citizen-requests.php</code>
+                            </p>
+                            <div class="bg-white rounded-lg p-4">
+                                <p class="text-sm text-gray-700 font-bold mb-2">البيانات المُدخلة:</p>
+                                <ul class="text-sm text-gray-600 space-y-1">
+                                    <li>• الاسم: أحمد محمد</li>
+                                    <li>• الهاتف: 03123456</li>
+                                    <li>• نوع الطلب: شهادة سكن</li>
+                                    <li>• التفاصيل: ...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- السهم -->
+                <div class="text-center text-4xl text-gray-400">↓</div>
+
+                <!-- الخطوة 2 -->
+                <div class="step-box bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 border-r-4 border-green-500">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-green-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                            2
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-green-900 mb-2">إنشاء الطلب في قاعدة البيانات</h3>
+                            <p class="text-green-800 mb-3">
+                                يتم حفظ الطلب وإنشاء رقم تتبع فريد
+                            </p>
+                            <div class="bg-white rounded-lg p-4">
+                                <p class="text-sm text-gray-700 font-bold mb-2">النتيجة:</p>
+                                <ul class="text-sm text-gray-600 space-y-1">
+                                    <li>• رقم التتبع: <code class="bg-gray-100 px-2 py-1 rounded">REQ-2025-12345</code></li>
+                                    <li>• معرف الطلب: <code class="bg-gray-100 px-2 py-1 rounded">123</code></li>
+                                    <li>• الحالة: جديد</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- السهم -->
+                <div class="text-center text-4xl text-gray-400">↓</div>
+
+                <!-- الخطوة 3 -->
+                <div class="step-box bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border-r-4 border-purple-500">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-purple-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                            3
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-purple-900 mb-2">إنشاء حساب المواطن</h3>
+                            <p class="text-purple-800 mb-3">
+                                <code class="bg-purple-200 px-2 py-1 rounded">CitizenAccountHelper</code> يُنشئ أو يُحدّث الحساب
+                            </p>
+                            <div class="bg-white rounded-lg p-4">
+                                <pre class="text-xs text-gray-700 overflow-x-auto"><code>$helper = new CitizenAccountHelper($db);
+$account = $helper->getOrCreateAccount(
+    '03123456',  // الهاتف
+    'أحمد محمد', // الاسم
+    null,        // البريد
+    null         // الرقم الوطني
+);
+
+// النتيجة: citizen_id = 45</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- السهم -->
+                <div class="text-center text-4xl text-gray-400">↓</div>
+
+                <!-- الخطوة 4 -->
+                <div class="step-box bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-6 border-r-4 border-orange-500">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-orange-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                            4
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-orange-900 mb-2">إنشاء رابط سحري (Magic Link)</h3>
+                            <p class="text-orange-800 mb-3">
+                                رابط خاص للمواطن للدخول لحسابه بدون كلمة مرور
+                            </p>
+                            <div class="bg-white rounded-lg p-4">
+                                <pre class="text-xs text-gray-700 overflow-x-auto"><code>$link = $helper->createMagicLink(
+    45,          // citizen_id
+    '03123456',  // الهاتف
+    24           // صالح لمدة 24 ساعة
+);
+
+// النتيجة:
+// http://localhost:8080/.../citizen-dashboard.php?token=abc123...</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- السهم -->
+                <div class="text-center text-4xl text-gray-400">↓</div>
+
+                <!-- الخطوة 5 -->
+                <div class="step-box bg-gradient-to-r from-pink-50 to-pink-100 rounded-xl p-6 border-r-4 border-pink-500">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-pink-500 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                            5
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-pink-900 mb-2">تسجيل رسالة WhatsApp</h3>
+                            <p class="text-pink-800 mb-3">
+                                <code class="bg-pink-200 px-2 py-1 rounded">WhatsAppService</code> يُجهّز الرسالة ويُسجّلها
+                            </p>
+                            <div class="bg-white rounded-lg p-4">
+                                <pre class="text-xs text-gray-700 overflow-x-auto"><code>$whatsapp = new WhatsAppService($db);
+$result = $whatsapp->sendWelcomeMessage(
+    ['name' => 'أحمد محمد', 'phone' => '03123456'],
+    ['tracking_number' => 'REQ-2025-12345', ...],
+    $magicLink
+);
+
+// يتم تسجيل الرسالة في جدول whatsapp_log</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- السهم -->
+                <div class="text-center text-4xl text-gray-400">↓</div>
+
+                <!-- الخطوة 6 -->
+                <div class="step-box bg-gradient-to-r from-green-400 to-green-500 rounded-xl p-6 border-r-4 border-green-700 text-white">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-white text-green-600 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">
+                            6
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold mb-2">📱 المواطن يستلم الرسالة!</h3>
+                            <p class="mb-3 opacity-90">
+                                حسب الطريقة المختارة في الإعدادات
+                            </p>
+                            <div class="bg-white text-gray-800 rounded-lg p-4">
+                                <p class="font-bold mb-2">مثال على الرسالة:</p>
+                                <div class="bg-green-50 border-2 border-green-300 rounded-lg p-3 text-sm">
+                                    <p>مرحباً أحمد محمد!</p>
+                                    <p class="mt-2">✅ تم استلام طلبك بنجاح</p>
+                                    <p>📋 نوع الطلب: شهادة سكن</p>
+                                    <p>🔢 رقم التتبع: REQ-2025-12345</p>
+                                    <p class="mt-2">🔐 للدخول لحسابك:</p>
+                                    <p class="text-blue-600">👉 [رابط الدخول]</p>
+                                    <p class="mt-2">━━━━━━━━━━━━━━━━━━━</p>
+                                    <p>💚 شكراً لثقتكم</p>
+                                    <p>🏛️ بلدية تكريت</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- طرق الإرسال -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+                🚀 طرق الإرسال المتاحة
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- يدوي -->
+                <div class="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+                    <div class="text-5xl text-center mb-4">👨‍💼</div>
+                    <h3 class="text-xl font-bold text-blue-900 text-center mb-3">يدوي (Manual)</h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="text-green-700 font-bold">✅ مجاني 100%</p>
+                        <p class="text-green-700 font-bold">✅ سهل الاستخدام</p>
+                        <p class="text-red-700">❌ يحتاج تدخل يدوي</p>
+                    </div>
+                    <div class="mt-4 bg-white rounded-lg p-3">
+                        <p class="text-xs text-gray-600">
+                            الموظف ينسخ الرسالة من لوحة التحكم ويرسلها عبر WhatsApp Web
+                        </p>
+                    </div>
+                </div>
+
+                <!-- API -->
+                <div class="bg-green-50 rounded-xl p-6 border-2 border-green-200">
+                    <div class="text-5xl text-center mb-4">🤖</div>
+                    <h3 class="text-xl font-bold text-green-900 text-center mb-3">API تلقائي</h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="text-green-700 font-bold">✅ تلقائي 100%</p>
+                        <p class="text-green-700 font-bold">✅ احترافي</p>
+                        <p class="text-red-700">❌ مدفوع</p>
+                    </div>
+                    <div class="mt-4 bg-white rounded-lg p-3">
+                        <p class="text-xs text-gray-600">
+                            يتطلب حساب WhatsApp Business وموافقة من Meta
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Webhook -->
+                <div class="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
+                    <div class="text-5xl text-center mb-4">🔗</div>
+                    <h3 class="text-xl font-bold text-purple-900 text-center mb-3">Webhook</h3>
+                    <div class="space-y-2 text-sm">
+                        <p class="text-green-700 font-bold">✅ مرن جداً</p>
+                        <p class="text-green-700 font-bold">✅ قابل للتخصيص</p>
+                        <p class="text-red-700">❌ يحتاج برمجة</p>
+                    </div>
+                    <div class="mt-4 bg-white rounded-lg p-3">
+                        <p class="text-xs text-gray-600">
+                            يمكن ربطه بأي خدمة خارجية لإرسال WhatsApp
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الملفات الجديدة -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+                📂 الملفات الجديدة المُنشأة
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="bg-blue-50 rounded-lg p-4 border-r-4 border-blue-500">
+                    <p class="font-mono font-bold text-blue-900 mb-2">includes/WhatsAppService.php</p>
+                    <p class="text-sm text-blue-700">خدمة إرسال رسائل WhatsApp - يحتوي على جميع وظائف الإرسال</p>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-4 border-r-4 border-green-500">
+                    <p class="font-mono font-bold text-green-900 mb-2">includes/CitizenAccountHelper.php</p>
+                    <p class="text-sm text-green-700">مساعد إدارة حسابات المواطنين والروابط السحرية</p>
+                </div>
+                
+                <div class="bg-purple-50 rounded-lg p-4 border-r-4 border-purple-500">
+                    <p class="font-mono font-bold text-purple-900 mb-2">WHATSAPP_INTEGRATION_GUIDE.md</p>
+                    <p class="text-sm text-purple-700">دليل شامل للتكامل مع كود الأمثلة</p>
+                </div>
+                
+                <div class="bg-orange-50 rounded-lg p-4 border-r-4 border-orange-500">
+                    <p class="font-mono font-bold text-orange-900 mb-2">WHATSAPP_SYSTEM_EXPLAINED.html</p>
+                    <p class="text-sm text-orange-700">هذه الصفحة - شرح مرئي للنظام</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- الخطوات التالية -->
+        <div class="bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl shadow-2xl p-8 text-white text-center">
+            <h2 class="text-3xl font-bold mb-4">✅ الخطوات التالية</h2>
+            <div class="space-y-3 text-lg">
+                <p>1️⃣ راجع ملف <code class="bg-white text-blue-600 px-3 py-1 rounded">WHATSAPP_INTEGRATION_GUIDE.md</code></p>
+                <p>2️⃣ أضف الكود المطلوب في <code class="bg-white text-blue-600 px-3 py-1 rounded">citizen-requests.php</code></p>
+                <p>3️⃣ اختبر النظام بإنشاء طلب تجريبي</p>
+                <p>4️⃣ راجع الرسائل في جدول <code class="bg-white text-blue-600 px-3 py-1 rounded">whatsapp_log</code></p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-gray-600">
+            <p class="font-bold text-lg">🏛️ بلدية تكريت - عكار، شمال لبنان 🇱🇧</p>
+            <p class="text-sm mt-1">نظام إدارة البلدية الإلكتروني</p>
+        </div>
+    </div>
+</body>
+</html>
+
