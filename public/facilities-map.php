@@ -174,8 +174,10 @@ $t = $texts[$lang];
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-lg">
+    <?php require_once 'includes/header.php'; ?>
+    
+    <!-- Page Header -->
+    <div class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div>
@@ -198,7 +200,7 @@ $t = $texts[$lang];
                 </div>
             </div>
         </div>
-    </header>
+    </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <!-- Search and Filters -->

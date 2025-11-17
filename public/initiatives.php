@@ -109,27 +109,7 @@ function getInitiativeIcon($type) {
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Header -->
-    <header class="tekrit-header sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center">
-                    <img src="assets/images/Tekrit_LOGO.png" alt="شعار بلدية تكريت" class="tekrit-logo ml-4">
-                    <div>
-                        <h1 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($site_title) ?></h1>
-                        <p class="text-sm text-gray-600 hidden sm:block">خدمات إلكترونية للمواطنين</p>
-                    </div>
-                </div>
-                <nav class="hidden lg:flex space-x-8 space-x-reverse">
-                    <a href="index.php" class="text-gray-700 hover:text-blue-600 font-medium">الرئيسية</a>
-                    <a href="initiatives.php" class="text-blue-600 font-medium">المبادرات</a>
-                    <a href="projects.php" class="text-gray-700 hover:text-blue-600 font-medium">المشاريع</a>
-                    <a href="news.php" class="text-gray-700 hover:text-blue-600 font-medium">الأخبار</a>
-                    <a href="contact.php" class="text-gray-700 hover:text-blue-600 font-medium">اتصل بنا</a>
-                </nav>
-            </div>
-        </div>
-    </header>
+    <?php require_once 'includes/header.php'; ?>
 
     <!-- Page Header -->
     <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white py-16">

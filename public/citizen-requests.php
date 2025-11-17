@@ -415,8 +415,36 @@ try {
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 via-white to-green-50 min-h-screen">
+    <?php 
+    // جلب إعدادات الموقع
+    function getSetting($key, $default = '') {
+        global $db;
+        if (!$db) return $default;
+        try {
+            $stmt = $db->prepare("SELECT setting_value FROM website_settings WHERE setting_key = ?");
+            $stmt->execute([$key]);
+            $result = $stmt->fetch();
+            return $result ? $result['setting_value'] : $default;
+        } catch (Exception $e) {
+            return $default;
+        }
+    }
+    $site_title = getSetting('site_title', 'بلدية تكريت');
+    require_once 'includes/header.php'; 
+    ?>
+    
     <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
+        <!-- Back Button -->
+        <div class="mb-6">
+            <a href="index.php" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition">
+                <svg class="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                الرجوع إلى الصفحة الرئيسية
+            </a>
+        </div>
+        
+        <!-- Page Title -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-2">تقديم طلب جديد</h1>
             <p class="text-gray-600">بلدية تكريت - عكار</p>
