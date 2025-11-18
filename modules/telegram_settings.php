@@ -60,12 +60,18 @@ try {
     $error_message = "خطأ في جلب الإعدادات: " . $e->getMessage();
 }
 
-// اختبار الاتصال بالبوت
+// اختبار الاتصال بالبوت (فقط عند الطلب)
 $botInfo = null;
-if (!empty($settings['telegram_bot_token'])) {
+if (isset($_POST['test_connection']) && !empty($settings['telegram_bot_token'])) {
     require_once '../includes/TelegramService.php';
     $telegramService = new TelegramService($db);
     $botInfo = $telegramService->getBotInfo();
+
+    if ($botInfo) {
+        $success_message = "✅ تم الاتصال بالبوت بنجاح!";
+    } else {
+        $error_message = "❌ فشل الاتصال بالبوت! تحقق من Token";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -122,9 +128,24 @@ if (!empty($settings['telegram_bot_token'])) {
                     </div>
                 </div>
             </div>
-        <?php elseif (!empty($settings['telegram_bot_token'])): ?>
-            <div class="bg-red-50 border-2 border-red-400 rounded-xl p-6 mb-8">
-                <p class="text-red-800 font-bold text-center">❌ فشل الاتصال بالبوت! تحقق من Token</p>
+        <?php endif; ?>
+
+        <!-- زر اختبار الاتصال -->
+        <?php if (!empty($settings['telegram_bot_token']) && !$botInfo): ?>
+            <div class="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-8">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-blue-900 mb-2">🔍 اختبار الاتصال بالبوت</h3>
+                        <p class="text-sm text-blue-700">تحقق من صحة Token والاتصال بـ Telegram</p>
+                    </div>
+                    <form method="POST" class="inline-block">
+                        <button type="submit"
+                                name="test_connection"
+                                class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                            🧪 اختبار الاتصال
+                        </button>
+                    </form>
+                </div>
             </div>
         <?php endif; ?>
 
