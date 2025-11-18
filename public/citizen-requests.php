@@ -412,21 +412,23 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Cairo', sans-serif; }
+        body {
+            font-family: 'Cairo', sans-serif;
+        }
         .step { display: none; }
         .step.active { display: block; }
-        .step-indicator { 
-            background: #e5e7eb; 
-            color: #6b7280; 
+        .step-indicator {
+            background: #e5e7eb;
+            color: #6b7280;
             transition: all 0.3s ease;
         }
-        .step-indicator.active { 
-            background: #3b82f6; 
-            color: white; 
+        .step-indicator.active {
+            background: #3b82f6;
+            color: white;
         }
-        .step-indicator.completed { 
-            background: #10b981; 
-            color: white; 
+        .step-indicator.completed {
+            background: #10b981;
+            color: white;
         }
         .form-field {
             margin-bottom: 1rem;
@@ -450,6 +452,38 @@ try {
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* تحسينات responsive إضافية */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+                line-height: 2rem;
+            }
+            h2 {
+                font-size: 1.25rem;
+                line-height: 1.75rem;
+            }
+            /* تحسين الأزرار في الموبايل */
+            button {
+                min-height: 44px; /* حجم touch friendly */
+            }
+            /* تحسين input fields */
+            input, textarea, select {
+                font-size: 16px; /* منع zoom في iOS */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .max-w-4xl {
+                margin-left: 0;
+                margin-right: 0;
+                border-radius: 0;
+            }
         }
     </style>
 </head>
@@ -519,25 +553,25 @@ try {
         <?php endif; ?>
 
         <!-- مؤشر الخطوات -->
-        <div class="flex justify-center mb-8">
-            <div class="flex items-center space-x-4 space-x-reverse">
-                <div class="step-indicator active flex items-center justify-center w-10 h-10 rounded-full font-bold" id="step-indicator-1">1</div>
-                <div class="w-16 h-1 bg-gray-300" id="line-1"></div>
-                <div class="step-indicator flex items-center justify-center w-10 h-10 rounded-full font-bold" id="step-indicator-2">2</div>
-                <div class="w-16 h-1 bg-gray-300" id="line-2"></div>
-                <div class="step-indicator flex items-center justify-center w-10 h-10 rounded-full font-bold" id="step-indicator-3">3</div>
-                <div class="w-16 h-1 bg-gray-300" id="line-3"></div>
-                <div class="step-indicator flex items-center justify-center w-10 h-10 rounded-full font-bold" id="step-indicator-4">4</div>
+        <div class="flex justify-center mb-4 md:mb-8 overflow-x-auto px-4">
+            <div class="flex items-center space-x-2 md:space-x-4 space-x-reverse">
+                <div class="step-indicator active flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full font-bold text-sm md:text-base flex-shrink-0" id="step-indicator-1">1</div>
+                <div class="w-8 md:w-16 h-1 bg-gray-300 flex-shrink-0" id="line-1"></div>
+                <div class="step-indicator flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full font-bold text-sm md:text-base flex-shrink-0" id="step-indicator-2">2</div>
+                <div class="w-8 md:w-16 h-1 bg-gray-300 flex-shrink-0" id="line-2"></div>
+                <div class="step-indicator flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full font-bold text-sm md:text-base flex-shrink-0" id="step-indicator-3">3</div>
+                <div class="w-8 md:w-16 h-1 bg-gray-300 flex-shrink-0" id="line-3"></div>
+                <div class="step-indicator flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full font-bold text-sm md:text-base flex-shrink-0" id="step-indicator-4">4</div>
             </div>
         </div>
 
         <!-- عناوين الخطوات -->
-        <div class="flex justify-center mb-8">
-            <div class="grid grid-cols-4 gap-4 text-center text-sm">
-                <div class="text-blue-600 font-semibold" id="step-title-1">المعلومات الشخصية</div>
-                <div class="text-gray-500" id="step-title-2">نوع الطلب</div>
-                <div class="text-gray-500" id="step-title-3">تفاصيل الطلب</div>
-                <div class="text-gray-500" id="step-title-4">المراجعة والإرسال</div>
+        <div class="flex justify-center mb-6 md:mb-8 overflow-x-auto px-2">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 text-center text-xs md:text-sm w-full max-w-3xl">
+                <div class="text-blue-600 font-semibold whitespace-nowrap px-1" id="step-title-1">المعلومات الشخصية</div>
+                <div class="text-gray-500 whitespace-nowrap px-1" id="step-title-2">نوع الطلب</div>
+                <div class="text-gray-500 whitespace-nowrap px-1" id="step-title-3">تفاصيل الطلب</div>
+                <div class="text-gray-500 whitespace-nowrap px-1" id="step-title-4">المراجعة والإرسال</div>
             </div>
         </div>
 
@@ -549,33 +583,33 @@ try {
                 <input type="hidden" name="submit_request" value="1" id="submit_request_hidden">
                 
                 <!-- الخطوة 1: المعلومات الشخصية -->
-                <div class="step active p-8" id="step-1">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">المعلومات الشخصية</h2>
+                <div class="step active p-4 md:p-8" id="step-1">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 text-center">المعلومات الشخصية</h2>
                     
                     <!-- قسم إدخال رمز الدخول للمواطنين العائدين -->
-                    <div id="access-code-section" class="mb-6">
-                        <div class="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-6">
+                    <div id="access-code-section" class="mb-4 md:mb-6">
+                        <div class="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-4 md:p-6">
                             <div class="text-center mb-4">
-                                <span class="text-5xl mb-3 inline-block">🔑</span>
-                                <h3 class="text-xl font-bold text-gray-800 mb-2">هل لديك رمز دخول؟</h3>
-                                <p class="text-gray-600 text-sm">إذا كنت قدمت طلباً سابقاً، أدخل رمز الدخول الخاص بك</p>
+                                <span class="text-4xl md:text-5xl mb-3 inline-block">🔑</span>
+                                <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">هل لديك رمز دخول؟</h3>
+                                <p class="text-gray-600 text-xs md:text-sm">إذا كنت قدمت طلباً سابقاً، أدخل رمز الدخول الخاص بك</p>
                             </div>
-                            
+
                             <div class="max-w-md mx-auto">
-                                <div class="flex gap-3 items-center">
+                                <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
                                     <div class="flex-1 flex items-center border-2 border-blue-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white" style="direction: ltr;">
-                                        <div class="px-4 py-3 text-lg font-bold text-gray-500 flex items-center">
+                                        <div class="px-3 md:px-4 py-2 md:py-3 text-base md:text-lg font-bold text-gray-500 flex items-center">
                                             <span>TKT-</span>
                                         </div>
-                                        <input type="text" id="access-code-input" 
-                                               class="flex-1 px-4 py-3 border-0 focus:ring-0 focus:outline-none text-center font-bold text-lg tracking-wider"
+                                        <input type="text" id="access-code-input"
+                                               class="flex-1 px-3 md:px-4 py-2 md:py-3 border-0 focus:ring-0 focus:outline-none text-center font-bold text-base md:text-lg tracking-wider"
                                                placeholder="12345"
                                                maxlength="5"
                                                pattern="[0-9]{5}"
                                                inputmode="numeric">
                                     </div>
-                                    <button type="button" onclick="loadDataByAccessCode()" 
-                                            class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-bold whitespace-nowrap">
+                                    <button type="button" onclick="loadDataByAccessCode()"
+                                            class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:bg-blue-700 transition font-bold whitespace-nowrap text-sm md:text-base">
                                         🔍 جلب البيانات
                                     </button>
                                 </div>
@@ -653,8 +687,8 @@ try {
                         </div>
                     </div>
                     
-                    <div class="flex justify-end mt-8">
-                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">
+                    <div class="flex justify-end mt-6 md:mt-8">
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold text-sm md:text-base w-full md:w-auto">
                             التالي ←
                         </button>
                     </div>
@@ -663,8 +697,8 @@ try {
                 </div>
 
                 <!-- الخطوة 2: نوع الطلب -->
-                <div class="step p-8" id="step-2">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">اختيار نوع الطلب</h2>
+                <div class="step p-4 md:p-8" id="step-2">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 text-center">اختيار نوع الطلب</h2>
                     
                     <div class="form-field">
                         <label class="block text-sm font-medium text-gray-700 mb-4">نوع الطلب *</label>
@@ -698,19 +732,19 @@ try {
                         <div id="documents-list" class="text-sm text-amber-700"></div>
                     </div>
 
-                    <div class="flex justify-between mt-8">
-                        <button type="button" onclick="prevStep()" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-300 font-semibold">
+                    <div class="flex flex-col md:flex-row justify-between gap-3 mt-6 md:mt-8">
+                        <button type="button" onclick="prevStep()" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-300 font-semibold text-sm md:text-base order-2 md:order-1">
                             ← السابق
                         </button>
-                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold" id="step2-next" disabled>
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold text-sm md:text-base order-1 md:order-2" id="step2-next" disabled>
                             التالي ←
                         </button>
                     </div>
                 </div>
 
                 <!-- الخطوة 3: تفاصيل الطلب -->
-                <div class="step p-8" id="step-3">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">تفاصيل الطلب</h2>
+                <div class="step p-4 md:p-8" id="step-3">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 text-center">تفاصيل الطلب</h2>
                     
                     <div class="grid grid-cols-1 gap-6">
                         <div class="form-field">
@@ -760,19 +794,19 @@ try {
                         </div>
                     </div>
 
-                    <div class="flex justify-between mt-8">
-                        <button type="button" onclick="prevStep()" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-300 font-semibold">
+                    <div class="flex flex-col md:flex-row justify-between gap-3 mt-6 md:mt-8">
+                        <button type="button" onclick="prevStep()" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-300 font-semibold text-sm md:text-base order-2 md:order-1">
                             ← السابق
                         </button>
-                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold">
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300 font-semibold text-sm md:text-base order-1 md:order-2">
                             التالي ←
                         </button>
                     </div>
                 </div>
 
                 <!-- الخطوة 4: المراجعة والإرسال -->
-                <div class="step p-8" id="step-4">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">مراجعة الطلب</h2>
+                <div class="step p-4 md:p-8" id="step-4">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 text-center">مراجعة الطلب</h2>
                     
                     <div class="bg-gray-50 rounded-lg p-6 mb-6">
                         <h3 class="font-bold text-gray-800 mb-4">ملخص الطلب:</h3>
@@ -799,11 +833,11 @@ try {
                         </div>
                     </div>
 
-                    <div class="flex justify-between">
-                        <button type="button" onclick="prevStep()" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-300 font-semibold">
+                    <div class="flex flex-col md:flex-row justify-between gap-3 mt-6 md:mt-8">
+                        <button type="button" onclick="prevStep()" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition duration-300 font-semibold text-sm md:text-base order-2 md:order-1">
                             ← السابق
                         </button>
-                        <button type="submit" name="submit_request" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition duration-300 font-semibold">
+                        <button type="submit" name="submit_request" class="bg-green-600 text-white px-6 md:px-8 py-3 rounded-lg hover:bg-green-700 transition duration-300 font-semibold text-sm md:text-base order-1 md:order-2">
                             🚀 تقديم الطلب
                         </button>
                     </div>
