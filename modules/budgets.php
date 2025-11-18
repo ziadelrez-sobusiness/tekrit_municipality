@@ -1,4 +1,9 @@
 <?php
+// تحميل أنظمة الأمان
+if (file_exists(__DIR__ . '/../includes/auto_security.php')) {
+    require_once __DIR__ . '/../includes/auto_security.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -42,9 +47,18 @@ if ($edit_item_id) {
     }
 }
 
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 // معالجة إنشاء ميزانية تلقائية من قوالب اللجنة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_auto_budget'])) {
-    try {
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error = $error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $committee_id = intval($_POST['committee_id']);
         $currency_id = intval($_POST['currency_id']); // العملة المحددة من المستخدم
         $fiscal_year = intval($_POST['fiscal_year']);
@@ -109,40 +123,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_auto_budget'])
         $stmt->execute([$budget_id, $currency_id, $committee_id]);
         $items_count = $stmt->rowCount();
         
-        $message = "تم إنشاء الميزانية بنجاح مع $items_count بند تلقائياً بالعملة المحددة!";
-    } catch (Exception $e) {
-        $error = 'خطأ في إنشاء الميزانية التلقائية: ' . $e->getMessage();
+            $message = "تم إنشاء الميزانية بنجاح مع $items_count بند تلقائياً بالعملة المحددة!";
+        } catch (Exception $e) {
+            $error = 'خطأ في إنشاء الميزانية التلقائية: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة تعديل ميزانية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_budget'])) {
-    try {
-        $budget_id = intval($_POST['budget_id']);
-        $budget_code = trim($_POST['budget_code']);
-        $name = trim($_POST['name']);
-        $fiscal_year = intval($_POST['fiscal_year']);
-        $start_date = $_POST['start_date'];
-        $end_date = $_POST['end_date'];
-        $total_amount = floatval($_POST['total_amount']);
-        $currency_id = intval($_POST['currency_id']);
-        $committee_id = !empty($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
-        $description = trim($_POST['description']);
-        
-        $stmt = $db->prepare("UPDATE budgets SET budget_code = ?, name = ?, fiscal_year = ?, start_date = ?, end_date = ?, total_amount = ?, currency_id = ?, committee_id = ?, description = ? WHERE id = ?");
-        $stmt->execute([$budget_code, $name, $fiscal_year, $start_date, $end_date, $total_amount, $currency_id, $committee_id, $description, $budget_id]);
-        
-        $message = 'تم تحديث الميزانية بنجاح!';
-        header("Location: budgets.php?budget_id=$budget_id" . ($selected_committee_id ? "&committee_id=$selected_committee_id&committee_name=" . urlencode($selected_committee_name) : ""));
-        exit();
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث الميزانية: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $budget_id = intval($_POST['budget_id']);
+            $budget_code = trim($_POST['budget_code']);
+            $name = trim($_POST['name']);
+            $fiscal_year = intval($_POST['fiscal_year']);
+            $start_date = $_POST['start_date'];
+            $end_date = $_POST['end_date'];
+            $total_amount = floatval($_POST['total_amount']);
+            $currency_id = intval($_POST['currency_id']);
+            $committee_id = !empty($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
+            $description = trim($_POST['description']);
+            
+            $stmt = $db->prepare("UPDATE budgets SET budget_code = ?, name = ?, fiscal_year = ?, start_date = ?, end_date = ?, total_amount = ?, currency_id = ?, committee_id = ?, description = ? WHERE id = ?");
+            $stmt->execute([$budget_code, $name, $fiscal_year, $start_date, $end_date, $total_amount, $currency_id, $committee_id, $description, $budget_id]);
+            
+            $message = 'تم تحديث الميزانية بنجاح!';
+            header("Location: budgets.php?budget_id=$budget_id" . ($selected_committee_id ? "&committee_id=$selected_committee_id&committee_name=" . urlencode($selected_committee_name) : ""));
+            exit();
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث الميزانية: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة إضافة ميزانية يدوية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_budget'])) {
-    try {
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error = $error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $budget_code = trim($_POST['budget_code']);
         $name = trim($_POST['name']);
         $fiscal_year = intval($_POST['fiscal_year']);
@@ -156,32 +179,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_budget'])) {
         $stmt = $db->prepare("INSERT INTO budgets (budget_code, name, fiscal_year, start_date, end_date, total_amount, currency_id, committee_id, description, created_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'مسودة')");
         $stmt->execute([$budget_code, $name, $fiscal_year, $start_date, $end_date, $total_amount, $currency_id, $committee_id, $description, $user['id']]);
         
-        $message = 'تم إضافة الميزانية بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في إضافة الميزانية: ' . $e->getMessage();
+            $message = 'تم إضافة الميزانية بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في إضافة الميزانية: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة حذف بند
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_budget_item'])) {
-    try {
-        $item_id = intval($_POST['item_id']);
-        $budget_id = intval($_POST['budget_id']);
-        
-        $stmt = $db->prepare("DELETE FROM budget_items WHERE id = ?");
-        $stmt->execute([$item_id]);
-        
-        $message = 'تم حذف البند بنجاح!';
-        header("Location: budgets.php?budget_id=$budget_id" . ($selected_committee_id ? "&committee_id=$selected_committee_id&committee_name=" . urlencode($selected_committee_name) : ""));
-        exit();
-    } catch (PDOException $e) {
-        $error = 'خطأ في حذف البند: ' . $e->getMessage();
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error = $error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $item_id = intval($_POST['item_id']);
+            $budget_id = intval($_POST['budget_id']);
+            
+            $stmt = $db->prepare("DELETE FROM budget_items WHERE id = ?");
+            $stmt->execute([$item_id]);
+            
+            $message = 'تم حذف البند بنجاح!';
+            header("Location: budgets.php?budget_id=$budget_id" . ($selected_committee_id ? "&committee_id=$selected_committee_id&committee_name=" . urlencode($selected_committee_name) : ""));
+            exit();
+        } catch (PDOException $e) {
+            $error = 'خطأ في حذف البند: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة تعديل بند
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_budget_item'])) {
-    try {
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error = $error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $item_id = intval($_POST['item_id']);
         $budget_id = intval($_POST['budget_id']);
         $item_code = trim($_POST['item_code']);
@@ -202,17 +235,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_budget_item'])) 
         $stmt = $db->prepare("UPDATE budget_items SET item_code = ?, name = ?, description = ?, item_type = ?, category = ?, allocated_amount = ?, currency_id = ?, remaining_amount = ? WHERE id = ?");
         $stmt->execute([$item_code, $name, $description, $item_type, $category, $allocated_amount, $currency_id, $remaining_amount, $item_id]);
         
-        $message = 'تم تحديث البند بنجاح!';
-        header("Location: budgets.php?budget_id=$budget_id" . ($selected_committee_id ? "&committee_id=$selected_committee_id&committee_name=" . urlencode($selected_committee_name) : ""));
-        exit();
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث البند: ' . $e->getMessage();
+            $message = 'تم تحديث البند بنجاح!';
+            header("Location: budgets.php?budget_id=$budget_id" . ($selected_committee_id ? "&committee_id=$selected_committee_id&committee_name=" . urlencode($selected_committee_name) : ""));
+            exit();
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث البند: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة إضافة بند
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_budget_item'])) {
-    try {
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error = $error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $budget_id = intval($_POST['budget_id']);
         $item_code = trim($_POST['item_code']);
         $name = trim($_POST['item_name']);
@@ -228,15 +266,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_budget_item'])) {
         $stmt = $db->prepare("INSERT INTO budget_items (budget_id, item_code, name, description, item_type, category, allocated_amount, currency_id, remaining_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$budget_id, $item_code, $name, $description, $item_type, $category, $allocated_amount, $currency_id, $remaining_amount]);
         
-        $message = 'تم إضافة البند بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في إضافة البند: ' . $e->getMessage();
+            $message = 'تم إضافة البند بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في إضافة البند: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة حذف ميزانية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_budget'])) {
-    try {
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error = $error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $budget_id = intval($_POST['budget_id']);
         
         // حذف البنود أولاً
@@ -247,39 +290,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_budget'])) {
         $stmt = $db->prepare("DELETE FROM budgets WHERE id = ?");
         $stmt->execute([$budget_id]);
         
-        $message = 'تم حذف الميزانية بنجاح!';
-        header("Location: budgets.php" . ($selected_committee_id ? "?committee_id=$selected_committee_id&committee_name=" . urlencode($selected_committee_name) : ""));
-        exit();
-    } catch (PDOException $e) {
-        $error = 'خطأ في حذف الميزانية: ' . $e->getMessage();
+            $message = 'تم حذف الميزانية بنجاح!';
+            header("Location: budgets.php" . ($selected_committee_id ? "?committee_id=$selected_committee_id&committee_name=" . urlencode($selected_committee_name) : ""));
+            exit();
+        } catch (PDOException $e) {
+            $error = 'خطأ في حذف الميزانية: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة اعتماد الميزانية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['approve_budget'])) {
-    try {
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error = $error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $budget_id = intval($_POST['budget_id']);
         
         $stmt = $db->prepare("UPDATE budgets SET status = 'معتمد', approved_by = ?, approved_date = CURRENT_DATE WHERE id = ?");
         $stmt->execute([$user['id'], $budget_id]);
         
-        $message = 'تم اعتماد الميزانية بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في اعتماد الميزانية: ' . $e->getMessage();
+            $message = 'تم اعتماد الميزانية بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في اعتماد الميزانية: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة إلغاء اعتماد الميزانية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['unapprove_budget'])) {
-    try {
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error = $error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $budget_id = intval($_POST['budget_id']);
         
         $stmt = $db->prepare("UPDATE budgets SET status = 'مسودة', approved_by = NULL, approved_date = NULL WHERE id = ?");
         $stmt->execute([$budget_id]);
         
-        $message = 'تم إلغاء اعتماد الميزانية بنجاح! يمكنك الآن تعديلها أو حذفها.';
-    } catch (PDOException $e) {
-        $error = 'خطأ في إلغاء اعتماد الميزانية: ' . $e->getMessage();
+            $message = 'تم إلغاء اعتماد الميزانية بنجاح! يمكنك الآن تعديلها أو حذفها.';
+        } catch (PDOException $e) {
+            $error = 'خطأ في إلغاء اعتماد الميزانية: ' . $e->getMessage();
+        }
     }
 }
 
@@ -646,6 +700,7 @@ if ($selected_budget_id) {
                                             ✏️ تعديل
                                         </button>
                                         <form method="POST" class="flex-1" onsubmit="return confirm('هل أنت متأكد من حذف هذه الميزانية؟');">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="delete_budget" value="1">
                                             <input type="hidden" name="budget_id" value="<?= $budget['id'] ?>">
                                             <button type="submit" class="w-full bg-red-600 text-white text-xs py-2 rounded hover:bg-red-700">
@@ -657,6 +712,7 @@ if ($selected_budget_id) {
                                 
                                 <?php if ($budget['status'] == 'مسودة'): ?>
                                 <form method="POST" class="mt-2" onclick="event.stopPropagation();">
+                                    <?php echo csrf_input('csrf_token'); ?>
                                     <input type="hidden" name="budget_id" value="<?= $budget['id'] ?>">
                                     <button type="submit" name="approve_budget" 
                                             class="w-full bg-green-600 text-white text-sm py-2 rounded hover:bg-green-700">
@@ -666,6 +722,7 @@ if ($selected_budget_id) {
                                 <?php elseif ($budget['status'] == 'معتمد'): ?>
                                 <form method="POST" class="mt-2" onclick="event.stopPropagation();" 
                                       onsubmit="return confirm('هل أنت متأكد من إلغاء اعتماد هذه الميزانية؟ سيمكنك بعدها تعديلها أو حذفها.');">
+                                    <?php echo csrf_input('csrf_token'); ?>
                                     <input type="hidden" name="budget_id" value="<?= $budget['id'] ?>">
                                     <button type="submit" name="unapprove_budget" 
                                             class="w-full bg-orange-600 text-white text-sm py-2 rounded hover:bg-orange-700">
@@ -776,6 +833,7 @@ if ($selected_budget_id) {
                                                     ✏️ تعديل
                                                 </button>
                                                 <form method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا البند؟');">
+                                                    <?php echo csrf_input('csrf_token'); ?>
                                                     <input type="hidden" name="delete_budget_item" value="1">
                                                     <input type="hidden" name="item_id" value="<?= $item['id'] ?>">
                                                     <input type="hidden" name="budget_id" value="<?= $selected_budget_id ?>">
@@ -940,6 +998,7 @@ if ($selected_budget_id) {
             </div>
             
             <form method="POST" class="p-6 space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
                     <p class="text-sm text-purple-800">
                         <strong>📌 ملاحظة:</strong> عند اختيار لجنة وعملة، سيتم إنشاء الميزانية تلقائياً مع جميع البنود المحددة مسبقاً لهذه اللجنة بالعملة المحددة، مما يوفر الوقت والجهد.
@@ -1010,6 +1069,7 @@ if ($selected_budget_id) {
             </div>
             
             <form method="POST" class="p-6 space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-2">رمز الميزانية *</label>
@@ -1100,6 +1160,7 @@ if ($selected_budget_id) {
             </div>
             
             <form method="POST" class="p-6 space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="budget_id" value="<?= $edit_budget['id'] ?>">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1200,6 +1261,7 @@ if ($selected_budget_id) {
             </div>
             
             <form method="POST" class="p-6 space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="budget_id" id="item_budget_id">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1283,6 +1345,7 @@ if ($selected_budget_id) {
             </div>
             
             <form method="POST" class="p-6 space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="item_id" value="<?= $edit_item['id'] ?>">
                 <input type="hidden" name="budget_id" value="<?= $edit_item['budget_id'] ?>">
                 

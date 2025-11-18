@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../config/database.php';
 require_once '../includes/auth.php';
 
@@ -18,149 +23,153 @@ $error_message = '';
 
 // معالجة الإجراءات
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    if ($action == 'add_facility') {
-        $name_ar = trim($_POST['name_ar']);
-        $name_en = trim($_POST['name_en']);
-        $category_id = $_POST['category_id'];
-        $description_ar = trim($_POST['description_ar']);
-        $description_en = trim($_POST['description_en']);
-        $latitude = floatval($_POST['latitude']);
-        $longitude = floatval($_POST['longitude']);
-        $contact_person_ar = trim($_POST['contact_person_ar']);
-        $contact_person_en = trim($_POST['contact_person_en']);
-        $phone = trim($_POST['phone']);
-        $email = trim($_POST['email']);
-        $address_ar = trim($_POST['address_ar']);
-        $address_en = trim($_POST['address_en']);
-        $working_hours_ar = trim($_POST['working_hours_ar']);
-        $working_hours_en = trim($_POST['working_hours_en']);
-        $website = trim($_POST['website']);
-        $is_featured = isset($_POST['is_featured']) ? 1 : 0;
+    if (!csrf_protect(false)) {
+        $error_message = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $action = $_POST['action'] ?? '';
         
-        // معالجة رفع الصورة
-        $image_path = '';
-        if (!empty($_FILES['facility_image']['name'])) {
-            $upload_dir = '../uploads/facilities/';
-            $file_ext = strtolower(pathinfo($_FILES['facility_image']['name'], PATHINFO_EXTENSION));
-            $allowed_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if ($action == 'add_facility') {
+            $name_ar = trim($_POST['name_ar']);
+            $name_en = trim($_POST['name_en']);
+            $category_id = $_POST['category_id'];
+            $description_ar = trim($_POST['description_ar']);
+            $description_en = trim($_POST['description_en']);
+            $latitude = floatval($_POST['latitude']);
+            $longitude = floatval($_POST['longitude']);
+            $contact_person_ar = trim($_POST['contact_person_ar']);
+            $contact_person_en = trim($_POST['contact_person_en']);
+            $phone = trim($_POST['phone']);
+            $email = trim($_POST['email']);
+            $address_ar = trim($_POST['address_ar']);
+            $address_en = trim($_POST['address_en']);
+            $working_hours_ar = trim($_POST['working_hours_ar']);
+            $working_hours_en = trim($_POST['working_hours_en']);
+            $website = trim($_POST['website']);
+            $is_featured = isset($_POST['is_featured']) ? 1 : 0;
             
-            if (in_array($file_ext, $allowed_ext)) {
-                $image_path = 'facility_' . time() . '.' . $file_ext;
-                move_uploaded_file($_FILES['facility_image']['tmp_name'], $upload_dir . $image_path);
+            // معالجة رفع الصورة
+            $image_path = '';
+            if (!empty($_FILES['facility_image']['name'])) {
+                $upload_dir = '../uploads/facilities/';
+                $file_ext = strtolower(pathinfo($_FILES['facility_image']['name'], PATHINFO_EXTENSION));
+                $allowed_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                
+                if (in_array($file_ext, $allowed_ext)) {
+                    $image_path = 'facility_' . time() . '.' . $file_ext;
+                    move_uploaded_file($_FILES['facility_image']['tmp_name'], $upload_dir . $image_path);
+                }
+            }
+            
+            if (!empty($name_ar) && !empty($latitude) && !empty($longitude)) {
+                try {
+                    $stmt = $db->prepare("INSERT INTO facilities (name_ar, name_en, category_id, description_ar, description_en, latitude, longitude, contact_person_ar, contact_person_en, phone, email, address_ar, address_en, working_hours_ar, working_hours_en, website, image_path, is_featured, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$name_ar, $name_en, $category_id, $description_ar, $description_en, $latitude, $longitude, $contact_person_ar, $contact_person_en, $phone, $email, $address_ar, $address_en, $working_hours_ar, $working_hours_en, $website, $image_path, $is_featured, $auth->getCurrentUser()['id']]);
+                    $success_message = "تم إضافة المرفق بنجاح";
+                } catch (Exception $e) {
+                    $error_message = "خطأ في إضافة المرفق: " . $e->getMessage();
+                }
+            } else {
+                $error_message = "يرجى ملء الحقول الإجبارية (الاسم بالعربي، خط العرض، خط الطول)";
             }
         }
         
-        if (!empty($name_ar) && !empty($latitude) && !empty($longitude)) {
+        elseif ($action == 'edit_facility') {
+            $facility_id = $_POST['facility_id'];
+            $name_ar = trim($_POST['name_ar']);
+            $name_en = trim($_POST['name_en']);
+            $category_id = $_POST['category_id'];
+            $description_ar = trim($_POST['description_ar']);
+            $description_en = trim($_POST['description_en']);
+            $latitude = floatval($_POST['latitude']);
+            $longitude = floatval($_POST['longitude']);
+            $contact_person_ar = trim($_POST['contact_person_ar']);
+            $contact_person_en = trim($_POST['contact_person_en']);
+            $phone = trim($_POST['phone']);
+            $email = trim($_POST['email']);
+            $address_ar = trim($_POST['address_ar']);
+            $address_en = trim($_POST['address_en']);
+            $working_hours_ar = trim($_POST['working_hours_ar']);
+            $working_hours_en = trim($_POST['working_hours_en']);
+            $website = trim($_POST['website']);
+            $is_featured = isset($_POST['is_featured']) ? 1 : 0;
+            
+            // جلب البيانات الحالية
+            $current_stmt = $db->prepare("SELECT image_path FROM facilities WHERE id = ?");
+            $current_stmt->execute([$facility_id]);
+            $current_data = $current_stmt->fetch();
+            $image_path = $current_data['image_path'];
+            
+            // معالجة رفع صورة جديدة
+            if (!empty($_FILES['facility_image']['name'])) {
+                $upload_dir = '../uploads/facilities/';
+                $file_ext = strtolower(pathinfo($_FILES['facility_image']['name'], PATHINFO_EXTENSION));
+                $allowed_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                
+                if (in_array($file_ext, $allowed_ext)) {
+                    // حذف الصورة القديمة
+                    if ($image_path && file_exists($upload_dir . $image_path)) {
+                        unlink($upload_dir . $image_path);
+                    }
+                    
+                    $image_path = 'facility_' . time() . '.' . $file_ext;
+                    move_uploaded_file($_FILES['facility_image']['tmp_name'], $upload_dir . $image_path);
+                }
+            }
+            
+            if (!empty($name_ar) && !empty($latitude) && !empty($longitude)) {
+                try {
+                    $stmt = $db->prepare("UPDATE facilities SET name_ar = ?, name_en = ?, category_id = ?, description_ar = ?, description_en = ?, latitude = ?, longitude = ?, contact_person_ar = ?, contact_person_en = ?, phone = ?, email = ?, address_ar = ?, address_en = ?, working_hours_ar = ?, working_hours_en = ?, website = ?, image_path = ?, is_featured = ? WHERE id = ?");
+                    $stmt->execute([$name_ar, $name_en, $category_id, $description_ar, $description_en, $latitude, $longitude, $contact_person_ar, $contact_person_en, $phone, $email, $address_ar, $address_en, $working_hours_ar, $working_hours_en, $website, $image_path, $is_featured, $facility_id]);
+                    $success_message = "تم تحديث المرفق بنجاح";
+                } catch (Exception $e) {
+                    $error_message = "خطأ في تحديث المرفق: " . $e->getMessage();
+                }
+            }
+        }
+        
+        elseif ($action == 'delete_facility') {
+            $facility_id = $_POST['facility_id'];
+            
             try {
-                $stmt = $db->prepare("INSERT INTO facilities (name_ar, name_en, category_id, description_ar, description_en, latitude, longitude, contact_person_ar, contact_person_en, phone, email, address_ar, address_en, working_hours_ar, working_hours_en, website, image_path, is_featured, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$name_ar, $name_en, $category_id, $description_ar, $description_en, $latitude, $longitude, $contact_person_ar, $contact_person_en, $phone, $email, $address_ar, $address_en, $working_hours_ar, $working_hours_en, $website, $image_path, $is_featured, $auth->getCurrentUser()['id']]);
-                $success_message = "تم إضافة المرفق بنجاح";
-            } catch (Exception $e) {
-                $error_message = "خطأ في إضافة المرفق: " . $e->getMessage();
-            }
-        } else {
-            $error_message = "يرجى ملء الحقول الإجبارية (الاسم بالعربي، خط العرض، خط الطول)";
-        }
-    }
-    
-    elseif ($action == 'edit_facility') {
-        $facility_id = $_POST['facility_id'];
-        $name_ar = trim($_POST['name_ar']);
-        $name_en = trim($_POST['name_en']);
-        $category_id = $_POST['category_id'];
-        $description_ar = trim($_POST['description_ar']);
-        $description_en = trim($_POST['description_en']);
-        $latitude = floatval($_POST['latitude']);
-        $longitude = floatval($_POST['longitude']);
-        $contact_person_ar = trim($_POST['contact_person_ar']);
-        $contact_person_en = trim($_POST['contact_person_en']);
-        $phone = trim($_POST['phone']);
-        $email = trim($_POST['email']);
-        $address_ar = trim($_POST['address_ar']);
-        $address_en = trim($_POST['address_en']);
-        $working_hours_ar = trim($_POST['working_hours_ar']);
-        $working_hours_en = trim($_POST['working_hours_en']);
-        $website = trim($_POST['website']);
-        $is_featured = isset($_POST['is_featured']) ? 1 : 0;
-        
-        // جلب البيانات الحالية
-        $current_stmt = $db->prepare("SELECT image_path FROM facilities WHERE id = ?");
-        $current_stmt->execute([$facility_id]);
-        $current_data = $current_stmt->fetch();
-        $image_path = $current_data['image_path'];
-        
-        // معالجة رفع صورة جديدة
-        if (!empty($_FILES['facility_image']['name'])) {
-            $upload_dir = '../uploads/facilities/';
-            $file_ext = strtolower(pathinfo($_FILES['facility_image']['name'], PATHINFO_EXTENSION));
-            $allowed_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            
-            if (in_array($file_ext, $allowed_ext)) {
-                // حذف الصورة القديمة
-                if ($image_path && file_exists($upload_dir . $image_path)) {
-                    unlink($upload_dir . $image_path);
+                // جلب مسار الصورة قبل الحذف
+                $stmt = $db->prepare("SELECT image_path FROM facilities WHERE id = ?");
+                $stmt->execute([$facility_id]);
+                $facility = $stmt->fetch();
+                
+                // حذف المرفق
+                $stmt = $db->prepare("DELETE FROM facilities WHERE id = ?");
+                $stmt->execute([$facility_id]);
+                
+                // حذف الصورة إن وجدت
+                if ($facility && $facility['image_path']) {
+                    $image_file = '../uploads/facilities/' . $facility['image_path'];
+                    if (file_exists($image_file)) {
+                        unlink($image_file);
+                    }
                 }
                 
-                $image_path = 'facility_' . time() . '.' . $file_ext;
-                move_uploaded_file($_FILES['facility_image']['tmp_name'], $upload_dir . $image_path);
-            }
-        }
-        
-        if (!empty($name_ar) && !empty($latitude) && !empty($longitude)) {
-            try {
-                $stmt = $db->prepare("UPDATE facilities SET name_ar = ?, name_en = ?, category_id = ?, description_ar = ?, description_en = ?, latitude = ?, longitude = ?, contact_person_ar = ?, contact_person_en = ?, phone = ?, email = ?, address_ar = ?, address_en = ?, working_hours_ar = ?, working_hours_en = ?, website = ?, image_path = ?, is_featured = ? WHERE id = ?");
-                $stmt->execute([$name_ar, $name_en, $category_id, $description_ar, $description_en, $latitude, $longitude, $contact_person_ar, $contact_person_en, $phone, $email, $address_ar, $address_en, $working_hours_ar, $working_hours_en, $website, $image_path, $is_featured, $facility_id]);
-                $success_message = "تم تحديث المرفق بنجاح";
+                $success_message = "تم حذف المرفق بنجاح";
             } catch (Exception $e) {
-                $error_message = "خطأ في تحديث المرفق: " . $e->getMessage();
+                $error_message = "خطأ في حذف المرفق: " . $e->getMessage();
             }
         }
-    }
-    
-    elseif ($action == 'delete_facility') {
-        $facility_id = $_POST['facility_id'];
         
-        try {
-            // جلب مسار الصورة قبل الحذف
-            $stmt = $db->prepare("SELECT image_path FROM facilities WHERE id = ?");
-            $stmt->execute([$facility_id]);
-            $facility = $stmt->fetch();
+        elseif ($action == 'toggle_status') {
+            $facility_id = $_POST['facility_id'];
+            $new_status = $_POST['new_status'];
             
-            // حذف المرفق
-            $stmt = $db->prepare("DELETE FROM facilities WHERE id = ?");
-            $stmt->execute([$facility_id]);
-            
-            // حذف الصورة إن وجدت
-            if ($facility && $facility['image_path']) {
-                $image_file = '../uploads/facilities/' . $facility['image_path'];
-                if (file_exists($image_file)) {
-                    unlink($image_file);
-                }
+            try {
+                $stmt = $db->prepare("UPDATE facilities SET is_active = ? WHERE id = ?");
+                $stmt->execute([$new_status, $facility_id]);
+                
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
+                exit();
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                exit();
             }
-            
-            $success_message = "تم حذف المرفق بنجاح";
-        } catch (Exception $e) {
-            $error_message = "خطأ في حذف المرفق: " . $e->getMessage();
-        }
-    }
-    
-    elseif ($action == 'toggle_status') {
-        $facility_id = $_POST['facility_id'];
-        $new_status = $_POST['new_status'];
-        
-        try {
-            $stmt = $db->prepare("UPDATE facilities SET is_active = ? WHERE id = ?");
-            $stmt->execute([$new_status, $facility_id]);
-            
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true]);
-            exit();
-        } catch (Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-            exit();
         }
     }
 }
@@ -508,6 +517,7 @@ $stats = [
                     </div>
                     
                     <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="add_facility">
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -670,6 +680,7 @@ $stats = [
                     </div>
                     
                     <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="edit_facility">
                         <input type="hidden" name="facility_id" id="edit_facility_id">
                         

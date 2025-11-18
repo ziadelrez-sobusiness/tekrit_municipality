@@ -1,0 +1,172 @@
+<?php
+/**
+ * سكريبت لإضافة CSRF Protection تلقائياً لجميع الملفات المتبقية
+ * 
+ * هذا السكريبت يضيف CSRF middleware و validation و fields لجميع الملفات في modules/
+ * 
+ * تحذير: هذا السكريبت للاستخدام مرة واحدة فقط!
+ */
+
+require_once __DIR__ . '/../includes/csrf_middleware.php';
+
+$modulesDir = __DIR__ . '/../modules';
+$files = glob($modulesDir . '/*.php');
+
+// قائمة الملفات المكتملة (لا نعدلها)
+$completedFiles = [
+    'invoices.php',
+    'budgets.php',
+    'committee_dashboard.php',
+    'suppliers.php',
+    'departments.php',
+    'facilities_api.php',
+];
+
+// قائمة الملفات التي يجب تخطيها
+$skipFiles = [
+    'backup',
+    'old',
+    'example',
+    'test',
+    'protected',
+    'api',
+];
+
+$processed = 0;
+$errors = [];
+$skipped = 0;
+
+foreach ($files as $file) {
+    $basename = basename($file);
+    
+    // تخطي الملفات المكتملة
+    if (in_array($basename, $completedFiles)) {
+        $skipped++;
+        continue;
+    }
+    
+    // تخطي ملفات backup
+    $shouldSkip = false;
+    foreach ($skipFiles as $skip) {
+        if (stripos($basename, $skip) !== false) {
+            $shouldSkip = true;
+            break;
+        }
+    }
+    if ($shouldSkip) {
+        $skipped++;
+        continue;
+    }
+    
+    $content = file_get_contents($file);
+    $originalContent = $content;
+    $modified = false;
+    
+    // 1. إضافة require csrf_middleware في البداية (بعد require auth)
+    if (strpos($content, 'require_once') !== false && 
+        strpos($content, 'csrf_middleware') === false &&
+        (strpos($content, 'auth.php') !== false || strpos($content, 'auth') !== false)) {
+        
+        // البحث عن آخر require_once
+        $lines = explode("\n", $content);
+        $insertIndex = -1;
+        
+        for ($i = 0; $i < count($lines); $i++) {
+            if ((strpos($lines[$i], 'require_once') !== false || strpos($lines[$i], 'require') !== false) && 
+                (strpos($lines[$i], 'auth') !== false || strpos($lines[$i], 'database') !== false)) {
+                $insertIndex = $i + 1;
+                break;
+            }
+        }
+        
+        if ($insertIndex > 0) {
+            $csrfLine = "\n// تحميل CSRF Protection\n";
+            $csrfLine .= "if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {\n";
+            $csrfLine .= "    require_once __DIR__ . '/../includes/csrf_middleware.php';\n";
+            $csrfLine .= "}\n";
+            
+            array_splice($lines, $insertIndex, 0, $csrfLine);
+            $content = implode("\n", $lines);
+            $modified = true;
+        }
+    }
+    
+    // 2. إضافة CSRF validation في معالجات POST
+    // هذا معقد - سنحتاج regex أفضل
+    if (preg_match_all('/if\s*\(\s*\$_SERVER\[[\'"]REQUEST_METHOD[\'"]\s*\]\s*===\s*[\'"]POST[\'"]\s*\)/i', $content, $matches, PREG_OFFSET_CAPTURE)) {
+        foreach (array_reverse($matches[0]) as $match) {
+            $pos = $match[1];
+            
+            // التحقق من عدم وجود CSRF validation بالفعل
+            $before = substr($content, max(0, $pos - 200), 200);
+            if (strpos($before, 'csrf_protect') !== false || 
+                strpos($before, 'csrf_validate') !== false ||
+                strpos($before, 'form_validate_csrf') !== false) {
+                continue;
+            }
+            
+            // إضافة CSRF protection بعد if statement
+            $after = substr($content, $pos, 500);
+            if (preg_match('/\n\s*\{/', $after, $m, PREG_OFFSET_CAPTURE)) {
+                $insertPos = $pos + $m[0][1] + strlen($m[0][0]);
+                $csrfCode = "\n    // التحقق من CSRF\n    if (!csrf_protect(false)) {\n        \$error = \$error ?? 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';\n    } else {\n";
+                $content = substr_replace($content, $csrfCode, $insertPos, 0);
+                $modified = true;
+            }
+        }
+    }
+    
+    // 3. إضافة CSRF field في النماذج
+    if (preg_match_all('/<form\s+method\s*=\s*[\'"]POST[\'"]/i', $content, $formMatches, PREG_OFFSET_CAPTURE)) {
+        foreach (array_reverse($formMatches[0]) as $formMatch) {
+            $formPos = $formMatch[1];
+            
+            // التحقق من عدم وجود CSRF field بالفعل
+            $afterForm = substr($content, $formPos, 500);
+            if (strpos($afterForm, 'csrf_token') !== false || 
+                strpos($afterForm, 'csrf_field') !== false ||
+                strpos($afterForm, 'csrf_input') !== false) {
+                continue;
+            }
+            
+            // البحث عن نهاية <form> tag
+            if (preg_match('/>/', $afterForm, $m, PREG_OFFSET_CAPTURE)) {
+                $insertPos = $formPos + $m[0][1] + 1;
+                $csrfField = "\n                <?php echo csrf_input('csrf_token'); ?>\n";
+                $content = substr_replace($content, $csrfField, $insertPos, 0);
+                $modified = true;
+            }
+        }
+    }
+    
+    if ($modified) {
+        // نسخ احتياطي
+        $backupFile = $file . '.csrf_backup.' . date('Y-m-d_H-i-s');
+        copy($file, $backupFile);
+        
+        // حفظ الملف المحدث
+        if (file_put_contents($file, $content)) {
+            $processed++;
+            echo "✅ تم معالجة: $basename\n";
+        } else {
+            $errors[] = "❌ فشل حفظ: $basename";
+        }
+    }
+}
+
+echo "\n📊 النتيجة:\n";
+echo "✅ تم معالجة: $processed ملف\n";
+echo "⏭️ تم تخطي: $skipped ملف\n";
+echo "❌ الأخطاء: " . count($errors) . "\n";
+
+if (!empty($errors)) {
+    echo "\nالأخطاء:\n";
+    foreach ($errors as $error) {
+        echo "$error\n";
+    }
+}
+
+echo "\n⚠️ تحذير: تم إنشاء نسخ احتياطية من جميع الملفات المعدلة!\n";
+echo "يرجى اختبار النظام بعناية قبل حذف النسخ الاحتياطية.\n";
+
+

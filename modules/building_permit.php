@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -14,47 +19,51 @@ $error = '';
 
 // معالجة تقديم طلب رخصة البناء
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_permit'])) {
-    $applicant_name = trim($_POST['applicant_name']);
-    $applicant_phone = trim($_POST['applicant_phone']);
-    $applicant_address = trim($_POST['applicant_address']);
-    $building_address = trim($_POST['building_address']);
-    $building_type = $_POST['building_type'];
-    $land_area = floatval($_POST['land_area']);
-    $building_area = floatval($_POST['building_area']);
-    $floors_count = intval($_POST['floors_count']);
-    $construction_purpose = $_POST['construction_purpose'];
-    $estimated_cost = floatval($_POST['estimated_cost']);
-    $notes = trim($_POST['notes']);
-    
-    // التحقق من البيانات المطلوبة
-    if (empty($applicant_name) || empty($applicant_phone) || empty($building_address) || 
-        empty($building_type) || $land_area <= 0 || $building_area <= 0) {
-        $error = 'يرجى تعبئة جميع الحقول المطلوبة بشكل صحيح';
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        try {
-            // إعداد بيانات النموذج كـ JSON
-            $application_data = json_encode([
-                'building_address' => $building_address,
-                'building_type' => $building_type,
-                'land_area' => $land_area,
-                'building_area' => $building_area,
-                'floors_count' => $floors_count,
-                'construction_purpose' => $construction_purpose,
-                'estimated_cost' => $estimated_cost,
-                'notes' => $notes
-            ], JSON_UNESCAPED_UNICODE);
-            
-            $query = "INSERT INTO municipal_forms (form_type, applicant_name, applicant_phone, applicant_address, application_data, submission_date) VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->execute(['رخصة بناء', $applicant_name, $applicant_phone, $applicant_address, $application_data, date('Y-m-d')]);
-            
-            $message = 'تم تقديم طلب رخصة البناء بنجاح! رقم الطلب: ' . $db->lastInsertId();
-            
-            // إعادة تعيين النموذج
-            $_POST = [];
-            
-        } catch (PDOException $e) {
-            $error = 'خطأ في تقديم الطلب: ' . $e->getMessage();
+        $applicant_name = trim($_POST['applicant_name']);
+        $applicant_phone = trim($_POST['applicant_phone']);
+        $applicant_address = trim($_POST['applicant_address']);
+        $building_address = trim($_POST['building_address']);
+        $building_type = $_POST['building_type'];
+        $land_area = floatval($_POST['land_area']);
+        $building_area = floatval($_POST['building_area']);
+        $floors_count = intval($_POST['floors_count']);
+        $construction_purpose = $_POST['construction_purpose'];
+        $estimated_cost = floatval($_POST['estimated_cost']);
+        $notes = trim($_POST['notes']);
+        
+        // التحقق من البيانات المطلوبة
+        if (empty($applicant_name) || empty($applicant_phone) || empty($building_address) || 
+            empty($building_type) || $land_area <= 0 || $building_area <= 0) {
+            $error = 'يرجى تعبئة جميع الحقول المطلوبة بشكل صحيح';
+        } else {
+            try {
+                // إعداد بيانات النموذج كـ JSON
+                $application_data = json_encode([
+                    'building_address' => $building_address,
+                    'building_type' => $building_type,
+                    'land_area' => $land_area,
+                    'building_area' => $building_area,
+                    'floors_count' => $floors_count,
+                    'construction_purpose' => $construction_purpose,
+                    'estimated_cost' => $estimated_cost,
+                    'notes' => $notes
+                ], JSON_UNESCAPED_UNICODE);
+                
+                $query = "INSERT INTO municipal_forms (form_type, applicant_name, applicant_phone, applicant_address, application_data, submission_date) VALUES (?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute(['رخصة بناء', $applicant_name, $applicant_phone, $applicant_address, $application_data, date('Y-m-d')]);
+                
+                $message = 'تم تقديم طلب رخصة البناء بنجاح! رقم الطلب: ' . $db->lastInsertId();
+                
+                // إعادة تعيين النموذج
+                $_POST = [];
+                
+            } catch (PDOException $e) {
+                $error = 'خطأ في تقديم الطلب: ' . $e->getMessage();
+            }
         }
     }
 }
@@ -123,6 +132,7 @@ try {
                     </h2>
                     
                     <form method="POST" class="space-y-6">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <!-- معلومات مقدم الطلب -->
                         <div class="bg-gray-50 p-4 rounded-lg">
                             <h3 class="font-semibold text-gray-800 mb-4">معلومات مقدم الطلب</h3>

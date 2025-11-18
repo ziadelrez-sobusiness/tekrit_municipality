@@ -1,6 +1,16 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
+
+// تحميل دوال الأمان
+if (file_exists(__DIR__ . '/../includes/form_helper.php')) {
+    require_once __DIR__ . '/../includes/form_helper.php';
+}
 
 $auth->requireLogin();
 
@@ -17,8 +27,11 @@ $committees = $db->query("SELECT id, committee_name FROM municipal_committees WH
 
 // معالجة إضافة فاتورة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_invoice'])) {
-    try {
-        $invoice_number = trim($_POST['invoice_number']);
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $invoice_number = trim($_POST['invoice_number']);
         $supplier_id = intval($_POST['supplier_id']);
         $invoice_date = $_POST['invoice_date'];
         $due_date = $_POST['due_date'];
@@ -36,15 +49,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_invoice'])) {
         $stmt = $db->prepare("INSERT INTO supplier_invoices (invoice_number, supplier_id, invoice_date, due_date, total_amount, currency_id, exchange_rate, remaining_amount, description, related_project_id, budget_item_id, committee_id, created_by, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$invoice_number, $supplier_id, $invoice_date, $due_date, $total_amount, $currency_id, $exchange_rate, $remaining_amount, $description, $related_project_id, $budget_item_id, $committee_id, $user['id'], $notes]);
         
-        $message = 'تم إضافة الفاتورة بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في إضافة الفاتورة: ' . $e->getMessage();
+            $message = 'تم إضافة الفاتورة بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في إضافة الفاتورة: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة تعديل فاتورة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_invoice'])) {
-    try {
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $invoice_id = intval($_POST['invoice_id']);
         $invoice_number = trim($_POST['invoice_number']);
         $supplier_id = intval($_POST['supplier_id']);
@@ -73,15 +90,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_invoice'])) {
         $stmt = $db->prepare("UPDATE supplier_invoices SET invoice_number = ?, supplier_id = ?, invoice_date = ?, due_date = ?, total_amount = ?, currency_id = ?, exchange_rate = ?, remaining_amount = ?, description = ?, related_project_id = ?, budget_item_id = ?, committee_id = ?, notes = ? WHERE id = ?");
         $stmt->execute([$invoice_number, $supplier_id, $invoice_date, $due_date, $total_amount, $currency_id, $exchange_rate, $remaining_amount, $description, $related_project_id, $budget_item_id, $committee_id, $notes, $invoice_id]);
         
-        $message = 'تم تحديث الفاتورة بنجاح!';
-    } catch (Exception $e) {
-        $error = 'خطأ في تحديث الفاتورة: ' . $e->getMessage();
+            $message = 'تم تحديث الفاتورة بنجاح!';
+        } catch (Exception $e) {
+            $error = 'خطأ في تحديث الفاتورة: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة تسجيل دفعة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_payment'])) {
-    try {
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $db->beginTransaction();
         
         $invoice_id = intval($_POST['invoice_id']);
@@ -173,17 +194,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_payment'])) {
         }
         
         $db->commit();
-        $message = 'تم تسجيل الدفعة وإنشاء المعاملة المالية بنجاح!';
-        
-    } catch (Exception $e) {
-        $db->rollBack();
-        $error = 'خطأ في تسجيل الدفعة: ' . $e->getMessage();
+            $message = 'تم تسجيل الدفعة وإنشاء المعاملة المالية بنجاح!';
+            
+        } catch (Exception $e) {
+            $db->rollBack();
+            $error = 'خطأ في تسجيل الدفعة: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة حذف فاتورة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_invoice'])) {
-    try {
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $invoice_id = intval($_POST['invoice_id']);
         
         // التحقق من وجود دفعات
@@ -619,6 +644,7 @@ try {
             </div>
             
             <form method="POST" class="p-6 space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-2">رقم الفاتورة *</label>
@@ -745,6 +771,7 @@ try {
             </div>
             
             <form method="POST" class="p-6 space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="invoice_id" id="payment_invoice_id">
                 
                 <div class="bg-blue-50 p-4 rounded-lg mb-4">
@@ -907,6 +934,7 @@ try {
                 </div>
                 
                 <form method="POST" class="p-6">
+                    <?php echo csrf_input('csrf_token'); ?>
                     <input type="hidden" name="invoice_id" value="<?= $edit_invoice_data['id'] ?>">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

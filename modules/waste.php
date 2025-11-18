@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -14,68 +19,80 @@ $error = '';
 
 // معالجة إضافة جدولة جديدة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_schedule'])) {
-    $route_name = trim($_POST['route_name']);
-    $area = trim($_POST['area']);
-    $schedule_type = $_POST['schedule_type'];
-    $collection_day = $_POST['collection_day'];
-    $start_time = $_POST['start_time'];
-    $end_time = $_POST['end_time'];
-    $assigned_team = trim($_POST['assigned_team']);
-    $vehicle_id = !empty($_POST['vehicle_id']) ? intval($_POST['vehicle_id']) : null;
-    $notes = trim($_POST['notes']);
-    $is_active = isset($_POST['is_active']) ? 1 : 0;
-    
-    if (!empty($route_name) && !empty($area)) {
-        try {
-            $query = "INSERT INTO waste_collection_schedules (route_name, area, schedule_type, collection_day, start_time, end_time, assigned_team, vehicle_id, notes, is_active, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$route_name, $area, $schedule_type, $collection_day, $start_time, $end_time, $assigned_team, $vehicle_id, $notes, $is_active, $user['id']]);
-            $message = 'تم إضافة جدولة جمع النفايات بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة الجدولة: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $route_name = trim($_POST['route_name']);
+        $area = trim($_POST['area']);
+        $schedule_type = $_POST['schedule_type'];
+        $collection_day = $_POST['collection_day'];
+        $start_time = $_POST['start_time'];
+        $end_time = $_POST['end_time'];
+        $assigned_team = trim($_POST['assigned_team']);
+        $vehicle_id = !empty($_POST['vehicle_id']) ? intval($_POST['vehicle_id']) : null;
+        $notes = trim($_POST['notes']);
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        
+        if (!empty($route_name) && !empty($area)) {
+            try {
+                $query = "INSERT INTO waste_collection_schedules (route_name, area, schedule_type, collection_day, start_time, end_time, assigned_team, vehicle_id, notes, is_active, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$route_name, $area, $schedule_type, $collection_day, $start_time, $end_time, $assigned_team, $vehicle_id, $notes, $is_active, $user['id']]);
+                $message = 'تم إضافة جدولة جمع النفايات بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة الجدولة: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة إضافة تقرير نظافة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_report'])) {
-    $area = trim($_POST['area']);
-    $report_type = $_POST['report_type'];
-    $description = trim($_POST['description']);
-    $reporter_name = trim($_POST['reporter_name']);
-    $reporter_phone = trim($_POST['reporter_phone']);
-    $priority = $_POST['priority'];
-    $location_details = trim($_POST['location_details']);
-    
-    if (!empty($area) && !empty($description)) {
-        try {
-            $query = "INSERT INTO waste_reports (area, report_type, description, reporter_name, reporter_phone, priority, location_details, status, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, 'مفتوح', ?)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$area, $report_type, $description, $reporter_name, $reporter_phone, $priority, $location_details, $user['id']]);
-            $message = 'تم إضافة تقرير النظافة بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة التقرير: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $area = trim($_POST['area']);
+        $report_type = $_POST['report_type'];
+        $description = trim($_POST['description']);
+        $reporter_name = trim($_POST['reporter_name']);
+        $reporter_phone = trim($_POST['reporter_phone']);
+        $priority = $_POST['priority'];
+        $location_details = trim($_POST['location_details']);
+        
+        if (!empty($area) && !empty($description)) {
+            try {
+                $query = "INSERT INTO waste_reports (area, report_type, description, reporter_name, reporter_phone, priority, location_details, status, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, 'مفتوح', ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$area, $report_type, $description, $reporter_name, $reporter_phone, $priority, $location_details, $user['id']]);
+                $message = 'تم إضافة تقرير النظافة بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة التقرير: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة تحديث حالة التقرير
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_report_status'])) {
-    $report_id = intval($_POST['report_id']);
-    $new_status = $_POST['new_status'];
-    $admin_notes = trim($_POST['admin_notes']);
-    
-    try {
-        $query = "UPDATE waste_reports SET status = ?, admin_notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$new_status, $admin_notes, $report_id]);
-        $message = 'تم تحديث حالة التقرير بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث التقرير: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $report_id = intval($_POST['report_id']);
+        $new_status = $_POST['new_status'];
+        $admin_notes = trim($_POST['admin_notes']);
+        
+        try {
+            $query = "UPDATE waste_reports SET status = ?, admin_notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$new_status, $admin_notes, $report_id]);
+            $message = 'تم تحديث حالة التقرير بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث التقرير: ' . $e->getMessage();
+        }
     }
 }
 
@@ -495,6 +512,7 @@ $priorities = ['منخفضة', 'متوسطة', 'عالية', 'عاجلة'];
             <h3 class="text-xl font-semibold mb-4">إضافة جدولة جمع نفايات</h3>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">اسم الطريق *</label>
@@ -593,6 +611,7 @@ $priorities = ['منخفضة', 'متوسطة', 'عالية', 'عاجلة'];
             <h3 class="text-xl font-semibold mb-4">إضافة تقرير نظافة</h3>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">المنطقة *</label>

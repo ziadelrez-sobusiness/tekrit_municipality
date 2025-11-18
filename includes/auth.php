@@ -101,6 +101,13 @@ class Auth {
                 $this->loginTracker->recordAttempt($username, false);
             }
             
+            // تعيين رسالة الخطأ
+            if (!$user) {
+                $this->lastError = 'اسم المستخدم غير موجود أو الحساب غير مفعّل';
+            } else {
+                $this->lastError = 'كلمة المرور غير صحيحة';
+            }
+            
             return false;
             
         } catch (PDOException $e) {

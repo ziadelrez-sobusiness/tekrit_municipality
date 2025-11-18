@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../config/database.php';
 require_once '../includes/recaptcha_helper.php';
 
@@ -14,19 +19,25 @@ if (!$db) {
 $success_message = '';
 $error_message = '';
 
+// تحميل دوال الأمان
+require_once __DIR__ . '/../includes/helpers.php';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $sender_name = trim($_POST['sender_name'] ?? '');
-    $sender_email = trim($_POST['sender_email'] ?? '');
-    $sender_phone = trim($_POST['sender_phone'] ?? '');
-    $subject = trim($_POST['subject'] ?? '');
-    $message = trim($_POST['message'] ?? '');
-    
-    // التحقق من reCAPTCHA أولاً
-    $recaptcha_result = verify_recaptcha($_POST, $_SERVER['REMOTE_ADDR'] ?? null);
-    
-    if (!$recaptcha_result['success']) {
-        $error_message = $recaptcha_result['error'];
-    } elseif ($sender_name && $sender_email && $subject && $message) {
+    if (!csrf_protect(false)) {
+        $error_message = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $sender_name = trim($_POST['sender_name'] ?? '');
+        $sender_email = trim($_POST['sender_email'] ?? '');
+        $sender_phone = trim($_POST['sender_phone'] ?? '');
+        $subject = trim($_POST['subject'] ?? '');
+        $message = trim($_POST['message'] ?? '');
+        
+        // التحقق من reCAPTCHA أولاً
+        $recaptcha_result = verify_recaptcha($_POST, $_SERVER['REMOTE_ADDR'] ?? null);
+        
+        if (!$recaptcha_result['success']) {
+            $error_message = $recaptcha_result['error'];
+        } elseif ($sender_name && $sender_email && $subject && $message) {
         try {
             $stmt = $db->prepare("INSERT INTO contact_messages (sender_name, sender_email, sender_phone, subject, message, created_at, status) VALUES (?, ?, ?, ?, ?, NOW(), 'جديد')");
             $stmt->execute([$sender_name, $sender_email, $sender_phone, $subject, $message]);
@@ -37,9 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } catch(PDOException $e) {
             $error_message = "حدث خطأ أثناء إرسال الرسالة، يرجى المحاولة لاحقاً";
         }
-    } else {
-        $error_message = "يرجى ملء جميع الحقول المطلوبة";
-    }
+        } else {
+            $error_message = "يرجى ملء جميع الحقول المطلوبة";
+        }
+    } // نهاية else (CSRF valid)
 }
 
 function getSetting($key, $default = '') {
@@ -194,6 +206,7 @@ $site_title = getSetting('site_title', 'بلدية تكريت');
                 <?php endif; ?>
 
                 <form method="POST" class="space-y-6">
+                    <?php echo csrf_input('csrf_token'); ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">الاسم الكامل *</label>

@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -16,7 +21,10 @@ $error = '';
 
 // معالجة إضافة مساهمة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contribution'])) {
-    try {
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
         $db->beginTransaction();
         
         $project_id = intval($_POST['project_id']);
@@ -92,9 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_contribution'])) 
         $db->commit();
         
         $message = 'تم إضافة المساهمة بنجاح وربطها بالمعاملات المالية!';
-    } catch (Exception $e) {
-        $db->rollBack();
-        $error = 'خطأ في إضافة المساهمة: ' . $e->getMessage();
+        } catch (Exception $e) {
+            $db->rollBack();
+            $error = 'خطأ في إضافة المساهمة: ' . $e->getMessage();
+        }
     }
 }
 
@@ -461,6 +470,7 @@ $currencies = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             
             <form method="POST" class="p-6 space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <!-- المشروع -->
                 <div>
                     <label class="block text-sm font-medium mb-2">المشروع *</label>

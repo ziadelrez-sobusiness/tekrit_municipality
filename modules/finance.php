@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -20,81 +25,151 @@ $error = '';
 
 // معالجة حذف معاملة مالية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_transaction'])) {
-    try {
-        $transaction_id = intval($_POST['transaction_id']);
-        
-        // جلب تفاصيل المعاملة قبل الحذف
-        $stmt = $db->prepare("SELECT type, amount, budget_item_id, supplier_invoice_id, related_project_id FROM financial_transactions WHERE id = ?");
-        $stmt->execute([$transaction_id]);
-        $transaction = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($transaction) {
-            // التراجع عن التحديثات في بنود الميزانية
-            if ($transaction['budget_item_id'] && $transaction['type'] === 'مصروف') {
-                $stmt = $db->prepare("UPDATE budget_items 
-                                     SET spent_amount = spent_amount - ?, 
-                                         remaining_amount = remaining_amount + ? 
-                                     WHERE id = ?");
-                $stmt->execute([$transaction['amount'], $transaction['amount'], $transaction['budget_item_id']]);
-            }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $transaction_id = intval($_POST['transaction_id']);
             
-            // التراجع عن التحديثات في فواتير الموردين
-            if ($transaction['supplier_invoice_id']) {
-                $stmt = $db->prepare("UPDATE supplier_invoices 
-                                     SET paid_amount = paid_amount - ? 
-                                     WHERE id = ?");
-                $stmt->execute([$transaction['amount'], $transaction['supplier_invoice_id']]);
-                
-                // تحديث حالة الفاتورة
-                $stmt = $db->prepare("SELECT total_amount, paid_amount FROM supplier_invoices WHERE id = ?");
-                $stmt->execute([$transaction['supplier_invoice_id']]);
-                $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                $new_status = 'غير مدفوع';
-                if ($invoice['paid_amount'] >= $invoice['total_amount']) {
-                    $new_status = 'مدفوع بالكامل';
-                } elseif ($invoice['paid_amount'] > 0) {
-                    $new_status = 'مدفوع جزئياً';
+            // جلب تفاصيل المعاملة قبل الحذف
+            $stmt = $db->prepare("SELECT type, amount, budget_item_id, supplier_invoice_id, related_project_id FROM financial_transactions WHERE id = ?");
+            $stmt->execute([$transaction_id]);
+            $transaction = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($transaction) {
+                // التراجع عن التحديثات في بنود الميزانية
+                if ($transaction['budget_item_id'] && $transaction['type'] === 'مصروف') {
+                    $stmt = $db->prepare("UPDATE budget_items 
+                                         SET spent_amount = spent_amount - ?, 
+                                             remaining_amount = remaining_amount + ? 
+                                         WHERE id = ?");
+                    $stmt->execute([$transaction['amount'], $transaction['amount'], $transaction['budget_item_id']]);
                 }
                 
-                $stmt = $db->prepare("UPDATE supplier_invoices SET status = ? WHERE id = ?");
-                $stmt->execute([$new_status, $transaction['supplier_invoice_id']]);
+                // التراجع عن التحديثات في فواتير الموردين
+                if ($transaction['supplier_invoice_id']) {
+                    $stmt = $db->prepare("UPDATE supplier_invoices 
+                                         SET paid_amount = paid_amount - ? 
+                                         WHERE id = ?");
+                    $stmt->execute([$transaction['amount'], $transaction['supplier_invoice_id']]);
+                    
+                    // تحديث حالة الفاتورة
+                    $stmt = $db->prepare("SELECT total_amount, paid_amount FROM supplier_invoices WHERE id = ?");
+                    $stmt->execute([$transaction['supplier_invoice_id']]);
+                    $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    $new_status = 'غير مدفوع';
+                    if ($invoice['paid_amount'] >= $invoice['total_amount']) {
+                        $new_status = 'مدفوع بالكامل';
+                    } elseif ($invoice['paid_amount'] > 0) {
+                        $new_status = 'مدفوع جزئياً';
+                    }
+                    
+                    $stmt = $db->prepare("UPDATE supplier_invoices SET status = ? WHERE id = ?");
+                    $stmt->execute([$new_status, $transaction['supplier_invoice_id']]);
+                }
+                
+                // التراجع عن التحديثات في المشاريع
+                if ($transaction['related_project_id'] && $transaction['type'] === 'مصروف') {
+                    $stmt = $db->prepare("UPDATE projects SET spent_amount = spent_amount - ? WHERE id = ?");
+                    $stmt->execute([$transaction['amount'], $transaction['related_project_id']]);
+                }
+                
+                // حذف المعاملة
+                $stmt = $db->prepare("DELETE FROM financial_transactions WHERE id = ?");
+                $stmt->execute([$transaction_id]);
+                
+                $message = 'تم حذف المعاملة المالية بنجاح وتحديث البنود المرتبطة!';
+            } else {
+                $error = 'المعاملة غير موجودة';
             }
-            
-            // التراجع عن التحديثات في المشاريع
-            if ($transaction['related_project_id'] && $transaction['type'] === 'مصروف') {
-                $stmt = $db->prepare("UPDATE projects SET spent_amount = spent_amount - ? WHERE id = ?");
-                $stmt->execute([$transaction['amount'], $transaction['related_project_id']]);
-            }
-            
-            // حذف المعاملة
-            $stmt = $db->prepare("DELETE FROM financial_transactions WHERE id = ?");
-            $stmt->execute([$transaction_id]);
-            
-            $message = 'تم حذف المعاملة المالية بنجاح وتحديث البنود المرتبطة!';
-        } else {
-            $error = 'المعاملة غير موجودة';
+        } catch (PDOException $e) {
+            $error = 'خطأ في حذف المعاملة: ' . $e->getMessage();
         }
-    } catch (PDOException $e) {
-        $error = 'خطأ في حذف المعاملة: ' . $e->getMessage();
     }
 }
 
 // معالجة تعديل معاملة مالية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_transaction'])) {
-    try {
-        $transaction_id = intval($_POST['transaction_id']);
-        
-        // جلب المعاملة القديمة
-        $stmt = $db->prepare("SELECT * FROM financial_transactions WHERE id = ?");
-        $stmt->execute([$transaction_id]);
-        $old_transaction = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$old_transaction) {
-            throw new Exception('المعاملة غير موجودة');
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $transaction_id = intval($_POST['transaction_id']);
+            
+            // جلب المعاملة القديمة
+            $stmt = $db->prepare("SELECT * FROM financial_transactions WHERE id = ?");
+            $stmt->execute([$transaction_id]);
+            $old_transaction = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$old_transaction) {
+                throw new Exception('المعاملة غير موجودة');
+            }
+            
+            // البيانات الجديدة
+            $transaction_type = $_POST['transaction_type'];
+            $category = $_POST['category'];
+            $description = $_POST['description'];
+            $amount = floatval($_POST['amount']);
+            $currency_id = intval($_POST['currency_id']);
+            $transaction_date = $_POST['transaction_date'];
+            $payment_method = $_POST['payment_method'];
+            $reference_number = $_POST['reference_number'];
+            $bank_name = $_POST['bank_name'] ?? '';
+            $check_number = $_POST['check_number'] ?? '';
+            
+            $budget_item_id = !empty($_POST['budget_item_id']) ? intval($_POST['budget_item_id']) : null;
+            
+            // التراجع عن التحديثات القديمة في بنود الميزانية
+            if ($old_transaction['budget_item_id'] && $old_transaction['type'] === 'مصروف') {
+                $stmt = $db->prepare("UPDATE budget_items 
+                                     SET spent_amount = spent_amount - ?, 
+                                         remaining_amount = remaining_amount + ? 
+                                     WHERE id = ?");
+                $stmt->execute([$old_transaction['amount'], $old_transaction['amount'], $old_transaction['budget_item_id']]);
+            }
+            
+            // تحديث المعاملة
+            $stmt = $db->prepare("SELECT exchange_rate_to_iqd FROM currencies WHERE id = ?");
+            $stmt->execute([$currency_id]);
+            $exchange_rate = $stmt->fetchColumn() ?: 1.0;
+            
+            $stmt = $db->prepare("UPDATE financial_transactions 
+                                 SET type = ?, category = ?, description = ?, amount = ?, 
+                                     currency_id = ?, exchange_rate = ?, transaction_date = ?,
+                                     payment_method = ?, reference_number = ?, bank_name = ?, 
+                                     check_number = ?, budget_item_id = ?
+                                 WHERE id = ?");
+            $stmt->execute([$transaction_type, $category, $description, $amount, $currency_id, 
+                           $exchange_rate, $transaction_date, $payment_method, $reference_number, 
+                           $bank_name, $check_number, $budget_item_id, $transaction_id]);
+            
+            // تطبيق التحديثات الجديدة في بنود الميزانية
+            if ($budget_item_id && $transaction_type === 'مصروف') {
+                $stmt = $db->prepare("UPDATE budget_items 
+                                     SET spent_amount = spent_amount + ?, 
+                                         remaining_amount = remaining_amount - ? 
+                                     WHERE id = ?");
+                $stmt->execute([$amount, $amount, $budget_item_id]);
+            }
+            
+            $message = '✅ تم تحديث المعاملة المالية بنجاح!<br>📊 تم تحديث بنود الميزانية تلقائياً';
+            
+            // إعادة توجيه لتجنب إعادة الإرسال
+            header("Location: finance.php");
+            exit();
+            
+        } catch (Exception $e) {
+            $error = 'خطأ في تحديث المعاملة: ' . $e->getMessage();
         }
-        
-        // البيانات الجديدة
+    }
+}
+
+// معالجة إضافة معاملة مالية جديدة
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_transaction'])) {
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
         $transaction_type = $_POST['transaction_type'];
         $category = $_POST['category'];
         $description = $_POST['description'];
@@ -106,139 +181,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_transaction'])) 
         $bank_name = $_POST['bank_name'] ?? '';
         $check_number = $_POST['check_number'] ?? '';
         
+        // الربط مع البنود الأخرى
         $budget_item_id = !empty($_POST['budget_item_id']) ? intval($_POST['budget_item_id']) : null;
+        $supplier_invoice_id = !empty($_POST['supplier_invoice_id']) ? intval($_POST['supplier_invoice_id']) : null;
+        $tax_collection_id = !empty($_POST['tax_collection_id']) ? intval($_POST['tax_collection_id']) : null;
+        $related_project_id = !empty($_POST['related_project_id']) ? intval($_POST['related_project_id']) : null;
+        $association_id = !empty($_POST['association_id']) ? intval($_POST['association_id']) : null;
         
-        // التراجع عن التحديثات القديمة في بنود الميزانية
-        if ($old_transaction['budget_item_id'] && $old_transaction['type'] === 'مصروف') {
-            $stmt = $db->prepare("UPDATE budget_items 
-                                 SET spent_amount = spent_amount - ?, 
-                                     remaining_amount = remaining_amount + ? 
-                                 WHERE id = ?");
-            $stmt->execute([$old_transaction['amount'], $old_transaction['amount'], $old_transaction['budget_item_id']]);
-        }
-        
-        // تحديث المعاملة
+        // جلب سعر الصرف للعملة المحددة
         $stmt = $db->prepare("SELECT exchange_rate_to_iqd FROM currencies WHERE id = ?");
         $stmt->execute([$currency_id]);
-        $exchange_rate = $stmt->fetchColumn() ?: 1.0;
+        $exchange_rate = $stmt->fetchColumn();
+        if (!$exchange_rate) $exchange_rate = 1.0;
         
-        $stmt = $db->prepare("UPDATE financial_transactions 
-                             SET type = ?, category = ?, description = ?, amount = ?, 
-                                 currency_id = ?, exchange_rate = ?, transaction_date = ?,
-                                 payment_method = ?, reference_number = ?, bank_name = ?, 
-                                 check_number = ?, budget_item_id = ?
-                             WHERE id = ?");
-        $stmt->execute([$transaction_type, $category, $description, $amount, $currency_id, 
-                       $exchange_rate, $transaction_date, $payment_method, $reference_number, 
-                       $bank_name, $check_number, $budget_item_id, $transaction_id]);
-        
-        // تطبيق التحديثات الجديدة في بنود الميزانية
-        if ($budget_item_id && $transaction_type === 'مصروف') {
-            $stmt = $db->prepare("UPDATE budget_items 
-                                 SET spent_amount = spent_amount + ?, 
-                                     remaining_amount = remaining_amount - ? 
-                                 WHERE id = ?");
-            $stmt->execute([$amount, $amount, $budget_item_id]);
-        }
-        
-        $message = '✅ تم تحديث المعاملة المالية بنجاح!<br>📊 تم تحديث بنود الميزانية تلقائياً';
-        
-        // إعادة توجيه لتجنب إعادة الإرسال
-        header("Location: finance.php");
-        exit();
-        
-    } catch (Exception $e) {
-        $error = 'خطأ في تحديث المعاملة: ' . $e->getMessage();
-    }
-}
-
-// معالجة إضافة معاملة مالية جديدة
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_transaction'])) {
-    $transaction_type = $_POST['transaction_type'];
-    $category = $_POST['category'];
-    $description = $_POST['description'];
-    $amount = floatval($_POST['amount']);
-    $currency_id = intval($_POST['currency_id']);
-    $transaction_date = $_POST['transaction_date'];
-    $payment_method = $_POST['payment_method'];
-    $reference_number = $_POST['reference_number'];
-    $bank_name = $_POST['bank_name'] ?? '';
-    $check_number = $_POST['check_number'] ?? '';
-    
-    // الربط مع البنود الأخرى
-    $budget_item_id = !empty($_POST['budget_item_id']) ? intval($_POST['budget_item_id']) : null;
-    $supplier_invoice_id = !empty($_POST['supplier_invoice_id']) ? intval($_POST['supplier_invoice_id']) : null;
-    $tax_collection_id = !empty($_POST['tax_collection_id']) ? intval($_POST['tax_collection_id']) : null;
-    $related_project_id = !empty($_POST['related_project_id']) ? intval($_POST['related_project_id']) : null;
-    $association_id = !empty($_POST['association_id']) ? intval($_POST['association_id']) : null;
-    
-    // جلب سعر الصرف للعملة المحددة
-    $stmt = $db->prepare("SELECT exchange_rate_to_iqd FROM currencies WHERE id = ?");
-    $stmt->execute([$currency_id]);
-    $exchange_rate = $stmt->fetchColumn();
-    if (!$exchange_rate) $exchange_rate = 1.0;
-    
-    if (!empty($category) && !empty($description) && $amount > 0) {
-        try {
-            $query = "INSERT INTO financial_transactions 
-                     (type, category, description, amount, currency_id, exchange_rate, transaction_date, 
-                      payment_method, reference_number, bank_name, check_number, created_by, status,
-                      budget_item_id, supplier_invoice_id, tax_collection_id, related_project_id, association_id) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'معتمد', ?, ?, ?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$transaction_type, $category, $description, $amount, $currency_id, $exchange_rate, 
-                          $transaction_date, $payment_method, $reference_number, $bank_name, $check_number, 
-                          $user['id'], $budget_item_id, $supplier_invoice_id, $tax_collection_id, 
-                          $related_project_id, $association_id]);
-            
-            // تحديث البنود المرتبطة
-            $budget_updated = false;
-            if ($budget_item_id && $transaction_type === 'مصروف') {
-                $stmt = $db->prepare("UPDATE budget_items 
-                                     SET spent_amount = spent_amount + ?, 
-                                         remaining_amount = remaining_amount - ? 
-                                     WHERE id = ?");
-                $stmt->execute([$amount, $amount, $budget_item_id]);
-                $budget_updated = true;
-            }
-            
-            if ($supplier_invoice_id) {
-                $stmt = $db->prepare("UPDATE supplier_invoices 
-                                     SET paid_amount = paid_amount + ? 
-                                     WHERE id = ?");
-                $stmt->execute([$amount, $supplier_invoice_id]);
+        if (!empty($category) && !empty($description) && $amount > 0) {
+            try {
+                $query = "INSERT INTO financial_transactions 
+                         (type, category, description, amount, currency_id, exchange_rate, transaction_date, 
+                          payment_method, reference_number, bank_name, check_number, created_by, status,
+                          budget_item_id, supplier_invoice_id, tax_collection_id, related_project_id, association_id) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'معتمد', ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$transaction_type, $category, $description, $amount, $currency_id, $exchange_rate, 
+                              $transaction_date, $payment_method, $reference_number, $bank_name, $check_number, 
+                              $user['id'], $budget_item_id, $supplier_invoice_id, $tax_collection_id, 
+                              $related_project_id, $association_id]);
                 
-                // تحديث حالة الفاتورة
-                $stmt = $db->prepare("SELECT total_amount, paid_amount FROM supplier_invoices WHERE id = ?");
-                $stmt->execute([$supplier_invoice_id]);
-                $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                $new_status = 'غير مدفوع';
-                if ($invoice['paid_amount'] >= $invoice['total_amount']) {
-                    $new_status = 'مدفوع بالكامل';
-                } elseif ($invoice['paid_amount'] > 0) {
-                    $new_status = 'مدفوع جزئياً';
+                // تحديث البنود المرتبطة
+                $budget_updated = false;
+                if ($budget_item_id && $transaction_type === 'مصروف') {
+                    $stmt = $db->prepare("UPDATE budget_items 
+                                         SET spent_amount = spent_amount + ?, 
+                                             remaining_amount = remaining_amount - ? 
+                                         WHERE id = ?");
+                    $stmt->execute([$amount, $amount, $budget_item_id]);
+                    $budget_updated = true;
                 }
                 
-                $stmt = $db->prepare("UPDATE supplier_invoices SET status = ? WHERE id = ?");
-                $stmt->execute([$new_status, $supplier_invoice_id]);
+                if ($supplier_invoice_id) {
+                    $stmt = $db->prepare("UPDATE supplier_invoices 
+                                         SET paid_amount = paid_amount + ? 
+                                         WHERE id = ?");
+                    $stmt->execute([$amount, $supplier_invoice_id]);
+                    
+                    // تحديث حالة الفاتورة
+                    $stmt = $db->prepare("SELECT total_amount, paid_amount FROM supplier_invoices WHERE id = ?");
+                    $stmt->execute([$supplier_invoice_id]);
+                    $invoice = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    $new_status = 'غير مدفوع';
+                    if ($invoice['paid_amount'] >= $invoice['total_amount']) {
+                        $new_status = 'مدفوع بالكامل';
+                    } elseif ($invoice['paid_amount'] > 0) {
+                        $new_status = 'مدفوع جزئياً';
+                    }
+                    
+                    $stmt = $db->prepare("UPDATE supplier_invoices SET status = ? WHERE id = ?");
+                    $stmt->execute([$new_status, $supplier_invoice_id]);
+                }
+                
+                if ($related_project_id && $transaction_type === 'مصروف') {
+                    $stmt = $db->prepare("UPDATE projects SET spent_amount = spent_amount + ? WHERE id = ?");
+                    $stmt->execute([$amount, $related_project_id]);
+                }
+                
+                if ($budget_updated) {
+                    $message = '✅ تم إضافة المعاملة المالية بنجاح!<br>📊 تم تحديث بند الميزانية تلقائياً (المصروف والمتبقي)';
+                } else {
+                    $message = 'تم إضافة المعاملة المالية بنجاح!';
+                }
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة المعاملة: ' . $e->getMessage();
             }
-            
-            if ($related_project_id && $transaction_type === 'مصروف') {
-                $stmt = $db->prepare("UPDATE projects SET spent_amount = spent_amount + ? WHERE id = ?");
-                $stmt->execute([$amount, $related_project_id]);
-            }
-            
-            if ($budget_updated) {
-                $message = '✅ تم إضافة المعاملة المالية بنجاح!<br>📊 تم تحديث بند الميزانية تلقائياً (المصروف والمتبقي)';
-            } else {
-                $message = 'تم إضافة المعاملة المالية بنجاح!';
-            }
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة المعاملة: ' . $e->getMessage();
+        } else {
+            $error = 'يرجى تعبئة جميع الحقول المطلوبة';
         }
-    } else {
-        $error = 'يرجى تعبئة جميع الحقول المطلوبة';
     }
 }
 
@@ -546,6 +563,7 @@ foreach ($chart_data_by_currency as $currency => &$currency_data) {
                 <h2 class="text-xl font-semibold mb-4">إضافة معاملة مالية جديدة</h2>
                 
                 <form method="POST" class="space-y-4">
+                    <?php echo csrf_input('csrf_token'); ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">نوع المعاملة</label>
@@ -802,6 +820,7 @@ foreach ($chart_data_by_currency as $currency => &$currency_data) {
                                         </a>
                                         <form method="POST" class="inline" 
                                               onsubmit="return confirm('⚠️ هل أنت متأكد من حذف هذه المعاملة؟\n\nسيتم التراجع عن أي تحديثات في بنود الميزانية.');">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="delete_transaction" value="1">
                                             <input type="hidden" name="transaction_id" value="<?= $transaction['id'] ?>">
                                             <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">
@@ -913,6 +932,7 @@ foreach ($chart_data_by_currency as $currency => &$currency_data) {
                 </div>
             
             <form method="POST" class="p-6 space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="transaction_id" value="<?= $edit_transaction['id'] ?>">
                 
                 <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">

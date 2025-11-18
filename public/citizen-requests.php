@@ -1,5 +1,16 @@
 <?php
+// بدء session قبل أي output
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header('Content-Type: text/html; charset=utf-8');
+
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../config/database.php';
 
 $database = new Database();
@@ -9,20 +20,39 @@ $db->exec("SET NAMES utf8mb4");
 $success_message = '';
 $error_message = '';
 
+// تحميل دوال الأمان
+require_once __DIR__ . '/../includes/helpers.php';
+
 // معالجة تقديم الطلب
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_request'])) {
-    $citizen_name = trim($_POST['citizen_name']);
-    $citizen_phone = trim($_POST['citizen_phone']);
-    $citizen_email = trim($_POST['citizen_email']);
-    $citizen_address = trim($_POST['citizen_address']);
-    $national_id = trim($_POST['national_id']);
-    $request_type_id = $_POST['request_type_id'];
-    $request_title = trim($_POST['request_title']);
-    $request_description = trim($_POST['request_description']);
-    $priority_level = $_POST['priority_level'] ?? 'عادي';
+// التحقق من وجود submit_request (من الزر أو من hidden field)
+$hasSubmitRequest = isset($_POST['submit_request']) && $_POST['submit_request'] != '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && $hasSubmitRequest) {
+    // التحقق من CSRF (بدون logging مفرط لتسريع العملية)
+    $csrfResult = csrf_protect(false);
     
-    if (!empty($citizen_name) && !empty($citizen_phone) && !empty($request_type_id) && !empty($request_title)) {
+    if (!$csrfResult) {
+        $error_message = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $citizen_name = trim($_POST['citizen_name']);
+        $citizen_phone = trim($_POST['citizen_phone']);
+        $citizen_email = trim($_POST['citizen_email']);
+        $citizen_address = trim($_POST['citizen_address']);
+        $national_id = trim($_POST['national_id']);
+        $request_type_id = $_POST['request_type_id'];
+        $request_title = trim($_POST['request_title']);
+        $request_description = trim($_POST['request_description']);
+        $priority_level = $_POST['priority_level'] ?? 'عادي';
+        
+        if (!empty($citizen_name) && !empty($citizen_phone) && !empty($request_type_id) && !empty($request_title)) {
+            error_log("✅ All required fields present");
+            error_log("Citizen Name: " . $citizen_name);
+            error_log("Citizen Phone: " . $citizen_phone);
+            error_log("Request Type ID: " . $request_type_id);
+            error_log("Request Title: " . $request_title);
+            
         try {
+            error_log("Starting database transaction...");
             $db->beginTransaction();
             
             // إنشاء رقم تتبع فريد
@@ -124,10 +154,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_request'])) {
             ]);
             
             $db->commit();
+            
             $success_message = "تم تقديم طلبكم بنجاح! رقم التتبع: " . $tracking_number;
             
             // ========================================
-            // إرسال رسالة Telegram للمواطن
+            // إرسال رسالة Telegram للمواطن (في الخلفية)
             // ========================================
             try {
                 // تحميل المكتبات المطلوبة
@@ -170,14 +201,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_request'])) {
                 // إرسال رسالة Telegram
                 $telegramService = new TelegramService($db);
                 
-                // تسجيل البيانات للتصحيح
-                error_log("=== TELEGRAM DEBUG ===");
-                error_log("Citizen ID: " . $citizenId);
-                error_log("Telegram Chat ID: " . ($telegramChatId ?? 'NULL'));
-                error_log("Access Code: " . $accessCode);
-                error_log("Request ID: " . $request_id);
-                error_log("Tracking Number: " . $tracking_number);
-                
                 $telegramResult = $telegramService->sendWelcomeMessage(
                     [
                         'name' => $citizen_name,
@@ -195,7 +218,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_request'])) {
                     $accessCode
                 );
                 
-                error_log("Telegram Result: " . json_encode($telegramResult));
+                // ========================================
+                // إرسال إشعار إداري إلى البوت (معطل - غير ضروري)
+                // ========================================
+                // تم تعطيل الإشعار الإداري لأن رسالة المواطن تحتوي على كل المعلومات
+                // إذا كنت تريد تفعيله، قم بإلغاء التعليق من الكود أدناه
+                /*
+                try {
+                    $telegramService->sendAdminNotification([
+                        'request_id' => $request_id,
+                        'citizen_name' => $citizen_name,
+                        'citizen_phone' => $citizen_phone,
+                        'citizen_email' => $citizen_email,
+                        'tracking_number' => $tracking_number,
+                        'type_name' => $requestTypeName,
+                        'request_title' => $request_title,
+                        'priority_level' => $priority_level
+                    ]);
+                } catch (Exception $e) {
+                    // لا نعرض الخطأ للمواطن
+                }
+                */
                 
                 // تحديث رسالة النجاح
                 if ($accessCode) {
@@ -297,21 +340,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_request'])) {
                 }
                 
             } catch (Exception $e) {
-                // تسجيل الخطأ لكن لا نعرض للمستخدم (حتى لا نربك المواطن)
-                error_log("Telegram Integration Error: " . $e->getMessage());
-                // يمكن إضافة ملاحظة بسيطة للمواطن
-                $success_message .= "<div class='mt-4 pt-4 border-t-2 border-yellow-300'>";
-                $success_message .= "<p class='text-yellow-700 text-sm'>📝 ملاحظة: سيتم التواصل معك قريباً</p>";
-                $success_message .= "</div>";
+                // لا نعرض الخطأ للمواطن
             }
             
         } catch (Exception $e) {
             $db->rollBack();
             $error_message = "حدث خطأ أثناء تقديم الطلب: " . $e->getMessage();
         }
-    } else {
-        $error_message = "يرجى ملء جميع الحقول المطلوبة";
-    }
+        } else {
+            $error_message = "يرجى ملء جميع الحقول المطلوبة";
+        }
+    } // نهاية else (CSRF valid)
 }
 
 // جلب أنواع الطلبات مع تفاصيل العملة
@@ -505,6 +544,9 @@ try {
         <!-- نموذج الطلب -->
         <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
             <form method="POST" enctype="multipart/form-data" id="requestForm">
+                <?php echo csrf_input('csrf_token'); ?>
+                <!-- Hidden field to ensure submit_request is always sent -->
+                <input type="hidden" name="submit_request" value="1" id="submit_request_hidden">
                 
                 <!-- الخطوة 1: المعلومات الشخصية -->
                 <div class="step active p-8" id="step-1">
@@ -776,6 +818,119 @@ try {
         let selectedRequestType = null;
         let loadedAccessCode = null; // رمز الدخول المحمّل (إذا جلب المواطن بياناته)
         let originalPhone = null; // رقم الهاتف الأصلي (قبل التعديل)
+        
+        // معالج إرسال النموذج
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('requestForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    console.log('=== FORM SUBMIT EVENT ===');
+                    console.log('Current Step:', currentStep);
+                    console.log('Selected Request Type:', selectedRequestType);
+                    
+                    // التحقق من أننا في الخطوة الأخيرة
+                    if (currentStep !== 4) {
+                        console.log('❌ Not on final step, preventing submit');
+                        e.preventDefault();
+                        alert('يرجى إكمال جميع الخطوات أولاً');
+                        return false;
+                    }
+                    
+                    // التحقق من البيانات المطلوبة
+                    const citizenName = document.getElementById('citizen_name')?.value?.trim();
+                    const citizenPhone = document.getElementById('citizen_phone')?.value?.trim();
+                    const requestTypeId = document.querySelector('input[name="request_type_id"]:checked')?.value;
+                    const requestTitle = document.querySelector('input[name="request_title"]')?.value?.trim();
+                    const requestDescription = document.querySelector('textarea[name="request_description"]')?.value?.trim();
+                    
+                    console.log('Citizen Name:', citizenName);
+                    console.log('Citizen Phone:', citizenPhone);
+                    console.log('Request Type ID:', requestTypeId);
+                    console.log('Request Title:', requestTitle);
+                    
+                    if (!citizenName || !citizenPhone || !requestTypeId || !requestTitle) {
+                        console.log('❌ Missing required fields, preventing submit');
+                        e.preventDefault();
+                        alert('يرجى تعبئة جميع الحقول المطلوبة');
+                        return false;
+                    }
+                    
+                    // التأكد من أن CSRF token موجود
+                    const csrfToken = document.querySelector('input[name="csrf_token"]');
+                    if (!csrfToken || !csrfToken.value) {
+                        console.log('❌ CSRF token missing, preventing submit');
+                        e.preventDefault();
+                        alert('خطأ في الأمان. يرجى تحديث الصفحة والمحاولة مرة أخرى.');
+                        return false;
+                    }
+                    
+                    console.log('✅ All validations passed, submitting form...');
+                    
+                    // التأكد من أن submit_request موجود في النموذج
+                    let submitRequestField = document.getElementById('submit_request_hidden');
+                    if (!submitRequestField) {
+                        submitRequestField = document.createElement('input');
+                        submitRequestField.type = 'hidden';
+                        submitRequestField.name = 'submit_request';
+                        submitRequestField.value = '1';
+                        submitRequestField.id = 'submit_request_hidden';
+                        form.appendChild(submitRequestField);
+                    }
+                    console.log('✅ submit_request field ensured');
+                    
+                    // إظهار جميع الخطوات قبل الإرسال (لضمان إرسال جميع الحقول)
+                    for (let i = 1; i <= totalSteps; i++) {
+                        const step = document.getElementById('step-' + i);
+                        if (step) {
+                            step.style.display = 'block';
+                            step.classList.add('active');
+                        }
+                    }
+                    
+                    // إظهار loading indicator
+                    const submitButton = document.querySelector('button[type="submit"][name="submit_request"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        const originalText = submitButton.innerHTML;
+                        submitButton.innerHTML = '⏳ جاري الإرسال...';
+                        
+                        // في حالة فشل الإرسال، استعادة الزر
+                        setTimeout(() => {
+                            if (submitButton.disabled) {
+                                submitButton.disabled = false;
+                                submitButton.innerHTML = originalText;
+                            }
+                        }, 10000);
+                    }
+                    
+                    console.log('✅ Form is ready to submit');
+                    
+                    // التأكد من أن جميع الحقول المطلوبة موجودة
+                    const requiredInputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+                    let missingFields = [];
+                    requiredInputs.forEach(input => {
+                        if (!input.value || !input.value.trim()) {
+                            missingFields.push(input.name || input.id);
+                        }
+                    });
+                    
+                    if (missingFields.length > 0) {
+                        console.log('❌ Missing required fields:', missingFields);
+                        e.preventDefault();
+                        alert('يرجى تعبئة جميع الحقول المطلوبة: ' + missingFields.join(', '));
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = '🚀 تقديم الطلب';
+                        }
+                        return false;
+                    }
+                    
+                    console.log('✅ All fields validated, form will be submitted');
+                    // السماح بإرسال النموذج
+                    return true;
+                });
+            }
+        });
 
         // بيانات أنواع الطلبات مع الحقول المطلوبة
         const requestTypesData = {

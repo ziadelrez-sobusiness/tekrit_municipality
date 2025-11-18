@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -14,56 +19,64 @@ $error = '';
 
 // معالجة إضافة تبرع جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_donation'])) {
-    $donor_name = trim($_POST['donor_name']);
-    $donor_type = $_POST['donor_type'];
-    $donor_phone = trim($_POST['donor_phone']);
-    $donor_email = trim($_POST['donor_email']);
-    $donation_type = $_POST['donation_type'];
-    $amount = floatval($_POST['amount']);
-    $currency_id = intval($_POST['currency_id']);
-    $items_description = trim($_POST['items_description']);
-    $estimated_value = floatval($_POST['estimated_value']);
-    $purpose = trim($_POST['purpose']);
-    $allocated_to_project_id = !empty($_POST['allocated_to_project_id']) ? intval($_POST['allocated_to_project_id']) : null;
-    
-    if (!empty($donor_name)) {
-        try {
-            // توليد رقم التبرع
-            $donation_number = 'DON' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            
-            $query = "INSERT INTO donations (donation_number, donor_name, donor_type, donor_phone, donor_email, 
-                     donation_type, amount, currency_id, items_description, estimated_value, estimated_value_currency_id, 
-                     purpose, allocated_to_project_id, received_by_user_id, received_date, status) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'مستلم')";
-            
-            $stmt = $db->prepare($query);
-            $stmt->execute([
-                $donation_number, $donor_name, $donor_type, $donor_phone, $donor_email,
-                $donation_type, $amount, $currency_id, $items_description, $estimated_value, $currency_id,
-                $purpose, $allocated_to_project_id, $user['id']
-            ]);
-            
-            $message = 'تم إضافة التبرع بنجاح! رقم التبرع: ' . $donation_number;
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة التبرع: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $donor_name = trim($_POST['donor_name']);
+        $donor_type = $_POST['donor_type'];
+        $donor_phone = trim($_POST['donor_phone']);
+        $donor_email = trim($_POST['donor_email']);
+        $donation_type = $_POST['donation_type'];
+        $amount = floatval($_POST['amount']);
+        $currency_id = intval($_POST['currency_id']);
+        $items_description = trim($_POST['items_description']);
+        $estimated_value = floatval($_POST['estimated_value']);
+        $purpose = trim($_POST['purpose']);
+        $allocated_to_project_id = !empty($_POST['allocated_to_project_id']) ? intval($_POST['allocated_to_project_id']) : null;
+        
+        if (!empty($donor_name)) {
+            try {
+                // توليد رقم التبرع
+                $donation_number = 'DON' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                
+                $query = "INSERT INTO donations (donation_number, donor_name, donor_type, donor_phone, donor_email, 
+                         donation_type, amount, currency_id, items_description, estimated_value, estimated_value_currency_id, 
+                         purpose, allocated_to_project_id, received_by_user_id, received_date, status) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'مستلم')";
+                
+                $stmt = $db->prepare($query);
+                $stmt->execute([
+                    $donation_number, $donor_name, $donor_type, $donor_phone, $donor_email,
+                    $donation_type, $amount, $currency_id, $items_description, $estimated_value, $currency_id,
+                    $purpose, $allocated_to_project_id, $user['id']
+                ]);
+                
+                $message = 'تم إضافة التبرع بنجاح! رقم التبرع: ' . $donation_number;
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة التبرع: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة تحديث حالة التبرع
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
-    $donation_id = intval($_POST['donation_id']);
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $donation_id = intval($_POST['donation_id']);
     $status = $_POST['status'];
     
-    try {
-        $query = "UPDATE donations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$status, $donation_id]);
-        $message = 'تم تحديث حالة التبرع بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث التبرع: ' . $e->getMessage();
+        try {
+            $query = "UPDATE donations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$status, $donation_id]);
+            $message = 'تم تحديث حالة التبرع بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث التبرع: ' . $e->getMessage();
+        }
     }
 }
 
@@ -332,6 +345,7 @@ try {
             </div>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-2">اسم المتبرع *</label>

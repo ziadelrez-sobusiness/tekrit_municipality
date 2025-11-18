@@ -34,11 +34,31 @@ class RecaptchaHelper {
         return "
         <input type=\"hidden\" id=\"{$uniqueId}\" name=\"recaptcha-token\" />
         <script>
-        grecaptcha.ready(function() {
-            grecaptcha.execute('{$siteKey}', {action: '{$action}'}).then(function(token) {
-                document.getElementById('{$uniqueId}').value = token;
-            });
-        });
+        (function() {
+            function executeRecaptcha() {
+                if (typeof grecaptcha !== 'undefined' && grecaptcha.ready) {
+                    grecaptcha.ready(function() {
+                        grecaptcha.execute('{$siteKey}', {action: '{$action}'}).then(function(token) {
+                            var tokenField = document.getElementById('{$uniqueId}');
+                            if (tokenField) {
+                                tokenField.value = token;
+                            }
+                        }).catch(function(error) {
+                            console.error('reCAPTCHA error:', error);
+                        });
+                    });
+                } else {
+                    // إعادة المحاولة بعد 100ms إذا لم يكن grecaptcha جاهزاً
+                    setTimeout(executeRecaptcha, 100);
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', executeRecaptcha);
+            } else {
+                executeRecaptcha();
+            }
+        })();
         </script>";
     }
     

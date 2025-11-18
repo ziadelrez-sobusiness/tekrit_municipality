@@ -170,6 +170,10 @@ class CitizenAccountHelper {
      */
     public function getAccountByAccessCode($accessCode) {
         try {
+            $accessCode = trim(strtoupper($accessCode));
+            error_log("getAccountByAccessCode called with: " . $accessCode);
+            
+            // البحث الأول: مطابقة تامة (فقط permanent_access_code)
             $stmt = $this->db->prepare("
                 SELECT * FROM citizens_accounts 
                 WHERE permanent_access_code = ?
@@ -178,6 +182,9 @@ class CitizenAccountHelper {
             $account = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($account) {
+                error_log("✅ Account found (exact match) - ID: " . $account['id'] . ", Name: " . ($account['name'] ?? 'N/A'));
+                error_log("Access Code in DB: " . ($account['permanent_access_code'] ?? 'NULL'));
+                
                 // تحديث آخر دخول
                 $updateStmt = $this->db->prepare("UPDATE citizens_accounts SET last_login = NOW() WHERE id = ?");
                 $updateStmt->execute([$account['id']]);
@@ -188,6 +195,57 @@ class CitizenAccountHelper {
                 ];
             }
             
+            error_log("❌ Exact match not found for: " . $accessCode);
+            
+            // البحث الثاني: بدون TKT- prefix
+            $codeWithoutPrefix = str_replace('TKT-', '', $accessCode);
+            if ($codeWithoutPrefix != $accessCode && !empty($codeWithoutPrefix)) {
+                error_log("Trying without prefix: " . $codeWithoutPrefix);
+                
+                // البحث في permanent_access_code بدون prefix
+                $stmt = $this->db->prepare("
+                    SELECT * FROM citizens_accounts 
+                    WHERE REPLACE(permanent_access_code, 'TKT-', '') = ?
+                ");
+                $stmt->execute([$codeWithoutPrefix]);
+                $account = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($account) {
+                    error_log("✅ Account found (without prefix match) - ID: " . $account['id']);
+                    return [
+                        'success' => true,
+                        'account' => $account
+                    ];
+                }
+            }
+            
+            // البحث الثالث: LIKE search (partial match)
+            error_log("Trying LIKE search...");
+            $stmt = $this->db->prepare("
+                SELECT * FROM citizens_accounts 
+                WHERE permanent_access_code LIKE ?
+                ORDER BY id DESC
+                LIMIT 1
+            ");
+            $searchPattern = '%' . $codeWithoutPrefix . '%';
+            $stmt->execute([$searchPattern]);
+            $account = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($account) {
+                error_log("✅ Account found (LIKE match) - ID: " . $account['id']);
+                return [
+                    'success' => true,
+                    'account' => $account
+                ];
+            }
+            
+            error_log("❌ All search attempts failed for access code: " . $accessCode);
+            
+            // Debug: عرض بعض الأكواد الموجودة في قاعدة البيانات
+            $debugStmt = $this->db->query("SELECT id, permanent_access_code, name, phone FROM citizens_accounts WHERE permanent_access_code IS NOT NULL LIMIT 5");
+            $debugAccounts = $debugStmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Sample access codes in DB: " . json_encode($debugAccounts, JSON_UNESCAPED_UNICODE));
+            
             return [
                 'success' => false,
                 'error' => 'رمز الدخول غير صحيح'
@@ -195,6 +253,7 @@ class CitizenAccountHelper {
             
         } catch (Exception $e) {
             error_log("Get Account Error: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return [
                 'success' => false,
                 'error' => $e->getMessage()

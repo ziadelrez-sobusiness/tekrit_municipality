@@ -1,4 +1,9 @@
 <?php
+// تحميل أنظمة الأمان (Security Headers و دوال مساعدة)
+if (file_exists(__DIR__ . '/includes/init_security.php')) {
+    require_once __DIR__ . '/includes/init_security.php';
+}
+
 require_once 'includes/auth.php';
 $auth = new Auth();
 

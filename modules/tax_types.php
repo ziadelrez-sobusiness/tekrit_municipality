@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -14,56 +19,64 @@ $error = '';
 
 // معالجة إضافة نوع جباية جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_tax_type'])) {
-    $tax_code = trim($_POST['tax_code']);
-    $tax_name = trim($_POST['tax_name']);
-    $tax_name_en = trim($_POST['tax_name_en']);
-    $category = $_POST['category'];
-    $description = trim($_POST['description']);
-    $calculation_method = $_POST['calculation_method'];
-    $base_amount = floatval($_POST['base_amount']);
-    $percentage_rate = !empty($_POST['percentage_rate']) ? floatval($_POST['percentage_rate']) : null;
-    $currency_id = intval($_POST['currency_id']);
-    $payment_frequency = $_POST['payment_frequency'];
-    $due_period_days = intval($_POST['due_period_days']);
-    $applies_to = !empty($_POST['applies_to']) ? json_encode($_POST['applies_to']) : null;
-    $minimum_amount = !empty($_POST['minimum_amount']) ? floatval($_POST['minimum_amount']) : null;
-    $maximum_amount = !empty($_POST['maximum_amount']) ? floatval($_POST['maximum_amount']) : null;
-    $discount_available = isset($_POST['discount_available']) ? 1 : 0;
-    $discount_percentage = !empty($_POST['discount_percentage']) ? floatval($_POST['discount_percentage']) : null;
-    $exemption_criteria = !empty($_POST['exemption_criteria']) ? trim($_POST['exemption_criteria']) : null;
-    $legal_basis = trim($_POST['legal_basis']);
-    $approval_number = trim($_POST['approval_number']);
-    $approval_date = !empty($_POST['approval_date']) ? $_POST['approval_date'] : null;
-    $effective_date = !empty($_POST['effective_date']) ? $_POST['effective_date'] : null;
-    $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
-    $notes = trim($_POST['notes']);
-    
-    if (!empty($tax_code) && !empty($tax_name) && !empty($category)) {
-        try {
-            $query = "INSERT INTO tax_types (tax_code, tax_name, tax_name_en, category, description, calculation_method, base_amount, percentage_rate, currency_id, payment_frequency, due_period_days, applies_to, minimum_amount, maximum_amount, discount_available, discount_percentage, exemption_criteria, legal_basis, approval_number, approval_date, effective_date, expiry_date, notes, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$tax_code, $tax_name, $tax_name_en, $category, $description, $calculation_method, $base_amount, $percentage_rate, $currency_id, $payment_frequency, $due_period_days, $applies_to, $minimum_amount, $maximum_amount, $discount_available, $discount_percentage, $exemption_criteria, $legal_basis, $approval_number, $approval_date, $effective_date, $expiry_date, $notes, $user['id']]);
-            $message = 'تم إضافة نوع الجباية بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة نوع الجباية: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $tax_code = trim($_POST['tax_code']);
+        $tax_name = trim($_POST['tax_name']);
+        $tax_name_en = trim($_POST['tax_name_en']);
+        $category = $_POST['category'];
+        $description = trim($_POST['description']);
+        $calculation_method = $_POST['calculation_method'];
+        $base_amount = floatval($_POST['base_amount']);
+        $percentage_rate = !empty($_POST['percentage_rate']) ? floatval($_POST['percentage_rate']) : null;
+        $currency_id = intval($_POST['currency_id']);
+        $payment_frequency = $_POST['payment_frequency'];
+        $due_period_days = intval($_POST['due_period_days']);
+        $applies_to = !empty($_POST['applies_to']) ? json_encode($_POST['applies_to']) : null;
+        $minimum_amount = !empty($_POST['minimum_amount']) ? floatval($_POST['minimum_amount']) : null;
+        $maximum_amount = !empty($_POST['maximum_amount']) ? floatval($_POST['maximum_amount']) : null;
+        $discount_available = isset($_POST['discount_available']) ? 1 : 0;
+        $discount_percentage = !empty($_POST['discount_percentage']) ? floatval($_POST['discount_percentage']) : null;
+        $exemption_criteria = !empty($_POST['exemption_criteria']) ? trim($_POST['exemption_criteria']) : null;
+        $legal_basis = trim($_POST['legal_basis']);
+        $approval_number = trim($_POST['approval_number']);
+        $approval_date = !empty($_POST['approval_date']) ? $_POST['approval_date'] : null;
+        $effective_date = !empty($_POST['effective_date']) ? $_POST['effective_date'] : null;
+        $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
+        $notes = trim($_POST['notes']);
+        
+        if (!empty($tax_code) && !empty($tax_name) && !empty($category)) {
+            try {
+                $query = "INSERT INTO tax_types (tax_code, tax_name, tax_name_en, category, description, calculation_method, base_amount, percentage_rate, currency_id, payment_frequency, due_period_days, applies_to, minimum_amount, maximum_amount, discount_available, discount_percentage, exemption_criteria, legal_basis, approval_number, approval_date, effective_date, expiry_date, notes, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$tax_code, $tax_name, $tax_name_en, $category, $description, $calculation_method, $base_amount, $percentage_rate, $currency_id, $payment_frequency, $due_period_days, $applies_to, $minimum_amount, $maximum_amount, $discount_available, $discount_percentage, $exemption_criteria, $legal_basis, $approval_number, $approval_date, $effective_date, $expiry_date, $notes, $user['id']]);
+                $message = 'تم إضافة نوع الجباية بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة نوع الجباية: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة تحديث حالة نوع الجباية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_tax_type_status'])) {
-    $tax_type_id = intval($_POST['tax_type_id']);
-    $is_active = intval($_POST['is_active']);
-    
-    try {
-        $query = "UPDATE tax_types SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$is_active, $tax_type_id]);
-        $message = 'تم تحديث حالة نوع الجباية بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث نوع الجباية: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $tax_type_id = intval($_POST['tax_type_id']);
+        $is_active = intval($_POST['is_active']);
+        
+        try {
+            $query = "UPDATE tax_types SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$is_active, $tax_type_id]);
+            $message = 'تم تحديث حالة نوع الجباية بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث نوع الجباية: ' . $e->getMessage();
+        }
     }
 }
 
@@ -405,6 +418,7 @@ $applies_to_options = ['مواطنين', 'شركات', 'مؤسسات', 'زوار
             </div>
             
             <form method="POST" class="space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <!-- المعلومات الأساسية -->
                 <div class="border-b pb-4">
                     <h4 class="text-lg font-medium text-gray-900 mb-3">المعلومات الأساسية</h4>

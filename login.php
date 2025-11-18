@@ -4,6 +4,11 @@ error_reporting(E_ALL);
 ini_set('display_errors', 0); // إخفاء الأخطاء في الإنتاج
 ini_set('log_errors', 1);
 
+// تحميل أنظمة الأمان (Security Headers و دوال مساعدة)
+if (file_exists(__DIR__ . '/includes/init_security.php')) {
+    require_once __DIR__ . '/includes/init_security.php';
+}
+
 // بدء الجلسة مع إعدادات محسنة
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_lifetime', 86400);

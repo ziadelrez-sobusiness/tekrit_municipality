@@ -1,5 +1,11 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
+
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -23,74 +29,78 @@ $error_message = '';
 
 // معالجة التحديث
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    if ($action == 'update_request') {
-        $new_status = $_POST['status'];
-        $assigned_department = $_POST['assigned_to_department_id'] ?: null;
-        $assigned_committee = $_POST['assigned_to_committee_id'] ?: null;
-        $priority_level = $_POST['priority_level'] ?? 'عادي';
-        $admin_notes = trim($_POST['admin_notes']);
+    if (!csrf_protect(false)) {
+        $error_message = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $action = $_POST['action'] ?? '';
         
-        try {
-            // تحديث الطلب
-            $stmt = $db->prepare("UPDATE citizen_requests SET status = ?, assigned_to_department_id = ?, assigned_to_committee_id = ?, assigned_to_user_id = NULL, priority_level = ?, admin_notes = ?, updated_at = NOW() WHERE id = ?");
-            $stmt->execute([$new_status, $assigned_department, $assigned_committee, $priority_level, $admin_notes, $request_id]);
+        if ($action == 'update_request') {
+            $new_status = $_POST['status'];
+            $assigned_department = $_POST['assigned_to_department_id'] ?: null;
+            $assigned_committee = $_POST['assigned_to_committee_id'] ?: null;
+            $priority_level = $_POST['priority_level'] ?? 'عادي';
+            $admin_notes = trim($_POST['admin_notes']);
             
-            // إضافة تحديث في تاريخ التحديثات
-            $update_text = "تم تحديث حالة الطلب إلى: " . htmlspecialchars($new_status, ENT_QUOTES, 'UTF-8');
-            if ($admin_notes) {
-                $update_text .= "\nملاحظات: " . htmlspecialchars($admin_notes, ENT_QUOTES, 'UTF-8');
-            }
-            
-            // الحصول على معرف المستخدم الحالي
-            $current_user_id = $_SESSION['user_id'] ?? null;
-            
-            $update_stmt = $db->prepare("INSERT INTO request_updates (request_id, update_type, update_text, updated_by, is_visible_to_citizen, created_at) VALUES (?, 'تحديث الحالة', ?, ?, 1, NOW())");
-            $update_stmt->execute([$request_id, $update_text, $current_user_id]);
-            
-            // إذا كان الطلب مكتملاً، تحديث تاريخ الإنجاز
-            if ($new_status == 'مكتمل') {
-                $stmt = $db->prepare("UPDATE citizen_requests SET completion_date = NOW() WHERE id = ?");
+            try {
+                // تحديث الطلب
+                $stmt = $db->prepare("UPDATE citizen_requests SET status = ?, assigned_to_department_id = ?, assigned_to_committee_id = ?, assigned_to_user_id = NULL, priority_level = ?, admin_notes = ?, updated_at = NOW() WHERE id = ?");
+                $stmt->execute([$new_status, $assigned_department, $assigned_committee, $priority_level, $admin_notes, $request_id]);
+                
+                // إضافة تحديث في تاريخ التحديثات
+                $update_text = "تم تحديث حالة الطلب إلى: " . htmlspecialchars($new_status, ENT_QUOTES, 'UTF-8');
+                if ($admin_notes) {
+                    $update_text .= "\nملاحظات: " . htmlspecialchars($admin_notes, ENT_QUOTES, 'UTF-8');
+                }
+                
+                // الحصول على معرف المستخدم الحالي
+                $current_user_id = $_SESSION['user_id'] ?? null;
+                
+                $update_stmt = $db->prepare("INSERT INTO request_updates (request_id, update_type, update_text, updated_by, is_visible_to_citizen, created_at) VALUES (?, 'تحديث الحالة', ?, ?, 1, NOW())");
+                $update_stmt->execute([$request_id, $update_text, $current_user_id]);
+                
+                // إذا كان الطلب مكتملاً، تحديث تاريخ الإنجاز
+                if ($new_status == 'مكتمل') {
+                    $stmt = $db->prepare("UPDATE citizen_requests SET completion_date = NOW() WHERE id = ?");
+                    $stmt->execute([$request_id]);
+                }
+                
+                $success_message = "تم تحديث الطلب بنجاح";
+                
+                // إعادة جلب البيانات المحدثة (للعرض بعد التحديث)
+                $stmt = $db->prepare("
+                    SELECT cr.id, cr.tracking_number, cr.citizen_name, cr.citizen_phone, 
+                           cr.citizen_email, cr.citizen_address, cr.national_id, 
+                           cr.request_type_id, rt.type_name as request_type, rt.type_description,
+                           cr.request_title, cr.request_description, cr.priority_level, cr.status, cr.project_id,
+                           cr.assigned_to_department_id, cr.assigned_to_committee_id, cr.assigned_to_user_id, cr.attachments,
+                           cr.admin_notes, cr.citizen_rating, cr.citizen_feedback,
+                           cr.created_at, cr.updated_at, cr.completion_date,
+                           d.department_name,
+                           mc.committee_name,
+                           u.full_name as assigned_to_name,
+                           dp.project_name, dp.project_description, dp.project_status,
+                           DATEDIFF(NOW(), cr.created_at) as days_since_created
+                    FROM citizen_requests cr 
+                    LEFT JOIN request_types rt ON cr.request_type_id = rt.id
+                    LEFT JOIN departments d ON cr.assigned_to_department_id = d.id 
+                    LEFT JOIN municipal_committees mc ON cr.assigned_to_committee_id = mc.id
+                    LEFT JOIN users u ON cr.assigned_to_user_id = u.id 
+                    LEFT JOIN development_projects dp ON cr.project_id = dp.id
+                    WHERE cr.id = ?
+                ");
                 $stmt->execute([$request_id]);
+                $request = $stmt->fetch(PDO::FETCH_ASSOC); // تأكد من جلبها كمصفوفة ترابطية
+            } catch (PDOException $e) { // استخدام PDOException لتقاط أخطاء قاعدة البيانات
+                if ($e->errorInfo[1] == 1062) { // Duplicate entry error
+                    $error_message = "خطأ في تحديث الطلب: قيمة مكررة لبيانات فريدة. ربما تحاول إسناد قيمة موجودة بالفعل في حقل يجب أن يكون فريدًا.";
+                } else {
+                    error_log("خطأ في تحديث الطلب (PDOException): " . $e->getMessage());
+                    $error_message = "خطأ في تحديث الطلب: " . $e->getMessage();
+                }
+            } catch (Exception $e) { // لأي استثناءات أخرى
+                error_log("خطأ عام في تحديث الطلب: " . $e->getMessage());
+                $error_message = "خطأ عام في تحديث الطلب: " . $e->getMessage();
             }
-            
-            $success_message = "تم تحديث الطلب بنجاح";
-            
-            // إعادة جلب البيانات المحدثة (للعرض بعد التحديث)
-            $stmt = $db->prepare("
-                SELECT cr.id, cr.tracking_number, cr.citizen_name, cr.citizen_phone, 
-                       cr.citizen_email, cr.citizen_address, cr.national_id, 
-                       cr.request_type_id, rt.type_name as request_type, rt.type_description,
-                       cr.request_title, cr.request_description, cr.priority_level, cr.status, cr.project_id,
-                       cr.assigned_to_department_id, cr.assigned_to_committee_id, cr.assigned_to_user_id, cr.attachments,
-                       cr.admin_notes, cr.citizen_rating, cr.citizen_feedback,
-                       cr.created_at, cr.updated_at, cr.completion_date,
-                       d.department_name,
-                       mc.committee_name,
-                       u.full_name as assigned_to_name,
-                       dp.project_name, dp.project_description, dp.project_status,
-                       DATEDIFF(NOW(), cr.created_at) as days_since_created
-                FROM citizen_requests cr 
-                LEFT JOIN request_types rt ON cr.request_type_id = rt.id
-                LEFT JOIN departments d ON cr.assigned_to_department_id = d.id 
-                LEFT JOIN municipal_committees mc ON cr.assigned_to_committee_id = mc.id
-                LEFT JOIN users u ON cr.assigned_to_user_id = u.id 
-                LEFT JOIN development_projects dp ON cr.project_id = dp.id
-                WHERE cr.id = ?
-            ");
-            $stmt->execute([$request_id]);
-            $request = $stmt->fetch(PDO::FETCH_ASSOC); // تأكد من جلبها كمصفوفة ترابطية
-        } catch (PDOException $e) { // استخدام PDOException لتقاط أخطاء قاعدة البيانات
-            if ($e->errorInfo[1] == 1062) { // Duplicate entry error
-                $error_message = "خطأ في تحديث الطلب: قيمة مكررة لبيانات فريدة. ربما تحاول إسناد قيمة موجودة بالفعل في حقل يجب أن يكون فريدًا.";
-            } else {
-                error_log("خطأ في تحديث الطلب (PDOException): " . $e->getMessage());
-                $error_message = "خطأ في تحديث الطلب: " . $e->getMessage();
-            }
-        } catch (Exception $e) { // لأي استثناءات أخرى
-            error_log("خطأ عام في تحديث الطلب: " . $e->getMessage());
-            $error_message = "خطأ عام في تحديث الطلب: " . $e->getMessage();
         }
     }
 }
@@ -339,6 +349,7 @@ $committees = $db->query("SELECT id, committee_name, department_id FROM municipa
                     
                     <!-- نموذج التحديث -->
                     <form method="POST" class="space-y-6">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="update_request">
                         
                         <div class="space-y-4">

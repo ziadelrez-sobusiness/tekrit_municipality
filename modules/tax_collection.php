@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -20,166 +25,182 @@ $error = '';
 
 // معالجة إضافة عملية جباية جديدة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_collection'])) {
-    $citizen_id = intval($_POST['citizen_id']);
-    $tax_type_id = intval($_POST['tax_type_id']);
-    $base_amount = floatval($_POST['base_amount']);
-    $discount_amount = floatval($_POST['discount_amount']) ?: 0;
-    $penalty_amount = floatval($_POST['penalty_amount']) ?: 0;
-    $total_amount = $base_amount - $discount_amount + $penalty_amount;
-    $currency_id = intval($_POST['currency_id']);
-    $issue_date = $_POST['issue_date'];
-    $due_date = $_POST['due_date'];
-    $service_description = trim($_POST['service_description']);
-    $location_details = trim($_POST['location_details']);
-    $period_from = !empty($_POST['period_from']) ? $_POST['period_from'] : null;
-    $period_to = !empty($_POST['period_to']) ? $_POST['period_to'] : null;
-    
-    // جلب سعر الصرف مقابل الليرة اللبنانية
-    $stmt = $db->prepare("SELECT exchange_rate_to_iqd FROM currencies WHERE id = ?");
-    $stmt->execute([$currency_id]);
-    $exchange_rate = $stmt->fetchColumn() ?: 1.0;
-    
-    if ($citizen_id && $tax_type_id && $total_amount > 0) {
-        try {
-            // توليد رقم الجباية
-            $collection_number = 'TAX' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            
-            $query = "INSERT INTO tax_collections (collection_number, citizen_id, tax_type_id, base_amount, discount_amount, penalty_amount, total_amount, currency_id, exchange_rate, issue_date, due_date, service_description, location_details, period_from, period_to, issued_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$collection_number, $citizen_id, $tax_type_id, $base_amount, $discount_amount, $penalty_amount, $total_amount, $currency_id, $exchange_rate, $issue_date, $due_date, $service_description, $location_details, $period_from, $period_to, $user['id']]);
-            
-            $message = 'تم إصدار عملية الجباية بنجاح! رقم الجباية: ' . $collection_number;
-        } catch (PDOException $e) {
-            $error = 'خطأ في إصدار عملية الجباية: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة والتأكد من صحة المبلغ';
+        $citizen_id = intval($_POST['citizen_id']);
+        $tax_type_id = intval($_POST['tax_type_id']);
+        $base_amount = floatval($_POST['base_amount']);
+        $discount_amount = floatval($_POST['discount_amount']) ?: 0;
+        $penalty_amount = floatval($_POST['penalty_amount']) ?: 0;
+        $total_amount = $base_amount - $discount_amount + $penalty_amount;
+        $currency_id = intval($_POST['currency_id']);
+        $issue_date = $_POST['issue_date'];
+        $due_date = $_POST['due_date'];
+        $service_description = trim($_POST['service_description']);
+        $location_details = trim($_POST['location_details']);
+        $period_from = !empty($_POST['period_from']) ? $_POST['period_from'] : null;
+        $period_to = !empty($_POST['period_to']) ? $_POST['period_to'] : null;
+        
+        // جلب سعر الصرف مقابل الليرة اللبنانية
+        $stmt = $db->prepare("SELECT exchange_rate_to_iqd FROM currencies WHERE id = ?");
+        $stmt->execute([$currency_id]);
+        $exchange_rate = $stmt->fetchColumn() ?: 1.0;
+        
+        if ($citizen_id && $tax_type_id && $total_amount > 0) {
+            try {
+                // توليد رقم الجباية
+                $collection_number = 'TAX' . date('Y') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+                
+                $query = "INSERT INTO tax_collections (collection_number, citizen_id, tax_type_id, base_amount, discount_amount, penalty_amount, total_amount, currency_id, exchange_rate, issue_date, due_date, service_description, location_details, period_from, period_to, issued_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$collection_number, $citizen_id, $tax_type_id, $base_amount, $discount_amount, $penalty_amount, $total_amount, $currency_id, $exchange_rate, $issue_date, $due_date, $service_description, $location_details, $period_from, $period_to, $user['id']]);
+                
+                $message = 'تم إصدار عملية الجباية بنجاح! رقم الجباية: ' . $collection_number;
+            } catch (PDOException $e) {
+                $error = 'خطأ في إصدار عملية الجباية: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة والتأكد من صحة المبلغ';
+        }
     }
 }
 
 // معالجة تعديل عملية جباية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_collection'])) {
-    $collection_id = intval($_POST['collection_id']);
-    $base_amount = floatval($_POST['base_amount']);
-    $discount_amount = floatval($_POST['discount_amount']) ?: 0;
-    $penalty_amount = floatval($_POST['penalty_amount']) ?: 0;
-    $total_amount = $base_amount - $discount_amount + $penalty_amount;
-    $issue_date = $_POST['issue_date'];
-    $due_date = $_POST['due_date'];
-    $payment_status = $_POST['payment_status'];
-    $service_description = trim($_POST['service_description']);
-    $location_details = trim($_POST['location_details']);
-    $period_from = !empty($_POST['period_from']) ? $_POST['period_from'] : null;
-    $period_to = !empty($_POST['period_to']) ? $_POST['period_to'] : null;
-    
-    // معلومات الدفع
-    $paid_amount = floatval($_POST['paid_amount']) ?: 0;
-    $payment_method = !empty($_POST['payment_method']) ? $_POST['payment_method'] : null;
-    $reference_number = !empty($_POST['reference_number']) ? trim($_POST['reference_number']) : null;
-    $receipt_number = !empty($_POST['receipt_number']) ? trim($_POST['receipt_number']) : null;
-    $payment_date = !empty($_POST['payment_date']) ? $_POST['payment_date'] : null;
-    
-    // تحديث حالة الدفع بناءً على المبلغ المدفوع
-    if ($paid_amount >= $total_amount) {
-        $payment_status = 'مدفوع كاملاً';
-    } elseif ($paid_amount > 0) {
-        $payment_status = 'مدفوع جزئياً';
-    }
-    
-    try {
-        $query = "UPDATE tax_collections SET 
-                  base_amount = ?, 
-                  discount_amount = ?, 
-                  penalty_amount = ?, 
-                  total_amount = ?, 
-                  issue_date = ?,
-                  due_date = ?, 
-                  payment_status = ?,
-                  service_description = ?, 
-                  location_details = ?,
-                  period_from = ?,
-                  period_to = ?,
-                  paid_amount = ?,
-                  payment_method = ?,
-                  reference_number = ?,
-                  receipt_number = ?,
-                  payment_date = ?,
-                  updated_at = CURRENT_TIMESTAMP 
-                  WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([
-            $base_amount, 
-            $discount_amount, 
-            $penalty_amount, 
-            $total_amount, 
-            $issue_date,
-            $due_date, 
-            $payment_status,
-            $service_description, 
-            $location_details,
-            $period_from,
-            $period_to,
-            $paid_amount,
-            $payment_method,
-            $reference_number,
-            $receipt_number,
-            $payment_date,
-            $collection_id
-        ]);
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $collection_id = intval($_POST['collection_id']);
+        $base_amount = floatval($_POST['base_amount']);
+        $discount_amount = floatval($_POST['discount_amount']) ?: 0;
+        $penalty_amount = floatval($_POST['penalty_amount']) ?: 0;
+        $total_amount = $base_amount - $discount_amount + $penalty_amount;
+        $issue_date = $_POST['issue_date'];
+        $due_date = $_POST['due_date'];
+        $payment_status = $_POST['payment_status'];
+        $service_description = trim($_POST['service_description']);
+        $location_details = trim($_POST['location_details']);
+        $period_from = !empty($_POST['period_from']) ? $_POST['period_from'] : null;
+        $period_to = !empty($_POST['period_to']) ? $_POST['period_to'] : null;
         
-        $message = 'تم تعديل عملية الجباية بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تعديل عملية الجباية: ' . $e->getMessage();
+        // معلومات الدفع
+        $paid_amount = floatval($_POST['paid_amount']) ?: 0;
+        $payment_method = !empty($_POST['payment_method']) ? $_POST['payment_method'] : null;
+        $reference_number = !empty($_POST['reference_number']) ? trim($_POST['reference_number']) : null;
+        $receipt_number = !empty($_POST['receipt_number']) ? trim($_POST['receipt_number']) : null;
+        $payment_date = !empty($_POST['payment_date']) ? $_POST['payment_date'] : null;
+        
+        // تحديث حالة الدفع بناءً على المبلغ المدفوع
+        if ($paid_amount >= $total_amount) {
+            $payment_status = 'مدفوع كاملاً';
+        } elseif ($paid_amount > 0) {
+            $payment_status = 'مدفوع جزئياً';
+        }
+        
+        try {
+            $query = "UPDATE tax_collections SET 
+                      base_amount = ?, 
+                      discount_amount = ?, 
+                      penalty_amount = ?, 
+                      total_amount = ?, 
+                      issue_date = ?,
+                      due_date = ?, 
+                      payment_status = ?,
+                      service_description = ?, 
+                      location_details = ?,
+                      period_from = ?,
+                      period_to = ?,
+                      paid_amount = ?,
+                      payment_method = ?,
+                      reference_number = ?,
+                      receipt_number = ?,
+                      payment_date = ?,
+                      updated_at = CURRENT_TIMESTAMP 
+                      WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([
+                $base_amount, 
+                $discount_amount, 
+                $penalty_amount, 
+                $total_amount, 
+                $issue_date,
+                $due_date, 
+                $payment_status,
+                $service_description, 
+                $location_details,
+                $period_from,
+                $period_to,
+                $paid_amount,
+                $payment_method,
+                $reference_number,
+                $receipt_number,
+                $payment_date,
+                $collection_id
+            ]);
+            
+            $message = 'تم تعديل عملية الجباية بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تعديل عملية الجباية: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة إلغاء عملية جباية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_collection'])) {
-    $collection_id = intval($_POST['collection_id']);
-    $cancel_reason = trim($_POST['cancel_reason']);
-    
-    try {
-        $query = "UPDATE tax_collections SET payment_status = 'ملغي', notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$cancel_reason, $collection_id]);
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $collection_id = intval($_POST['collection_id']);
+        $cancel_reason = trim($_POST['cancel_reason']);
         
-        $message = 'تم إلغاء عملية الجباية بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في إلغاء عملية الجباية: ' . $e->getMessage();
+        try {
+            $query = "UPDATE tax_collections SET payment_status = 'ملغي', notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$cancel_reason, $collection_id]);
+            
+            $message = 'تم إلغاء عملية الجباية بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في إلغاء عملية الجباية: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة تسجيل دفعة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['record_payment'])) {
-    $collection_id = intval($_POST['collection_id']);
-    $paid_amount = floatval($_POST['paid_amount']);
-    $payment_method = $_POST['payment_method'];
-    $reference_number = trim($_POST['reference_number']);
-    $receipt_number = trim($_POST['receipt_number']);
-    
-    try {
-        // جلب بيانات الجباية الحالية
-        $stmt = $db->prepare("SELECT total_amount, paid_amount FROM tax_collections WHERE id = ?");
-        $stmt->execute([$collection_id]);
-        $collection = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $collection_id = intval($_POST['collection_id']);
+        $paid_amount = floatval($_POST['paid_amount']);
+        $payment_method = $_POST['payment_method'];
+        $reference_number = trim($_POST['reference_number']);
+        $receipt_number = trim($_POST['receipt_number']);
         
-        if ($collection) {
-            $new_paid_amount = $collection['paid_amount'] + $paid_amount;
-            $payment_status = 'مدفوع جزئياً';
+        try {
+            // جلب بيانات الجباية الحالية
+            $stmt = $db->prepare("SELECT total_amount, paid_amount FROM tax_collections WHERE id = ?");
+            $stmt->execute([$collection_id]);
+            $collection = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($new_paid_amount >= $collection['total_amount']) {
-                $payment_status = 'مدفوع كاملاً';
-                $payment_date = date('Y-m-d');
+            if ($collection) {
+                $new_paid_amount = $collection['paid_amount'] + $paid_amount;
+                $payment_status = 'مدفوع جزئياً';
+                
+                if ($new_paid_amount >= $collection['total_amount']) {
+                    $payment_status = 'مدفوع كاملاً';
+                    $payment_date = date('Y-m-d');
+                }
+                
+                $query = "UPDATE tax_collections SET paid_amount = ?, payment_status = ?, payment_method = ?, reference_number = ?, receipt_number = ?, payment_date = ?, collected_by_user_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$new_paid_amount, $payment_status, $payment_method, $reference_number, $receipt_number, $payment_date ?? null, $user['id'], $collection_id]);
+                
+                $message = 'تم تسجيل الدفعة بنجاح!';
             }
-            
-            $query = "UPDATE tax_collections SET paid_amount = ?, payment_status = ?, payment_method = ?, reference_number = ?, receipt_number = ?, payment_date = ?, collected_by_user_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$new_paid_amount, $payment_status, $payment_method, $reference_number, $receipt_number, $payment_date ?? null, $user['id'], $collection_id]);
-            
-            $message = 'تم تسجيل الدفعة بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تسجيل الدفعة: ' . $e->getMessage();
         }
-    } catch (PDOException $e) {
-        $error = 'خطأ في تسجيل الدفعة: ' . $e->getMessage();
     }
 }
 
@@ -590,6 +611,7 @@ $tax_categories = ['رسوم خدمات', 'ضرائب', 'غرامات', 'ترا�
             </div>
             
             <form method="POST" class="space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-2">المواطن *</label>
@@ -731,6 +753,7 @@ $tax_categories = ['رسوم خدمات', 'ضرائب', 'غرامات', 'ترا�
             </div>
             
             <form method="POST" class="space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="collection_id" id="edit_collection_id">
                 
                 <!-- معلومات أساسية (للعرض فقط) -->
@@ -927,6 +950,7 @@ $tax_categories = ['رسوم خدمات', 'ضرائب', 'غرامات', 'ترا�
             </div>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="collection_id" id="cancel_collection_id">
                 
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
@@ -965,6 +989,7 @@ $tax_categories = ['رسوم خدمات', 'ضرائب', 'غرامات', 'ترا�
             </div>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="collection_id" id="payment_collection_id">
                 
                 <div>

@@ -2,6 +2,11 @@
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 // التحقق من تسجيل الدخول
 $auth->requireLogin();
 
@@ -16,79 +21,91 @@ $error = '';
 
 // معالجة إضافة مورد جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_supplier'])) {
-    try {
-        $supplier_code = trim($_POST['supplier_code']);
-        $name = trim($_POST['name']);
-        $contact_person = trim($_POST['contact_person']);
-        $phone = trim($_POST['phone']);
-        $mobile = trim($_POST['mobile']);
-        $email = trim($_POST['email']);
-        $address = trim($_POST['address']);
-        $service_type = trim($_POST['service_type']);
-        $tax_number = trim($_POST['tax_number']);
-        $commercial_registration = trim($_POST['commercial_registration']);
-        $payment_terms = trim($_POST['payment_terms']);
-        $bank_account = trim($_POST['bank_account']);
-        $bank_name = trim($_POST['bank_name']);
-        $notes = trim($_POST['notes']);
-        
-        $stmt = $db->prepare("INSERT INTO suppliers (supplier_code, name, contact_person, phone, mobile, email, address, service_type, tax_number, commercial_registration, payment_terms, bank_account, bank_name, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$supplier_code, $name, $contact_person, $phone, $mobile, $email, $address, $service_type, $tax_number, $commercial_registration, $payment_terms, $bank_account, $bank_name, $notes]);
-        
-        $message = 'تم إضافة المورد بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في إضافة المورد: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $supplier_code = trim($_POST['supplier_code']);
+            $name = trim($_POST['name']);
+            $contact_person = trim($_POST['contact_person']);
+            $phone = trim($_POST['phone']);
+            $mobile = trim($_POST['mobile']);
+            $email = trim($_POST['email']);
+            $address = trim($_POST['address']);
+            $service_type = trim($_POST['service_type']);
+            $tax_number = trim($_POST['tax_number']);
+            $commercial_registration = trim($_POST['commercial_registration']);
+            $payment_terms = trim($_POST['payment_terms']);
+            $bank_account = trim($_POST['bank_account']);
+            $bank_name = trim($_POST['bank_name']);
+            $notes = trim($_POST['notes']);
+            
+            $stmt = $db->prepare("INSERT INTO suppliers (supplier_code, name, contact_person, phone, mobile, email, address, service_type, tax_number, commercial_registration, payment_terms, bank_account, bank_name, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$supplier_code, $name, $contact_person, $phone, $mobile, $email, $address, $service_type, $tax_number, $commercial_registration, $payment_terms, $bank_account, $bank_name, $notes]);
+            
+            $message = 'تم إضافة المورد بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في إضافة المورد: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة تعديل مورد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_supplier'])) {
-    try {
-        $id = intval($_POST['supplier_id']);
-        $supplier_code = trim($_POST['supplier_code']);
-        $name = trim($_POST['name']);
-        $contact_person = trim($_POST['contact_person']);
-        $phone = trim($_POST['phone']);
-        $mobile = trim($_POST['mobile']);
-        $email = trim($_POST['email']);
-        $address = trim($_POST['address']);
-        $service_type = trim($_POST['service_type']);
-        $tax_number = trim($_POST['tax_number']);
-        $commercial_registration = trim($_POST['commercial_registration']);
-        $payment_terms = trim($_POST['payment_terms']);
-        $bank_account = trim($_POST['bank_account']);
-        $bank_name = trim($_POST['bank_name']);
-        $is_active = isset($_POST['is_active']) ? 1 : 0;
-        $notes = trim($_POST['notes']);
-        
-        $stmt = $db->prepare("UPDATE suppliers SET supplier_code=?, name=?, contact_person=?, phone=?, mobile=?, email=?, address=?, service_type=?, tax_number=?, commercial_registration=?, payment_terms=?, bank_account=?, bank_name=?, is_active=?, notes=? WHERE id=?");
-        $stmt->execute([$supplier_code, $name, $contact_person, $phone, $mobile, $email, $address, $service_type, $tax_number, $commercial_registration, $payment_terms, $bank_account, $bank_name, $is_active, $notes, $id]);
-        
-        $message = 'تم تحديث بيانات المورد بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث المورد: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $id = intval($_POST['supplier_id']);
+            $supplier_code = trim($_POST['supplier_code']);
+            $name = trim($_POST['name']);
+            $contact_person = trim($_POST['contact_person']);
+            $phone = trim($_POST['phone']);
+            $mobile = trim($_POST['mobile']);
+            $email = trim($_POST['email']);
+            $address = trim($_POST['address']);
+            $service_type = trim($_POST['service_type']);
+            $tax_number = trim($_POST['tax_number']);
+            $commercial_registration = trim($_POST['commercial_registration']);
+            $payment_terms = trim($_POST['payment_terms']);
+            $bank_account = trim($_POST['bank_account']);
+            $bank_name = trim($_POST['bank_name']);
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            $notes = trim($_POST['notes']);
+            
+            $stmt = $db->prepare("UPDATE suppliers SET supplier_code=?, name=?, contact_person=?, phone=?, mobile=?, email=?, address=?, service_type=?, tax_number=?, commercial_registration=?, payment_terms=?, bank_account=?, bank_name=?, is_active=?, notes=? WHERE id=?");
+            $stmt->execute([$supplier_code, $name, $contact_person, $phone, $mobile, $email, $address, $service_type, $tax_number, $commercial_registration, $payment_terms, $bank_account, $bank_name, $is_active, $notes, $id]);
+            
+            $message = 'تم تحديث بيانات المورد بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث المورد: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة حذف مورد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_supplier'])) {
-    try {
-        $id = intval($_POST['supplier_id']);
-        
-        // التحقق من وجود فواتير مرتبطة
-        $stmt = $db->prepare("SELECT COUNT(*) as count FROM supplier_invoices WHERE supplier_id = ?");
-        $stmt->execute([$id]);
-        $invoiceCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-        
-        if ($invoiceCount > 0) {
-            $error = "لا يمكن حذف المورد لوجود $invoiceCount فاتورة مرتبطة به. يمكنك تعطيله بدلاً من الحذف.";
-        } else {
-            $stmt = $db->prepare("DELETE FROM suppliers WHERE id = ?");
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $id = intval($_POST['supplier_id']);
+            
+            // التحقق من وجود فواتير مرتبطة
+            $stmt = $db->prepare("SELECT COUNT(*) as count FROM supplier_invoices WHERE supplier_id = ?");
             $stmt->execute([$id]);
-            $message = 'تم حذف المورد بنجاح!';
+            $invoiceCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+            
+            if ($invoiceCount > 0) {
+                $error = "لا يمكن حذف المورد لوجود $invoiceCount فاتورة مرتبطة به. يمكنك تعطيله بدلاً من الحذف.";
+            } else {
+                $stmt = $db->prepare("DELETE FROM suppliers WHERE id = ?");
+                $stmt->execute([$id]);
+                $message = 'تم حذف المورد بنجاح!';
+            }
+        } catch (PDOException $e) {
+            $error = 'خطأ في حذف المورد: ' . $e->getMessage();
         }
-    } catch (PDOException $e) {
-        $error = 'خطأ في حذف المورد: ' . $e->getMessage();
     }
 }
 
@@ -380,6 +397,7 @@ $service_types = $stmt->fetchAll(PDO::FETCH_COLUMN);
             </div>
             
             <form method="POST" class="p-6 space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="supplier_id" id="edit_supplier_id">
                 
                 <!-- معلومات أساسية -->
@@ -521,6 +539,7 @@ $service_types = $stmt->fetchAll(PDO::FETCH_COLUMN);
             </div>
             
             <form method="POST" class="p-6 space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <!-- معلومات أساسية -->
                 <div class="border-b pb-4">
                     <h4 class="text-lg font-medium text-gray-900 mb-4">📋 المعلومات الأساسية</h4>

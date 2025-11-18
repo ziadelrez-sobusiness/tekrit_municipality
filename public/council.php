@@ -1,4 +1,9 @@
 <?php
+// تحميل أنظمة الأمان
+if (file_exists(__DIR__ . '/../includes/auto_security.php')) {
+    require_once __DIR__ . '/../includes/auto_security.php';
+}
+
 require_once '../config/database.php';
 
 $database = new Database();

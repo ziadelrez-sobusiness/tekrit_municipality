@@ -3,6 +3,11 @@ header('Content-Type: text/html; charset=utf-8');
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 $auth->requireLogin();
 if (!$auth->checkPermission('employee')) {
     header('Location: ../comprehensive_dashboard.php?error=no_permission');
@@ -134,94 +139,98 @@ $error_message = '';
 
 // معالجة الإجراءات
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    // إجراءات الأقسام
-    if ($action == 'add_department') {
-        $name = trim($_POST['department_name']);
-        $description = trim($_POST['department_description']);
-        $manager = trim($_POST['department_manager']);
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error_message = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $action = $_POST['action'] ?? '';
         
-        if (!empty($name)) {
-            try {
-                $stmt = $db->prepare("INSERT INTO departments (department_name, department_description, department_manager) VALUES (?, ?, ?)");
-                $stmt->execute([$name, $description, $manager]);
-                $success_message = "تم إضافة القسم بنجاح";
-                header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
-                exit();
-            } catch (Exception $e) {
-                $error_message = "خطأ في إضافة القسم: " . $e->getMessage();
-            }
-        }
-    }
-    
-    elseif ($action == 'edit_department') {
-        $id = $_POST['id'];
-        $name = trim($_POST['department_name']);
-        $description = trim($_POST['department_description']);
-        $manager = trim($_POST['department_manager']);
-        $is_active = isset($_POST['is_active']) ? 1 : 0;
-        
-        try {
-            $stmt = $db->prepare("UPDATE departments SET department_name = ?, department_description = ?, department_manager = ?, is_active = ? WHERE id = ?");
-            $stmt->execute([$name, $description, $manager, $is_active, $id]);
-            $success_message = "تم تحديث القسم بنجاح";
-            header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في تحديث القسم: " . $e->getMessage();
-        }
-    }
-    
-    elseif ($action == 'delete_department') {
-        $id = $_POST['id'];
-        
-        try {
-            // التحقق من وجود موظفين
-            $check = $db->prepare("SELECT COUNT(*) as count FROM users WHERE department_id = ?");
-            $check->execute([$id]);
-            $count = $check->fetch()['count'];
+        // إجراءات الأقسام
+        if ($action == 'add_department') {
+            $name = trim($_POST['department_name']);
+            $description = trim($_POST['department_description']);
+            $manager = trim($_POST['department_manager']);
             
-            if ($count > 0) {
-                $error_message = "لا يمكن حذف القسم لأنه يحتوي على موظفين";
-            } else {
-                $stmt = $db->prepare("DELETE FROM departments WHERE id = ?");
-                $stmt->execute([$id]);
-                $success_message = "تم حذف القسم بنجاح";
+            if (!empty($name)) {
+                try {
+                    $stmt = $db->prepare("INSERT INTO departments (department_name, department_description, department_manager) VALUES (?, ?, ?)");
+                    $stmt->execute([$name, $description, $manager]);
+                    $success_message = "تم إضافة القسم بنجاح";
+                    header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
+                    exit();
+                } catch (Exception $e) {
+                    $error_message = "خطأ في إضافة القسم: " . $e->getMessage();
+                }
+            }
+        }
+        
+        elseif ($action == 'edit_department') {
+            $id = $_POST['id'];
+            $name = trim($_POST['department_name']);
+            $description = trim($_POST['department_description']);
+            $manager = trim($_POST['department_manager']);
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            
+            try {
+                $stmt = $db->prepare("UPDATE departments SET department_name = ?, department_description = ?, department_manager = ?, is_active = ? WHERE id = ?");
+                $stmt->execute([$name, $description, $manager, $is_active, $id]);
+                $success_message = "تم تحديث القسم بنجاح";
                 header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
                 exit();
-            }
-        } catch (Exception $e) {
-            $error_message = "خطأ في حذف القسم: " . $e->getMessage();
-        }
-    }
-    
-    // إجراءات اللجان
-    elseif ($action == 'add_committee') {
-        $name = trim($_POST['committee_name']);
-        $description = trim($_POST['committee_description']);
-        $department_id = $_POST['department_id'] ?: null;
-        $type = $_POST['committee_type'];
-        $frequency = $_POST['meeting_frequency'];
-        $responsibilities = trim($_POST['responsibilities']);
-        $formation_date = $_POST['formation_date'];
-        $chairman_id = $_POST['chairman_id'] ?: null;
-        $secretary_id = $_POST['secretary_id'] ?: null;
-        
-        if (!empty($name)) {
-            try {
-                $stmt = $db->prepare("INSERT INTO municipal_committees (committee_name, committee_description, department_id, committee_type, meeting_frequency, responsibilities, formation_date, chairman_id, secretary_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$name, $description, $department_id, $type, $frequency, $responsibilities, $formation_date, $chairman_id, $secretary_id]);
-                $success_message = "تم إضافة اللجنة بنجاح";
-                header("Location: " . $_SERVER['PHP_SELF'] . "?tab=committees&success=1");
-                exit();
             } catch (Exception $e) {
-                $error_message = "خطأ في إضافة اللجنة: " . $e->getMessage();
+                $error_message = "خطأ في تحديث القسم: " . $e->getMessage();
             }
         }
-    }
-    
-    elseif ($action == 'edit_committee') {
+        
+        elseif ($action == 'delete_department') {
+            $id = $_POST['id'];
+            
+            try {
+                // التحقق من وجود موظفين
+                $check = $db->prepare("SELECT COUNT(*) as count FROM users WHERE department_id = ?");
+                $check->execute([$id]);
+                $count = $check->fetch()['count'];
+                
+                if ($count > 0) {
+                    $error_message = "لا يمكن حذف القسم لأنه يحتوي على موظفين";
+                } else {
+                    $stmt = $db->prepare("DELETE FROM departments WHERE id = ?");
+                    $stmt->execute([$id]);
+                    $success_message = "تم حذف القسم بنجاح";
+                    header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
+                    exit();
+                }
+            } catch (Exception $e) {
+                $error_message = "خطأ في حذف القسم: " . $e->getMessage();
+            }
+        }
+        
+        // إجراءات اللجان
+        elseif ($action == 'add_committee') {
+            $name = trim($_POST['committee_name']);
+            $description = trim($_POST['committee_description']);
+            $department_id = $_POST['department_id'] ?: null;
+            $type = $_POST['committee_type'];
+            $frequency = $_POST['meeting_frequency'];
+            $responsibilities = trim($_POST['responsibilities']);
+            $formation_date = $_POST['formation_date'];
+            $chairman_id = $_POST['chairman_id'] ?: null;
+            $secretary_id = $_POST['secretary_id'] ?: null;
+            
+            if (!empty($name)) {
+                try {
+                    $stmt = $db->prepare("INSERT INTO municipal_committees (committee_name, committee_description, department_id, committee_type, meeting_frequency, responsibilities, formation_date, chairman_id, secretary_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$name, $description, $department_id, $type, $frequency, $responsibilities, $formation_date, $chairman_id, $secretary_id]);
+                    $success_message = "تم إضافة اللجنة بنجاح";
+                    header("Location: " . $_SERVER['PHP_SELF'] . "?tab=committees&success=1");
+                    exit();
+                } catch (Exception $e) {
+                    $error_message = "خطأ في إضافة اللجنة: " . $e->getMessage();
+                }
+            }
+        }
+        
+        elseif ($action == 'edit_committee') {
         $id = $_POST['id'];
         $name = trim($_POST['committee_name']);
         $description = trim($_POST['committee_description']);
@@ -244,94 +253,135 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     
-    elseif ($action == 'delete_committee') {
-        $id = $_POST['id'];
+        elseif ($action == 'delete_committee') {
+            $id = $_POST['id'];
+            
+            try {
+                $stmt = $db->prepare("DELETE FROM municipal_committees WHERE id = ?");
+                $stmt->execute([$id]);
+                $success_message = "تم حذف اللجنة بنجاح";
+                header("Location: " . $_SERVER['PHP_SELF'] . "?tab=committees&success=1");
+                exit();
+            } catch (Exception $e) {
+                $error_message = "خطأ في حذف اللجنة: " . $e->getMessage();
+            }
+        }
         
-        try {
-            $stmt = $db->prepare("DELETE FROM municipal_committees WHERE id = ?");
-            $stmt->execute([$id]);
-            $success_message = "تم حذف اللجنة بنجاح";
-            header("Location: " . $_SERVER['PHP_SELF'] . "?tab=committees&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في حذف اللجنة: " . $e->getMessage();
-        }
-    }
-    
-	elseif ($action == 'add_member') {
-        $committee_id = $_POST['committee_id'];
-        $user_id = $_POST['user_id'];
-        $role = $_POST['member_role'];
-        $join_date = $_POST['join_date'];
-        $notes = trim($_POST['notes']);
+        elseif ($action == 'add_member') {
+            $committee_id = $_POST['committee_id'];
+            $user_id = $_POST['user_id'];
+            $role = $_POST['member_role'];
+            $join_date = $_POST['join_date'];
+            $notes = trim($_POST['notes']);
 
-        try {
-            $stmt = $db->prepare("INSERT INTO committee_members (committee_id, user_id, member_role, join_date, notes) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$committee_id, $user_id, $role, $join_date, $notes]);
-            $success_message = "تم إضافة العضو بنجاح";
-            header("Location: ?view_members=" . $committee_id . "&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في إضافة العضو: " . $e->getMessage();
+            try {
+                $stmt = $db->prepare("INSERT INTO committee_members (committee_id, user_id, member_role, join_date, notes) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$committee_id, $user_id, $role, $join_date, $notes]);
+                $success_message = "تم إضافة العضو بنجاح";
+                header("Location: ?view_members=" . $committee_id . "&success=1");
+                exit();
+            } catch (Exception $e) {
+                $error_message = "خطأ في إضافة العضو: " . $e->getMessage();
+            }
         }
-    }
-    
-    elseif ($action == 'edit_member') {
-        $id = $_POST['id'];
-        $role = $_POST['member_role'];
-        $join_date = $_POST['join_date'];
-        $leave_date = $_POST['leave_date'] ?: null;
-        $is_active = isset($_POST['is_active']) ? 1 : 0;
-        $notes = trim($_POST['notes']);
-
-        try {
-            $stmt = $db->prepare("UPDATE committee_members SET member_role = ?, join_date = ?, leave_date = ?, is_active = ?, notes = ? WHERE id = ?");
-            $stmt->execute([$role, $join_date, $leave_date, $is_active, $notes, $id]);
-            $success_message = "تم تحديث العضو بنجاح";
-            header("Location: ?view_members=" . $_POST['committee_id'] . "&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في تحديث العضو: " . $e->getMessage();
-        }
-    }
-    
-    elseif ($action == 'delete_member') {
-        $id = $_POST['id'];
-        $committee_id = $_POST['committee_id'];
-
-        try {
-            $stmt = $db->prepare("DELETE FROM committee_members WHERE id = ?");
-            $stmt->execute([$id]);
-            $success_message = "تم حذف العضو بنجاح";
-            header("Location: ?view_members=" . $committee_id . "&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في حذف العضو: " . $e->getMessage();
-        }
-    }
-	
-    // إجراءات الجلسات
-    elseif ($action == 'add_session') {
-        $number = trim($_POST['session_number']);
-        $title = trim($_POST['session_title']);
-        $committee_id = !empty($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
-        $date = $_POST['session_date'];
-        $time = !empty($_POST['session_time']) ? $_POST['session_time'] : null;
-        $location = trim($_POST['location']);
-        $agenda = trim($_POST['agenda']);
-        $minutes = trim($_POST['session_minutes']);
-        $attachments = trim($_POST['attachments']);
         
-        if ($committee_id && $title && $date) {
+        elseif ($action == 'edit_member') {
+            $id = $_POST['id'];
+            $role = $_POST['member_role'];
+            $join_date = $_POST['join_date'];
+            $leave_date = $_POST['leave_date'] ?: null;
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            $notes = trim($_POST['notes']);
+
+            try {
+                $stmt = $db->prepare("UPDATE committee_members SET member_role = ?, join_date = ?, leave_date = ?, is_active = ?, notes = ? WHERE id = ?");
+                $stmt->execute([$role, $join_date, $leave_date, $is_active, $notes, $id]);
+                $success_message = "تم تحديث العضو بنجاح";
+                header("Location: ?view_members=" . $_POST['committee_id'] . "&success=1");
+                exit();
+            } catch (Exception $e) {
+                $error_message = "خطأ في تحديث العضو: " . $e->getMessage();
+            }
+        }
+        
+        elseif ($action == 'delete_member') {
+            $id = $_POST['id'];
+            $committee_id = $_POST['committee_id'];
+
+            try {
+                $stmt = $db->prepare("DELETE FROM committee_members WHERE id = ?");
+                $stmt->execute([$id]);
+                $success_message = "تم حذف العضو بنجاح";
+                header("Location: ?view_members=" . $committee_id . "&success=1");
+                exit();
+            } catch (Exception $e) {
+                $error_message = "خطأ في حذف العضو: " . $e->getMessage();
+            }
+        }
+        
+        // إجراءات الجلسات
+        elseif ($action == 'add_session') {
+            $number = trim($_POST['session_number']);
+            $title = trim($_POST['session_title']);
+            $committee_id = !empty($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
+            $date = $_POST['session_date'];
+            $time = !empty($_POST['session_time']) ? $_POST['session_time'] : null;
+            $location = trim($_POST['location']);
+            $agenda = trim($_POST['agenda']);
+            $minutes = trim($_POST['session_minutes']);
+            $attachments = trim($_POST['attachments']);
+            
+            if ($committee_id && $title && $date) {
+                try {
+                    $stmt = $db->prepare("
+                        INSERT INTO committee_sessions
+                            (committee_id, session_number, session_title, session_date, session_time, location, agenda, minutes, attachments, created_by)
+                        VALUES
+                            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([
+                        $committee_id,
+                        $number ?: null,
+                        $title,
+                        $date,
+                        $time,
+                        $location ?: null,
+                        $agenda ?: null,
+                        $minutes ?: null,
+                        $attachments ?: null,
+                        $auth->getCurrentUser()['id']
+                    ]);
+                    $success_message = "تم إضافة محضر الجلسة بنجاح";
+                    header("Location: " . $_SERVER['PHP_SELF'] . "?tab=sessions&success=1");
+                    exit();
+                } catch (Exception $e) {
+                    $error_message = "خطأ في إضافة الجلسة: " . $e->getMessage();
+                }
+            } else {
+                $error_message = "يرجى تحديد اللجنة، عنوان الجلسة، وتاريخ الانعقاد";
+            }
+        }
+        
+        elseif ($action == 'edit_session') {
+            $id = intval($_POST['id']);
+            $number = trim($_POST['session_number']);
+            $title = trim($_POST['session_title']);
+            $committee_id = !empty($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
+            $date = $_POST['session_date'];
+            $time = !empty($_POST['session_time']) ? $_POST['session_time'] : null;
+            $location = trim($_POST['location']);
+            $agenda = trim($_POST['agenda']);
+            $minutes = trim($_POST['session_minutes']);
+            $attachments = trim($_POST['attachments']);
+            
             try {
                 $stmt = $db->prepare("
-                    INSERT INTO committee_sessions
-                        (committee_id, session_number, session_title, session_date, session_time, location, agenda, minutes, attachments, created_by)
-                    VALUES
-                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    UPDATE committee_sessions
+                    SET committee_id = ?, session_number = ?, session_title = ?, session_date = ?, session_time = ?, location = ?, agenda = ?, minutes = ?, attachments = ?
+                    WHERE id = ?
                 ");
                 $stmt->execute([
-                    $committee_id,
+                    $committee_id ?: null,
                     $number ?: null,
                     $title,
                     $date,
@@ -340,83 +390,92 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $agenda ?: null,
                     $minutes ?: null,
                     $attachments ?: null,
-                    $auth->getCurrentUser()['id']
+                    $id
                 ]);
-                $success_message = "تم إضافة محضر الجلسة بنجاح";
+                $success_message = "تم تحديث محضر الجلسة بنجاح";
                 header("Location: " . $_SERVER['PHP_SELF'] . "?tab=sessions&success=1");
                 exit();
             } catch (Exception $e) {
-                $error_message = "خطأ في إضافة الجلسة: " . $e->getMessage();
+                $error_message = "خطأ في تحديث الجلسة: " . $e->getMessage();
             }
-        } else {
-            $error_message = "يرجى تحديد اللجنة، عنوان الجلسة، وتاريخ الانعقاد";
         }
-    }
-    
-    elseif ($action == 'edit_session') {
-        $id = intval($_POST['id']);
-        $number = trim($_POST['session_number']);
-        $title = trim($_POST['session_title']);
-        $committee_id = !empty($_POST['committee_id']) ? intval($_POST['committee_id']) : null;
-        $date = $_POST['session_date'];
-        $time = !empty($_POST['session_time']) ? $_POST['session_time'] : null;
-        $location = trim($_POST['location']);
-        $agenda = trim($_POST['agenda']);
-        $minutes = trim($_POST['session_minutes']);
-        $attachments = trim($_POST['attachments']);
         
-        try {
-            $stmt = $db->prepare("
-                UPDATE committee_sessions
-                SET committee_id = ?, session_number = ?, session_title = ?, session_date = ?, session_time = ?, location = ?, agenda = ?, minutes = ?, attachments = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([
-                $committee_id ?: null,
-                $number ?: null,
-                $title,
-                $date,
-                $time,
-                $location ?: null,
-                $agenda ?: null,
-                $minutes ?: null,
-                $attachments ?: null,
-                $id
-            ]);
-            $success_message = "تم تحديث محضر الجلسة بنجاح";
-            header("Location: " . $_SERVER['PHP_SELF'] . "?tab=sessions&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في تحديث الجلسة: " . $e->getMessage();
+        elseif ($action == 'delete_session') {
+            $id = intval($_POST['id']);
+            
+            try {
+                $stmt = $db->prepare("DELETE FROM committee_sessions WHERE id = ?");
+                $stmt->execute([$id]);
+                $success_message = "تم حذف محضر الجلسة بنجاح";
+                header("Location: " . $_SERVER['PHP_SELF'] . "?tab=sessions&success=1");
+                exit();
+            } catch (Exception $e) {
+                $error_message = "خطأ في حذف الجلسة: " . $e->getMessage();
+            }
         }
-    }
-    
-    elseif ($action == 'delete_session') {
-        $id = intval($_POST['id']);
         
-        try {
-            $stmt = $db->prepare("DELETE FROM committee_sessions WHERE id = ?");
-            $stmt->execute([$id]);
-            $success_message = "تم حذف محضر الجلسة بنجاح";
-            header("Location: " . $_SERVER['PHP_SELF'] . "?tab=sessions&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في حذف الجلسة: " . $e->getMessage();
+            // إجراءات القرارات
+        elseif ($action == 'add_decision') {
+            $number = trim($_POST['decision_number']);
+            $session_id = !empty($_POST['session_id']) ? intval($_POST['session_id']) : null;
+            $title = trim($_POST['decision_title']);
+            $text = trim($_POST['decision_text']);
+            $status = $_POST['decision_status'];
+            $due_date = !empty($_POST['due_date']) ? $_POST['due_date'] : null;
+            $implemented_at = !empty($_POST['implemented_at']) ? $_POST['implemented_at'] : null;
+            $notes = trim($_POST['decision_notes']);
+            
+            if ($session_id && $title && $text) {
+                try {
+                    $stmtSession = $db->prepare("SELECT committee_id FROM committee_sessions WHERE id = ?");
+                    $stmtSession->execute([$session_id]);
+                    $sessionRow = $stmtSession->fetch(PDO::FETCH_ASSOC);
+                    if (!$sessionRow) {
+                        throw new Exception('الجلسة المحددة غير موجودة');
+                    }
+                    
+                    $committee_id = $sessionRow['committee_id'];
+                    
+                    $stmt = $db->prepare("
+                        INSERT INTO committee_decisions
+                            (committee_id, session_id, decision_number, decision_title, decision_text, status, due_date, implemented_at, notes, created_by)
+                        VALUES
+                            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([
+                        $committee_id,
+                        $session_id,
+                        $number ?: null,
+                        $title,
+                        $text,
+                        $status,
+                        $due_date,
+                        $implemented_at,
+                        $notes ?: null,
+                        $auth->getCurrentUser()['id']
+                    ]);
+                    
+                    $success_message = "تم إضافة قرار اللجنة بنجاح";
+                    header("Location: " . $_SERVER['PHP_SELF'] . "?tab=decisions&success=1");
+                    exit();
+                } catch (Exception $e) {
+                    $error_message = "خطأ في إضافة القرار: " . $e->getMessage();
+                }
+            } else {
+                $error_message = "يرجى اختيار الجلسة وكتابة عنوان ونص القرار";
+            }
         }
-    }
-    
-    // إجراءات القرارات
-    elseif ($action == 'add_decision') {
-        $number = trim($_POST['decision_number']);
-        $session_id = !empty($_POST['session_id']) ? intval($_POST['session_id']) : null;
-        $title = trim($_POST['decision_title']);
-        $text = trim($_POST['decision_text']);
-        $status = $_POST['decision_status'];
-        $due_date = !empty($_POST['due_date']) ? $_POST['due_date'] : null;
-        $implemented_at = !empty($_POST['implemented_at']) ? $_POST['implemented_at'] : null;
-        $notes = trim($_POST['decision_notes']);
         
-        if ($session_id && $title && $text) {
+        elseif ($action == 'edit_decision') {
+            $id = intval($_POST['id']);
+            $session_id = !empty($_POST['session_id']) ? intval($_POST['session_id']) : null;
+            $title = trim($_POST['decision_title']);
+            $text = trim($_POST['decision_text']);
+            $status = $_POST['decision_status'];
+            $due_date = !empty($_POST['due_date']) ? $_POST['due_date'] : null;
+            $implemented_at = !empty($_POST['implemented_at']) ? $_POST['implemented_at'] : null;
+            $notes = trim($_POST['decision_notes']);
+            
             try {
                 $stmtSession = $db->prepare("SELECT committee_id FROM committee_sessions WHERE id = ?");
                 $stmtSession->execute([$session_id]);
@@ -428,92 +487,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $committee_id = $sessionRow['committee_id'];
                 
                 $stmt = $db->prepare("
-                    INSERT INTO committee_decisions
-                        (committee_id, session_id, decision_number, decision_title, decision_text, status, due_date, implemented_at, notes, created_by)
-                    VALUES
-                        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    UPDATE committee_decisions
+                    SET committee_id = ?, session_id = ?, decision_number = ?, decision_title = ?, decision_text = ?, status = ?, due_date = ?, implemented_at = ?, notes = ?
+                    WHERE id = ?
                 ");
                 $stmt->execute([
                     $committee_id,
                     $session_id,
-                    $number ?: null,
+                    trim($_POST['decision_number']) ?: null,
                     $title,
                     $text,
                     $status,
                     $due_date,
                     $implemented_at,
                     $notes ?: null,
-                    $auth->getCurrentUser()['id']
+                    $id
                 ]);
                 
-                $success_message = "تم إضافة قرار اللجنة بنجاح";
+                $success_message = "تم تحديث قرار اللجنة بنجاح";
                 header("Location: " . $_SERVER['PHP_SELF'] . "?tab=decisions&success=1");
                 exit();
             } catch (Exception $e) {
-                $error_message = "خطأ في إضافة القرار: " . $e->getMessage();
+                $error_message = "خطأ في تحديث القرار: " . $e->getMessage();
             }
-        } else {
-            $error_message = "يرجى اختيار الجلسة وكتابة عنوان ونص القرار";
         }
-    }
-    
-    elseif ($action == 'edit_decision') {
-        $id = intval($_POST['id']);
-        $session_id = !empty($_POST['session_id']) ? intval($_POST['session_id']) : null;
-        $title = trim($_POST['decision_title']);
-        $text = trim($_POST['decision_text']);
-        $status = $_POST['decision_status'];
-        $due_date = !empty($_POST['due_date']) ? $_POST['due_date'] : null;
-        $implemented_at = !empty($_POST['implemented_at']) ? $_POST['implemented_at'] : null;
-        $notes = trim($_POST['decision_notes']);
         
-        try {
-            $stmtSession = $db->prepare("SELECT committee_id FROM committee_sessions WHERE id = ?");
-            $stmtSession->execute([$session_id]);
-            $sessionRow = $stmtSession->fetch(PDO::FETCH_ASSOC);
-            if (!$sessionRow) {
-                throw new Exception('الجلسة المحددة غير موجودة');
+        elseif ($action == 'delete_decision') {
+            $id = intval($_POST['id']);
+            
+            try {
+                $stmt = $db->prepare("DELETE FROM committee_decisions WHERE id = ?");
+                $stmt->execute([$id]);
+                $success_message = "تم حذف قرار اللجنة بنجاح";
+                header("Location: " . $_SERVER['PHP_SELF'] . "?tab=decisions&success=1");
+                exit();
+            } catch (Exception $e) {
+                $error_message = "خطأ في حذف القرار: " . $e->getMessage();
             }
-            
-            $committee_id = $sessionRow['committee_id'];
-            
-            $stmt = $db->prepare("
-                UPDATE committee_decisions
-                SET committee_id = ?, session_id = ?, decision_number = ?, decision_title = ?, decision_text = ?, status = ?, due_date = ?, implemented_at = ?, notes = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([
-                $committee_id,
-                $session_id,
-                trim($_POST['decision_number']) ?: null,
-                $title,
-                $text,
-                $status,
-                $due_date,
-                $implemented_at,
-                $notes ?: null,
-                $id
-            ]);
-            
-            $success_message = "تم تحديث قرار اللجنة بنجاح";
-            header("Location: " . $_SERVER['PHP_SELF'] . "?tab=decisions&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في تحديث القرار: " . $e->getMessage();
-        }
-    }
-    
-    elseif ($action == 'delete_decision') {
-        $id = intval($_POST['id']);
-        
-        try {
-            $stmt = $db->prepare("DELETE FROM committee_decisions WHERE id = ?");
-            $stmt->execute([$id]);
-            $success_message = "تم حذف قرار اللجنة بنجاح";
-            header("Location: " . $_SERVER['PHP_SELF'] . "?tab=decisions&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في حذف القرار: " . $e->getMessage();
         }
     }
 }
@@ -800,6 +810,7 @@ if (isset($_GET['edit_member'])) {
                                        class="text-blue-600 hover:text-blue-800">✏️</a>
                                     <form method="POST" style="display: inline;" 
                                           onsubmit="return confirm('هل أنت متأكد من حذف هذا القسم؟')">
+                                        <?php echo csrf_input('csrf_token'); ?>
                                         <input type="hidden" name="action" value="delete_department">
                                         <input type="hidden" name="id" value="<?= $dept['id'] ?>">
                                         <button type="submit" class="text-red-600 hover:text-red-800">🗑️</button>
@@ -894,6 +905,7 @@ if (isset($_GET['edit_member'])) {
                                         <a href="?edit_committee=<?= $committee['id'] ?>" class="text-blue-600 hover:text-blue-900">✏️ تعديل</a>
                                         <a href="?view_members=<?= $committee['id'] ?>" class="text-green-600 hover:text-green-900">👥 الأعضاء</a>
                                         <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذه اللجنة؟')">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="action" value="delete_committee">
                                             <input type="hidden" name="id" value="<?= $committee['id'] ?>">
                                             <button type="submit" class="text-red-600 hover:text-red-900">🗑️ حذف</button>
@@ -952,6 +964,7 @@ if (isset($_GET['edit_member'])) {
                                         <a href="?view_session=<?= $session['id'] ?>" class="text-indigo-600 hover:text-indigo-900">👁️ عرض</a>
                                         <a href="?edit_session=<?= $session['id'] ?>" class="text-blue-600 hover:text-blue-900">✏️ تعديل</a>
                                         <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذه الجلسة؟')">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="action" value="delete_session">
                                             <input type="hidden" name="id" value="<?= $session['id'] ?>">
                                             <button type="submit" class="text-red-600 hover:text-red-900">🗑️ حذف</button>
@@ -1016,6 +1029,7 @@ if (isset($_GET['edit_member'])) {
                                         <a href="?view_decision=<?= $decision['id'] ?>" class="text-indigo-600 hover:text-indigo-900">👁️ عرض</a>
                                         <a href="?edit_decision=<?= $decision['id'] ?>" class="text-blue-600 hover:text-blue-900">✏️ تعديل</a>
                                         <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا القرار؟')">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="action" value="delete_decision">
                                             <input type="hidden" name="id" value="<?= $decision['id'] ?>">
                                             <button type="submit" class="text-red-600 hover:text-red-900">🗑️ حذف</button>
@@ -1036,6 +1050,7 @@ if (isset($_GET['edit_member'])) {
                 <div class="p-6">
                     <h3 class="text-lg font-bold mb-4"><?= isset($edit_department) ? 'تعديل القسم' : 'إضافة قسم جديد' ?></h3>
                     <form method="POST">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="<?= isset($edit_department) ? 'edit_department' : 'add_department' ?>">
                         <?php if (isset($edit_department)): ?>
                             <input type="hidden" name="id" value="<?= $edit_department['id'] ?>">
@@ -1084,6 +1099,7 @@ if (isset($_GET['edit_member'])) {
                 <div class="p-6">
                     <h3 class="text-lg font-bold mb-4"><?= isset($edit_committee) ? 'تعديل اللجنة' : 'إضافة لجنة جديدة' ?></h3>
                     <form method="POST">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="<?= isset($edit_committee) ? 'edit_committee' : 'add_committee' ?>">
                         <?php if (isset($edit_committee)): ?>
                             <input type="hidden" name="id" value="<?= $edit_committee['id'] ?>">
@@ -1164,6 +1180,7 @@ if (isset($_GET['edit_member'])) {
                 <div class="glass-card p-6 space-y-4 max-w-3xl">
                     <h3 class="text-xl font-bold"><?= isset($edit_session) ? 'تعديل محضر جلسة' : 'إضافة محضر جلسة جديدة' ?></h3>
                     <form method="POST" class="space-y-4">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="<?= isset($edit_session) ? 'edit_session' : 'add_session' ?>">
                         <?php if (isset($edit_session)): ?>
                             <input type="hidden" name="id" value="<?= $edit_session['id'] ?>">
@@ -1247,6 +1264,7 @@ if (isset($_GET['edit_member'])) {
                 <div class="glass-card p-6 space-y-4 max-w-3xl">
                     <h3 class="text-xl font-bold"><?= isset($edit_decision) ? 'تعديل قرار لجنة' : 'إضافة قرار لجنة جديد' ?></h3>
                     <form method="POST" class="space-y-4">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="<?= isset($edit_decision) ? 'edit_decision' : 'add_decision' ?>">
                         <?php if (isset($edit_decision)): ?>
                             <input type="hidden" name="id" value="<?= $edit_decision['id'] ?>">
@@ -1362,6 +1380,7 @@ if (isset($_GET['edit_member'])) {
                                 <td class="px-6 py-4 text-sm font-medium space-x-2 space-x-reverse">
                                     <a href="?view_members=<?= $committee_id ?>&edit_member=<?= $member['id'] ?>" class="text-blue-600 hover:text-blue-900">✏️ تعديل</a>
                                     <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا العضو؟')">
+                                        <?php echo csrf_input('csrf_token'); ?>
                                         <input type="hidden" name="action" value="delete_member">
                                         <input type="hidden" name="id" value="<?= $member['id'] ?>">
                                         <input type="hidden" name="committee_id" value="<?= $committee_id ?>">
@@ -1387,6 +1406,7 @@ if (isset($_GET['edit_member'])) {
             </div>
             
             <form method="POST">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="action" value="add_member">
                 <input type="hidden" name="committee_id" value="<?= $committee_id ?>">
                 
@@ -1443,6 +1463,7 @@ if (isset($_GET['edit_member'])) {
             </div>
             
             <form method="POST">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="action" value="edit_member">
                 <input type="hidden" name="id" value="<?= $edit_member['id'] ?>">
                 <input type="hidden" name="committee_id" value="<?= $committee_id ?>">

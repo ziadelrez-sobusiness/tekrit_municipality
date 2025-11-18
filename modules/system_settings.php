@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/currency_helper.php';
@@ -20,64 +25,76 @@ $error = '';
 
 // معالجة تحديث أسعار الصرف
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_exchange_rates'])) {
-    try {
-        $db->beginTransaction();
-        
-        foreach ($_POST['currencies'] as $currency_id => $data) {
-            $rate = floatval($data['exchange_rate']);
-            $is_active = isset($data['is_active']) ? 1 : 0;
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        try {
+            $db->beginTransaction();
             
-            $stmt = $db->prepare("UPDATE currencies SET exchange_rate_to_iqd = ?, is_active = ?, updated_at = NOW() WHERE id = ?");
-            $stmt->execute([$rate, $is_active, $currency_id]);
+            foreach ($_POST['currencies'] as $currency_id => $data) {
+                $rate = floatval($data['exchange_rate']);
+                $is_active = isset($data['is_active']) ? 1 : 0;
+                
+                $stmt = $db->prepare("UPDATE currencies SET exchange_rate_to_iqd = ?, is_active = ?, updated_at = NOW() WHERE id = ?");
+                $stmt->execute([$rate, $is_active, $currency_id]);
+            }
+            
+            $db->commit();
+            $message = 'تم تحديث أسعار الصرف بنجاح!';
+        } catch (PDOException $e) {
+            $db->rollback();
+            $error = 'خطأ في تحديث أسعار الصرف: ' . $e->getMessage();
         }
-        
-        $db->commit();
-        $message = 'تم تحديث أسعار الصرف بنجاح!';
-    } catch (PDOException $e) {
-        $db->rollback();
-        $error = 'خطأ في تحديث أسعار الصرف: ' . $e->getMessage();
     }
 }
 
 // معالجة إضافة عملة جديدة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_currency'])) {
-    $currency_code = strtoupper(trim($_POST['currency_code']));
-    $currency_name = trim($_POST['currency_name']);
-    $currency_symbol = trim($_POST['currency_symbol']);
-    $exchange_rate = floatval($_POST['exchange_rate']);
-    
-    if (!empty($currency_code) && !empty($currency_name) && !empty($currency_symbol)) {
-        try {
-            $stmt = $db->prepare("INSERT INTO currencies (currency_code, currency_name, currency_symbol, exchange_rate_to_iqd, is_active) VALUES (?, ?, ?, ?, 1)");
-            $stmt->execute([$currency_code, $currency_name, $currency_symbol, $exchange_rate]);
-            $message = 'تم إضافة العملة الجديدة بنجاح!';
-        } catch (PDOException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                $error = 'رمز العملة موجود مسبقاً';
-            } else {
-                $error = 'خطأ في إضافة العملة: ' . $e->getMessage();
-            }
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة جميع الحقول المطلوبة';
+        $currency_code = strtoupper(trim($_POST['currency_code']));
+        $currency_name = trim($_POST['currency_name']);
+        $currency_symbol = trim($_POST['currency_symbol']);
+        $exchange_rate = floatval($_POST['exchange_rate']);
+        
+        if (!empty($currency_code) && !empty($currency_name) && !empty($currency_symbol)) {
+            try {
+                $stmt = $db->prepare("INSERT INTO currencies (currency_code, currency_name, currency_symbol, exchange_rate_to_iqd, is_active) VALUES (?, ?, ?, ?, 1)");
+                $stmt->execute([$currency_code, $currency_name, $currency_symbol, $exchange_rate]);
+                $message = 'تم إضافة العملة الجديدة بنجاح!';
+            } catch (PDOException $e) {
+                if ($e->errorInfo[1] == 1062) {
+                    $error = 'رمز العملة موجود مسبقاً';
+                } else {
+                    $error = 'خطأ في إضافة العملة: ' . $e->getMessage();
+                }
+            }
+        } else {
+            $error = 'يرجى تعبئة جميع الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة إعدادات النظام العامة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_system_settings'])) {
-    $default_currency = intval($_POST['default_currency']);
-    $system_name = trim($_POST['system_name']);
-    $admin_email = trim($_POST['admin_email']);
-    
-    try {
-        // تحديث الإعدادات في جدول system_settings
-        setSetting('default_currency_id', $default_currency, 'معرف العملة الافتراضية للنظام');
-        setSetting('system_name', $system_name, 'اسم النظام');
-        setSetting('admin_email', $admin_email, 'بريد المدير الإلكتروني');
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $default_currency = intval($_POST['default_currency']);
+        $system_name = trim($_POST['system_name']);
+        $admin_email = trim($_POST['admin_email']);
         
-        $message = 'تم تحديث إعدادات النظام بنجاح! العملة الافتراضية الآن: ' . $default_currency;
-    } catch (Exception $e) {
-        $error = 'خطأ في تحديث الإعدادات: ' . $e->getMessage();
+        try {
+            // تحديث الإعدادات في جدول system_settings
+            setSetting('default_currency_id', $default_currency, 'معرف العملة الافتراضية للنظام');
+            setSetting('system_name', $system_name, 'اسم النظام');
+            setSetting('admin_email', $admin_email, 'بريد المدير الإلكتروني');
+            
+            $message = 'تم تحديث إعدادات النظام بنجاح! العملة الافتراضية الآن: ' . $default_currency;
+        } catch (Exception $e) {
+            $error = 'خطأ في تحديث الإعدادات: ' . $e->getMessage();
+        }
     }
 }
 
@@ -236,6 +253,7 @@ $current_default_currency = getDefaultCurrency();
                 <!-- Tab: إعدادات عامة -->
                 <div id="system-tab" class="tab-content active p-6">
                     <form method="POST" class="space-y-6">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <h3 class="text-xl font-semibold">إعدادات النظام العامة</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -272,6 +290,7 @@ $current_default_currency = getDefaultCurrency();
                         <div class="bg-gray-50 rounded-lg p-6">
                             <h3 class="text-xl font-semibold mb-4">➕ إضافة عملة جديدة</h3>
                             <form method="POST" class="space-y-4">
+                                <?php echo csrf_input('csrf_token'); ?>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">رمز العملة (3 أحرف)</label>
                                     <input type="text" name="currency_code" maxlength="3" placeholder="LBP" required 
@@ -332,6 +351,7 @@ $current_default_currency = getDefaultCurrency();
                 <!-- Tab: أسعار الصرف -->
                 <div id="exchange-rates-tab" class="tab-content p-6">
                     <form method="POST" class="space-y-6">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <div class="flex items-center justify-between">
                             <h3 class="text-xl font-semibold">تحديث أسعار الصرف</h3>
                             <button type="submit" name="update_exchange_rates" 

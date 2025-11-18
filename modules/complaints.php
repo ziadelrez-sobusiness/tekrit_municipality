@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -14,43 +19,51 @@ $error = '';
 
 // معالجة إضافة شكوى جديدة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_complaint'])) {
-    $subject = trim($_POST['subject']);
-    $details = trim($_POST['details']);
-    $complainant_name = trim($_POST['complainant_name']);
-    $complainant_phone = trim($_POST['complainant_phone']);
-    $complainant_address = trim($_POST['complainant_address']);
-    $category = $_POST['category'];
-    $priority = $_POST['priority'];
-    $assigned_department = $_POST['assigned_department'];
-    
-    if (!empty($subject) && !empty($details) && !empty($category)) {
-        try {
-            $query = "INSERT INTO complaints (subject, details, complainant_name, complainant_phone, complainant_address, category, priority, assigned_department, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'جديدة')";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$subject, $details, $complainant_name, $complainant_phone, $complainant_address, $category, $priority, $assigned_department]);
-            $message = 'تم إضافة الشكوى بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة الشكوى: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $subject = trim($_POST['subject']);
+        $details = trim($_POST['details']);
+        $complainant_name = trim($_POST['complainant_name']);
+        $complainant_phone = trim($_POST['complainant_phone']);
+        $complainant_address = trim($_POST['complainant_address']);
+        $category = $_POST['category'];
+        $priority = $_POST['priority'];
+        $assigned_department = $_POST['assigned_department'];
+        
+        if (!empty($subject) && !empty($details) && !empty($category)) {
+            try {
+                $query = "INSERT INTO complaints (subject, details, complainant_name, complainant_phone, complainant_address, category, priority, assigned_department, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'جديدة')";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$subject, $details, $complainant_name, $complainant_phone, $complainant_address, $category, $priority, $assigned_department]);
+                $message = 'تم إضافة الشكوى بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة الشكوى: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة تحديث حالة الشكوى
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complaint'])) {
-    $complaint_id = intval($_POST['complaint_id']);
-    $new_status = $_POST['new_status'];
-    $response = trim($_POST['response']);
-    $assigned_to = !empty($_POST['assigned_to']) ? intval($_POST['assigned_to']) : null;
-    
-    try {
-        $query = "UPDATE complaints SET status = ?, response = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$new_status, $response, $assigned_to, $complaint_id]);
-        $message = 'تم تحديث حالة الشكوى بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث الشكوى: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $complaint_id = intval($_POST['complaint_id']);
+        $new_status = $_POST['new_status'];
+        $response = trim($_POST['response']);
+        $assigned_to = !empty($_POST['assigned_to']) ? intval($_POST['assigned_to']) : null;
+        
+        try {
+            $query = "UPDATE complaints SET status = ?, response = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$new_status, $response, $assigned_to, $complaint_id]);
+            $message = 'تم تحديث حالة الشكوى بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث الشكوى: ' . $e->getMessage();
+        }
     }
 }
 
@@ -320,6 +333,7 @@ $departments = ['الهندسة', 'النظافة', 'الصيانة', 'المي�
             <h3 class="text-xl font-semibold mb-4">إضافة شكوى جديدة</h3>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">موضوع الشكوى *</label>

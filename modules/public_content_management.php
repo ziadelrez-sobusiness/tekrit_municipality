@@ -1,5 +1,11 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
+
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 require_once '../includes/currency_formatter.php';
@@ -44,46 +50,47 @@ if (isset($_GET['ajax'])) {
         exit();
     }
 
-
-if ($_GET['ajax'] == 'get_initiative' && isset($_GET['id'])) {
-    header('Content-Type: application/json');
-    $initiative_id = $_GET['id'];
-    
-    try {
-        $stmt = $db->prepare("SELECT * FROM youth_environmental_initiatives WHERE id = ?");
-        $stmt->execute([$initiative_id]);
-        $initiative = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($_GET['ajax'] == 'get_initiative' && isset($_GET['id'])) {
+        header('Content-Type: application/json');
+        $initiative_id = $_GET['id'];
         
-        if ($initiative) {
-            echo json_encode($initiative);
-        } else {
-            echo json_encode(['error' => 'Initiative not found']);
+        try {
+            $stmt = $db->prepare("SELECT * FROM youth_environmental_initiatives WHERE id = ?");
+            $stmt->execute([$initiative_id]);
+            $initiative = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($initiative) {
+                echo json_encode($initiative);
+            } else {
+                echo json_encode(['error' => 'Initiative not found']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
         }
-    } catch (Exception $e) {
-        echo json_encode(['error' => $e->getMessage()]);
+        exit();
     }
-    exit();
-}
-
 }
 
 // معالجة الإجراءات
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    // إضافة خبر جديد
-    if ($action == 'add_news') {
-        $title = trim($_POST['title']);
-        $content = trim($_POST['content']);
-        $news_type = $_POST['news_type'];
-        $publish_date = $_POST['publish_date'];
-        $is_featured = isset($_POST['is_featured']) ? 1 : 0;
+    if (!csrf_protect(false)) {
+        $error_message = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $action = $_POST['action'] ?? '';
         
-        // تضمين فئة إدارة الصور الجديدة
-        require_once 'news_image_manager.php';
-        $imageManager = new NewsImageManager($db);
-        
-        if (!empty($title) && !empty($content)) {
+        // إضافة خبر جديد
+        if ($action == 'add_news') {
+            $title = trim($_POST['title']);
+            $content = trim($_POST['content']);
+            $news_type = $_POST['news_type'];
+            $publish_date = $_POST['publish_date'];
+            $is_featured = isset($_POST['is_featured']) ? 1 : 0;
+            
+            // تضمين فئة إدارة الصور الجديدة
+            require_once 'news_image_manager.php';
+            $imageManager = new NewsImageManager($db);
+            
+            if (!empty($title) && !empty($content)) {
             try {
                 $db->beginTransaction();
                 
@@ -269,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error_message = "خطأ في إضافة المشروع: " . $e->getMessage();
         }
     }
-}
+    }
     
     // تعديل مشروع
     elseif ($action == 'edit_project') {
@@ -350,7 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $error_message = "خطأ في تحديث المشروع: " . $e->getMessage();
         }
     }
-}
+    }
     
     // إضافة مبادرة جديدة
     elseif ($action == 'add_initiative') {
@@ -856,6 +863,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_message = "خطأ في الحذف: " . $e->getMessage();
             }
         }
+    }
     }
 }
 
@@ -1403,6 +1411,7 @@ $stats = [
                 <!-- نموذج إضافة خبر -->
                 <div id="newsForm" class="hidden mb-6 p-4 border rounded-lg bg-gray-50">
                     <form method="POST" enctype="multipart/form-data">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="add_news">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
@@ -1480,6 +1489,7 @@ $stats = [
                         </div>
                         
                         <form id="editNewsForm" method="POST" enctype="multipart/form-data">
+                            <?php echo csrf_input('csrf_token'); ?>
                             <input type="hidden" name="action" value="edit_news">
                             <input type="hidden" name="news_id" id="edit_news_id">
                             
@@ -1593,6 +1603,7 @@ $stats = [
                                         <a href="../public/news-detail.php?id=<?= $item['id'] ?>" target="_blank" class="text-blue-600 hover:text-blue-900">👁️ عرض</a>
                                         <button onclick="editNews(<?= $item['id'] ?>)" class="text-green-600 hover:text-green-900">✏️ تعديل</button>
                                         <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الخبر؟')">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="action" value="delete_item">
                                             <input type="hidden" name="table" value="news_activities">
                                             <input type="hidden" name="id" value="<?= $item['id'] ?>">
@@ -1620,6 +1631,7 @@ $stats = [
                 <!-- نموذج إضافة مشروع -->
                 <div id="projectForm" class="hidden mb-6 form-container">
                     <form method="POST">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="add_project">
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -1890,6 +1902,7 @@ $stats = [
                                     <button onclick="editProject(<?= $project['id'] ?>)" class="text-green-600 hover:text-green-800">✏️ تعديل</button>
                                 </div>
                                 <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا المشروع؟')">
+                                    <?php echo csrf_input('csrf_token'); ?>
                                     <input type="hidden" name="action" value="delete_item">
                                     <input type="hidden" name="table" value="development_projects">
                                     <input type="hidden" name="id" value="<?= $project['id'] ?>">
@@ -1915,6 +1928,7 @@ $stats = [
                 <!-- نموذج إضافة مبادرة -->
                 <div id="initiativeForm" class="hidden mb-6 p-4 border rounded-lg bg-gray-50">
                     <form method="POST" enctype="multipart/form-data">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="add_initiative">
                         
                         <!-- المعلومات الأساسية -->
@@ -2190,6 +2204,7 @@ $stats = [
                                         <a href="../public/initiative-detail.php?id=<?= $initiative['id'] ?>" target="_blank" class="text-blue-600 hover:text-blue-900">👁️ عرض</a>
                                         <button onclick="editInitiative(<?= $initiative['id'] ?>)" class="text-green-600 hover:text-green-900">✏️ تعديل</button>
                                         <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذه المبادرة؟')">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="action" value="delete_item">
                                             <input type="hidden" name="table" value="youth_environmental_initiatives">
                                             <input type="hidden" name="id" value="<?= $initiative['id'] ?>">
@@ -2214,6 +2229,7 @@ $stats = [
                             <button onclick="closeEditInitiativeModal()" class="text-gray-400 hover:text-gray-600">✕</button>
                         </div>
                         <form id="editInitiativeForm" method="POST" enctype="multipart/form-data">
+                            <?php echo csrf_input('csrf_token'); ?>
                             <input type="hidden" name="action" value="edit_initiative">
                             <input type="hidden" name="initiative_id" id="edit_initiative_id">
                             
@@ -2436,6 +2452,7 @@ $stats = [
                             <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">✕</button>
                         </div>
                         <form id="editProjectForm" method="POST">
+                            <?php echo csrf_input('csrf_token'); ?>
                             <input type="hidden" name="action" value="edit_project">
                             <input type="hidden" name="project_id" id="edit_project_id">
                             
@@ -3675,6 +3692,7 @@ function closeEditNewsModal(event) {
             <!-- نموذج إضافة نوع طلب جديد -->
             <div id="requestTypeForm" class="hidden mb-6 p-4 border rounded-lg bg-gray-50">
                 <form method="POST">
+                    <?php echo csrf_input('csrf_token'); ?>
                     <input type="hidden" name="action" value="add_request_type">
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -3797,6 +3815,7 @@ function closeEditNewsModal(event) {
                                 <button onclick="editRequestType(<?= $type['id'] ?>)" class="text-blue-600 hover:text-blue-800">✏️ تعديل</button>
                             </div>
                             <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا النوع؟')">
+                                <?php echo csrf_input('csrf_token'); ?>
                                 <input type="hidden" name="action" value="delete_item">
                                 <input type="hidden" name="table" value="request_types">
                                 <input type="hidden" name="id" value="<?= $type['id'] ?>">
@@ -3819,6 +3838,7 @@ function closeEditNewsModal(event) {
                         <button onclick="closeEditRequestTypeModal()" class="text-gray-400 hover:text-gray-600">✕</button>
                     </div>
                     <form id="editRequestTypeForm" method="POST">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="edit_request_type">
                         <input type="hidden" name="request_type_id" id="edit_request_type_id">
                         

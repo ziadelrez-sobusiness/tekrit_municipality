@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 require_once '../includes/auth_helper.php';
@@ -18,77 +23,89 @@ $error = '';
 
 // معالجة إضافة آلية جديدة - فقط للمستخدمين المخولين
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_vehicle']) && hasPermission('vehicles_add')) {
-    $name = trim($_POST['name']);
-    $type = trim($_POST['type']);
-    $model = trim($_POST['model']);
-    $year = intval($_POST['year']);
-    $license_plate = trim($_POST['license_plate']);
-    $department = $_POST['department'];
-    $fuel_type = $_POST['fuel_type'];
-    $acquisition_date = $_POST['acquisition_date'];
-    $acquisition_cost = floatval($_POST['acquisition_cost']);
-    $assigned_driver_id = !empty($_POST['assigned_driver_id']) ? intval($_POST['assigned_driver_id']) : null;
-    
-    if (!empty($name) && !empty($type) && !empty($license_plate)) {
-        try {
-            $query = "INSERT INTO vehicles (name, type, model, year, license_plate, department, fuel_type, acquisition_date, acquisition_cost, assigned_driver_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'جاهز')";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$name, $type, $model, $year, $license_plate, $department, $fuel_type, $acquisition_date, $acquisition_cost, $assigned_driver_id]);
-            $message = 'تم إضافة الآلية بنجاح!';
-        } catch (PDOException $e) {
-            if ($e->errorInfo[1] == 1062) { // Duplicate entry
-                $error = 'رقم اللوحة موجود مسبقاً';
-            } else {
-                $error = 'خطأ في إضافة الآلية: ' . $e->getMessage();
-            }
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $name = trim($_POST['name']);
+        $type = trim($_POST['type']);
+        $model = trim($_POST['model']);
+        $year = intval($_POST['year']);
+        $license_plate = trim($_POST['license_plate']);
+        $department = $_POST['department'];
+        $fuel_type = $_POST['fuel_type'];
+        $acquisition_date = $_POST['acquisition_date'];
+        $acquisition_cost = floatval($_POST['acquisition_cost']);
+        $assigned_driver_id = !empty($_POST['assigned_driver_id']) ? intval($_POST['assigned_driver_id']) : null;
+        
+        if (!empty($name) && !empty($type) && !empty($license_plate)) {
+            try {
+                $query = "INSERT INTO vehicles (name, type, model, year, license_plate, department, fuel_type, acquisition_date, acquisition_cost, assigned_driver_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'جاهز')";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$name, $type, $model, $year, $license_plate, $department, $fuel_type, $acquisition_date, $acquisition_cost, $assigned_driver_id]);
+                $message = 'تم إضافة الآلية بنجاح!';
+            } catch (PDOException $e) {
+                if ($e->errorInfo[1] == 1062) { // Duplicate entry
+                    $error = 'رقم اللوحة موجود مسبقاً';
+                } else {
+                    $error = 'خطأ في إضافة الآلية: ' . $e->getMessage();
+                }
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة إضافة صيانة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_maintenance'])) {
-    $vehicle_id = intval($_POST['vehicle_id']);
-    $maintenance_type = trim($_POST['maintenance_type']);
-    $description = trim($_POST['description']);
-    $maintenance_date = $_POST['maintenance_date'];
-    $cost = floatval($_POST['cost']);
-    $performed_by = trim($_POST['performed_by']);
-    $next_maintenance_date = $_POST['next_maintenance_date'];
-    
-    if ($vehicle_id > 0 && !empty($maintenance_type)) {
-        try {
-            $query = "INSERT INTO vehicle_maintenance (vehicle_id, maintenance_type, description, maintenance_date, cost, performed_by, next_maintenance_date, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$vehicle_id, $maintenance_type, $description, $maintenance_date, $cost, $performed_by, $next_maintenance_date, $user['id']]);
-            
-            // تحديث تاريخ الصيانة في جدول الآليات
-            $update_query = "UPDATE vehicles SET last_maintenance_date = ?, next_maintenance_date = ? WHERE id = ?";
-            $update_stmt = $db->prepare($update_query);
-            $update_stmt->execute([$maintenance_date, $next_maintenance_date, $vehicle_id]);
-            
-            $message = 'تم إضافة سجل الصيانة بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة سجل الصيانة: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $vehicle_id = intval($_POST['vehicle_id']);
+        $maintenance_type = trim($_POST['maintenance_type']);
+        $description = trim($_POST['description']);
+        $maintenance_date = $_POST['maintenance_date'];
+        $cost = floatval($_POST['cost']);
+        $performed_by = trim($_POST['performed_by']);
+        $next_maintenance_date = $_POST['next_maintenance_date'];
+        
+        if ($vehicle_id > 0 && !empty($maintenance_type)) {
+            try {
+                $query = "INSERT INTO vehicle_maintenance (vehicle_id, maintenance_type, description, maintenance_date, cost, performed_by, next_maintenance_date, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$vehicle_id, $maintenance_type, $description, $maintenance_date, $cost, $performed_by, $next_maintenance_date, $user['id']]);
+                
+                // تحديث تاريخ الصيانة في جدول الآليات
+                $update_query = "UPDATE vehicles SET last_maintenance_date = ?, next_maintenance_date = ? WHERE id = ?";
+                $update_stmt = $db->prepare($update_query);
+                $update_stmt->execute([$maintenance_date, $next_maintenance_date, $vehicle_id]);
+                
+                $message = 'تم إضافة سجل الصيانة بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة سجل الصيانة: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة تحديث حالة الآلية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
-    $vehicle_id = intval($_POST['vehicle_id']);
-    $new_status = $_POST['new_status'];
-    
-    try {
-        $query = "UPDATE vehicles SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$new_status, $vehicle_id]);
-        $message = 'تم تحديث حالة الآلية بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث حالة الآلية: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $vehicle_id = intval($_POST['vehicle_id']);
+        $new_status = $_POST['new_status'];
+        
+        try {
+            $query = "UPDATE vehicles SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$new_status, $vehicle_id]);
+            $message = 'تم تحديث حالة الآلية بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث حالة الآلية: ' . $e->getMessage();
+        }
     }
 }
 
@@ -470,6 +487,7 @@ $fuel_types = ['بنزين', 'ديزل', 'هجين', 'كهربائي', 'غاز']
             <h3 class="text-xl font-semibold mb-4">إضافة آلية جديدة</h3>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">اسم الآلية *</label>
@@ -585,6 +603,7 @@ $fuel_types = ['بنزين', 'ديزل', 'هجين', 'كهربائي', 'غاز']
             <h3 class="text-xl font-semibold mb-4">إضافة سجل صيانة</h3>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">الآلية *</label>

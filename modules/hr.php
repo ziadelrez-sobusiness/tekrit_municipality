@@ -1,5 +1,11 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
+
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/currency_helper.php';
@@ -45,20 +51,23 @@ $error = '';
 
 // معالجة إضافة موظف جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
-    $username = trim($_POST['username']);
-    $full_name = trim($_POST['full_name']);
-    $email = trim($_POST['email']);
-    $phone = trim($_POST['phone']);
-    $department_id = intval($_POST['department_id'] ?? 0);
-    $position_id = intval($_POST['position_id'] ?? 0);
-    $user_type_id = intval($_POST['user_type_id'] ?? 0);
-    $hire_date = $_POST['hire_date'];
-    $salary = floatval($_POST['salary']);
-    $salary_currency_id = intval($_POST['salary_currency_id']);
-    $contract_type_id = intval($_POST['contract_type_id'] ?? 0);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    
-    if (!empty($username) && !empty($full_name) && $department_id > 0 && $position_id > 0 && $user_type_id > 0 && $contract_type_id > 0) {
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $username = trim($_POST['username']);
+        $full_name = trim($_POST['full_name']);
+        $email = trim($_POST['email']);
+        $phone = trim($_POST['phone']);
+        $department_id = intval($_POST['department_id'] ?? 0);
+        $position_id = intval($_POST['position_id'] ?? 0);
+        $user_type_id = intval($_POST['user_type_id'] ?? 0);
+        $hire_date = $_POST['hire_date'];
+        $salary = floatval($_POST['salary']);
+        $salary_currency_id = intval($_POST['salary_currency_id']);
+        $contract_type_id = intval($_POST['contract_type_id'] ?? 0);
+        $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        
+        if (!empty($username) && !empty($full_name) && $department_id > 0 && $position_id > 0 && $user_type_id > 0 && $contract_type_id > 0) {
         try {
             // التحقق من وجود اسم المستخدم مسبقاً
             $check_stmt = $db->prepare("SELECT COUNT(*) FROM users WHERE username = ?");
@@ -75,67 +84,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_employee'])) {
                  $stmt->execute([$username, $password, $full_name, $email, $phone, $department_id, $position_id, $user_type_id, $hire_date, $salary, $salary_currency_id, $contract_type_id]);
                 $message = 'تم إضافة الموظف "' . htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') . '" بنجاح!';
             }
-        } catch (PDOException $e) {
-            if ($e->errorInfo[1] == 1062) {
-                $error = 'اسم المستخدم موجود مسبقاً (خطأ قاعدة البيانات)';
-            } else {
-                $error = 'خطأ في إضافة الموظف: ' . $e->getMessage();
+            } catch (PDOException $e) {
+                if ($e->errorInfo[1] == 1062) {
+                    $error = 'اسم المستخدم موجود مسبقاً (خطأ قاعدة البيانات)';
+                } else {
+                    $error = 'خطأ في إضافة الموظف: ' . $e->getMessage();
+                }
             }
+        } else {
+            $error = 'يرجى تعبئة جميع الحقول المطلوبة: اسم المستخدم، الاسم الكامل، القسم، المنصب، نوع المستخدم، ونوع العقد';
         }
-    } else {
-        $error = 'يرجى تعبئة جميع الحقول المطلوبة: اسم المستخدم، الاسم الكامل، القسم، المنصب، نوع المستخدم، ونوع العقد';
     }
 }
 
 // معالجة تحديث بيانات الموظف
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_employee'])) {
-    $employee_id = intval($_POST['employee_id']);
-    $username = trim($_POST['username']);
-    $full_name = trim($_POST['full_name']);
-    $email = trim($_POST['email']);
-    $phone = trim($_POST['phone']);
-    $department_id = intval($_POST['department_id'] ?? 0);
-    $position_id = intval($_POST['position_id'] ?? 0);
-    $user_type_id = intval($_POST['user_type_id'] ?? 0);
-    $salary = floatval($_POST['salary']);
-    $salary_currency_id = intval($_POST['salary_currency_id']);
-    $contract_type_id = intval($_POST['contract_type_id'] ?? 0);
-    $is_active = isset($_POST['is_active']) ? 1 : 0;
-    
-    if (!empty($username) && !empty($full_name) && $department_id > 0 && $position_id > 0 && $user_type_id > 0 && $contract_type_id > 0) {
-        try {
-            // التحقق من وجود اسم المستخدم إذا تم تغييره
-            $check_stmt = $db->prepare("SELECT username FROM users WHERE id = ?");
-            $check_stmt->execute([$employee_id]);
-            $current_username = $check_stmt->fetchColumn();
-            
-            if ($username !== $current_username) {
-                $check_duplicate = $db->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
-                $check_duplicate->execute([$username, $employee_id]);
-                if ($check_duplicate->fetchColumn() > 0) {
-                    $error = 'اسم المستخدم "' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . '" موجود مسبقاً';
-                    goto skip_update;
-                }
-            }
-            
-            // تحديث مع أو بدون كلمة مرور
-            if (!empty($_POST['password'])) {
-                $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-                $query = "UPDATE users SET username = ?, password = ?, full_name = ?, email = ?, phone = ?, department_id = ?, position_id = ?, user_type_id = ?, salary = ?, salary_currency_id = ?, contract_type_id = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-                $stmt = $db->prepare($query);
-                $stmt->execute([$username, $password, $full_name, $email, $phone, $department_id, $position_id, $user_type_id, $salary, $salary_currency_id, $contract_type_id, $is_active, $employee_id]);
-            } else {
-                $query = "UPDATE users SET username = ?, full_name = ?, email = ?, phone = ?, department_id = ?, position_id = ?, user_type_id = ?, salary = ?, salary_currency_id = ?, contract_type_id = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-                $stmt = $db->prepare($query);
-                $stmt->execute([$username, $full_name, $email, $phone, $department_id, $position_id, $user_type_id, $salary, $salary_currency_id, $contract_type_id, $is_active, $employee_id]);
-            }
-            $message = 'تم تحديث بيانات الموظف بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في تحديث الموظف: ' . $e->getMessage();
-        }
-        skip_update:
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة جميع الحقول المطلوبة';
+        $employee_id = intval($_POST['employee_id']);
+        $username = trim($_POST['username']);
+        $full_name = trim($_POST['full_name']);
+        $email = trim($_POST['email']);
+        $phone = trim($_POST['phone']);
+        $department_id = intval($_POST['department_id'] ?? 0);
+        $position_id = intval($_POST['position_id'] ?? 0);
+        $user_type_id = intval($_POST['user_type_id'] ?? 0);
+        $salary = floatval($_POST['salary']);
+        $salary_currency_id = intval($_POST['salary_currency_id']);
+        $contract_type_id = intval($_POST['contract_type_id'] ?? 0);
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        
+        if (!empty($username) && !empty($full_name) && $department_id > 0 && $position_id > 0 && $user_type_id > 0 && $contract_type_id > 0) {
+            try {
+                // التحقق من وجود اسم المستخدم إذا تم تغييره
+                $check_stmt = $db->prepare("SELECT username FROM users WHERE id = ?");
+                $check_stmt->execute([$employee_id]);
+                $current_username = $check_stmt->fetchColumn();
+                
+                if ($username !== $current_username) {
+                    $check_duplicate = $db->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
+                    $check_duplicate->execute([$username, $employee_id]);
+                    if ($check_duplicate->fetchColumn() > 0) {
+                        $error = 'اسم المستخدم "' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . '" موجود مسبقاً';
+                        goto skip_update;
+                    }
+                }
+                
+                // تحديث مع أو بدون كلمة مرور
+                if (!empty($_POST['password'])) {
+                    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+                    $query = "UPDATE users SET username = ?, password = ?, full_name = ?, email = ?, phone = ?, department_id = ?, position_id = ?, user_type_id = ?, salary = ?, salary_currency_id = ?, contract_type_id = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+                    $stmt = $db->prepare($query);
+                    $stmt->execute([$username, $password, $full_name, $email, $phone, $department_id, $position_id, $user_type_id, $salary, $salary_currency_id, $contract_type_id, $is_active, $employee_id]);
+                } else {
+                    $query = "UPDATE users SET username = ?, full_name = ?, email = ?, phone = ?, department_id = ?, position_id = ?, user_type_id = ?, salary = ?, salary_currency_id = ?, contract_type_id = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+                    $stmt = $db->prepare($query);
+                    $stmt->execute([$username, $full_name, $email, $phone, $department_id, $position_id, $user_type_id, $salary, $salary_currency_id, $contract_type_id, $is_active, $employee_id]);
+                }
+                $message = 'تم تحديث بيانات الموظف بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في تحديث الموظف: ' . $e->getMessage();
+            }
+            skip_update:
+        } else {
+            $error = 'يرجى تعبئة جميع الحقول المطلوبة';
+        }
     }
 }
 
@@ -618,6 +632,7 @@ $default_currency = getDefaultCurrency();
             <h3 class="text-xl font-semibold mb-4">إضافة موظف جديد</h3>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم *</label>
@@ -774,6 +789,7 @@ $default_currency = getDefaultCurrency();
             <h3 id="editModalTitle" class="text-xl font-semibold mb-4">تعديل الموظف</h3>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="employee_id" id="edit_employee_id">
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

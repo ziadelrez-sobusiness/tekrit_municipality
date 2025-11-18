@@ -1,5 +1,11 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
+
+// تحميل أنظمة الأمان (Security Headers و دوال مساعدة)
+if (file_exists(__DIR__ . '/../includes/init_security.php')) {
+    require_once __DIR__ . '/../includes/init_security.php';
+}
+
 require_once '../config/database.php';
 require_once '../includes/currency_formatter.php';
 
@@ -347,7 +353,26 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                 <?php foreach (array_slice($latest_news, 0, 3) as $news): ?>
                     <article class="card-hover bg-white rounded-lg shadow-md overflow-hidden">
                         <?php if ($news['featured_image']): ?>
-                            <img src="../<?= htmlspecialchars($news['featured_image']) ?>" alt="<?= htmlspecialchars($news['title']) ?>" class="w-full h-48 object-cover">
+                            <?php 
+                                $imagePath = $news['featured_image'];
+                                // إصلاح المسار - التحقق من وجود الصورة في عدة مواقع محتملة
+                                if (strpos($imagePath, 'http') === 0) {
+                                    // URL كامل - لا تغيير
+                                } elseif (strpos($imagePath, 'assets/') === 0 || strpos($imagePath, 'uploads/') === 0) {
+                                    $imagePath = '../' . $imagePath;
+                                } elseif (strpos($imagePath, '../') !== 0 && strpos($imagePath, '/') !== 0) {
+                                    // إذا كان اسم الملف فقط (مثل news_featured_xxx.png)
+                                    // جرب في uploads/ أولاً
+                                    $possiblePaths = [
+                                        '../uploads/news/' . $imagePath,
+                                        '../assets/images/news/' . $imagePath,
+                                        '../' . $imagePath
+                                    ];
+                                    // استخدام أول مسار موجود (سيتم التحقق في onerror)
+                                    $imagePath = $possiblePaths[0];
+                                }
+                            ?>
+                            <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($news['title']) ?>" class="w-full h-48 object-cover" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'20\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3E%F0%9F%93%B0%3C/text%3E%3C/svg%3E'; this.nextElementSibling.style.display='flex';">
                         <?php else: ?>
                             <div class="w-full h-48 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
                                 <span class="text-white text-4xl">📰</span>
@@ -438,7 +463,26 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                 <?php foreach ($active_initiatives as $initiative): ?>
                     <div class="card-hover bg-white rounded-lg shadow-md overflow-hidden border-l-4 border-green-500">
                         <?php if ($initiative['main_image']): ?>
-                            <img src="../<?= htmlspecialchars($initiative['main_image']) ?>" alt="<?= htmlspecialchars($initiative['initiative_name']) ?>" class="w-full h-48 object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <?php 
+                                $imagePath = $initiative['main_image'];
+                                // إصلاح المسار - التحقق من وجود الصورة في عدة مواقع محتملة
+                                if (strpos($imagePath, 'http') === 0) {
+                                    // URL كامل - لا تغيير
+                                } elseif (strpos($imagePath, 'assets/') === 0 || strpos($imagePath, 'uploads/') === 0) {
+                                    $imagePath = '../' . $imagePath;
+                                } elseif (strpos($imagePath, '../') !== 0 && strpos($imagePath, '/') !== 0) {
+                                    // إذا كان اسم الملف فقط (مثل initiative_main_xxx.png)
+                                    // جرب في uploads/ أولاً
+                                    $possiblePaths = [
+                                        '../uploads/initiatives/' . $imagePath,
+                                        '../assets/images/initiatives/' . $imagePath,
+                                        '../' . $imagePath
+                                    ];
+                                    // استخدام أول مسار موجود (سيتم التحقق في onerror)
+                                    $imagePath = $possiblePaths[0];
+                                }
+                            ?>
+                            <img src="<?= htmlspecialchars($imagePath) ?>" alt="<?= htmlspecialchars($initiative['initiative_name']) ?>" class="w-full h-48 object-cover" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'400\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'20\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3E%F0%9F%8C%B1%3C/text%3E%3C/svg%3E'; this.nextElementSibling.style.display='flex';">
                         <?php else: ?>
                             <div class="w-full h-48 bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center">
                                 <span class="text-white text-4xl">🌱</span>

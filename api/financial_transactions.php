@@ -1,11 +1,26 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+// تحميل ApiSecurity إذا كان موجوداً
+$useApiSecurity = file_exists(__DIR__ . '/../includes/ApiSecurity.php');
+if ($useApiSecurity) {
+    require_once __DIR__ . '/../includes/ApiSecurity.php';
+    $configFile = __DIR__ . '/../config/api_config.php';
+    ApiSecurity::init(file_exists($configFile) ? $configFile : null);
+    
+    // التحقق من الأمان (API Key اختياري، Rate Limiting مفعّل)
+    // ملاحظة: هذا API يحتاج authentication - سيتم التحقق من Auth بعد ApiSecurity
+    if (!ApiSecurity::validate(['require_api_key' => false, 'rate_limit' => true])) {
+        exit; // ApiSecurity::validate() يرسل الاستجابة و يخرج
+    }
+} else {
+    // Fallback للكود القديم
+    header('Content-Type: application/json; charset=utf-8');
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        exit(0);
+    }
 }
 
 require_once '../config/database.php';
@@ -14,8 +29,12 @@ require_once '../includes/auth.php';
 // التحقق من المصادقة
 $auth = new Auth();
 if (!$auth->isLoggedIn()) {
-    http_response_code(401);
-    echo json_encode(['error' => 'غير مصرح بالوصول']);
+    if ($useApiSecurity && class_exists('ApiSecurity')) {
+        ApiSecurity::sendError('غير مصرح بالوصول - يرجى تسجيل الدخول', 401);
+    } else {
+        http_response_code(401);
+        echo json_encode(['error' => 'غير مصرح بالوصول']);
+    }
     exit;
 }
 
@@ -44,11 +63,22 @@ try {
             $response = ['error' => 'طريقة غير مدعومة'];
     }
 } catch (Exception $e) {
-    http_response_code(500);
-    $response = ['error' => 'خطأ في الخادم: ' . $e->getMessage()];
+    if ($useApiSecurity && class_exists('ApiSecurity')) {
+        ApiSecurity::sendError('خطأ في الخادم: ' . $e->getMessage(), 500);
+    } else {
+        http_response_code(500);
+        $response = ['error' => 'خطأ في الخادم: ' . $e->getMessage()];
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    }
+    exit;
 }
 
-echo json_encode($response, JSON_UNESCAPED_UNICODE);
+// إرسال الاستجابة
+if ($useApiSecurity && class_exists('ApiSecurity')) {
+    ApiSecurity::sendSuccess($response, 200);
+} else {
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+}
 
 function handleGet($db, &$response) {
     $page = $_GET['page'] ?? 1;

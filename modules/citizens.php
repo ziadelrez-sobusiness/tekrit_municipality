@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -14,141 +19,157 @@ $error = '';
 
 // معالجة إضافة مواطن جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_citizen'])) {
-    $citizen_number = trim($_POST['citizen_number']);
-    $full_name = trim($_POST['full_name']);
-    $father_name = trim($_POST['father_name']);
-    $grandfather_name = trim($_POST['grandfather_name']);
-    $surname = trim($_POST['surname']);
-    $mother_name = trim($_POST['mother_name']);
-    $birth_date = $_POST['birth_date'];
-    $birth_place = trim($_POST['birth_place']);
-    $gender = $_POST['gender'];
-    $marital_status = $_POST['marital_status'];
-    $nationality = trim($_POST['nationality']) ?: 'لبناني';
-    $religion = trim($_POST['religion']);
-    $district = trim($_POST['district']);
-    $area = trim($_POST['area']);
-    $neighborhood = trim($_POST['neighborhood']);
-    $street = trim($_POST['street']);
-    $house_number = trim($_POST['house_number']);
-    $building_type = $_POST['building_type'];
-    $phone = trim($_POST['phone']);
-    $mobile = trim($_POST['mobile']);
-    $email = trim($_POST['email']);
-    $profession = trim($_POST['profession']);
-    $workplace = trim($_POST['workplace']);
-    $monthly_income = !empty($_POST['monthly_income']) ? floatval($_POST['monthly_income']) : null;
-    $income_currency_id = !empty($_POST['income_currency_id']) ? intval($_POST['income_currency_id']) : null;
-    $residence_status = $_POST['residence_status'];
-    $social_status = $_POST['social_status'];
-    $family_members_count = intval($_POST['family_members_count']) ?: 1;
-    $dependents_count = intval($_POST['dependents_count']) ?: 0;
-    $special_needs = trim($_POST['special_needs']);
-    $notes = trim($_POST['notes']);
-    
-    if (!empty($full_name) && !empty($citizen_number)) {
-        try {
-            $query = "INSERT INTO citizens (citizen_number, full_name, father_name, grandfather_name, surname, mother_name, birth_date, birth_place, gender, marital_status, nationality, religion, district, area, neighborhood, street, house_number, building_type, phone, mobile, email, profession, workplace, monthly_income, income_currency_id, residence_status, social_status, family_members_count, dependents_count, special_needs, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$citizen_number, $full_name, $father_name, $grandfather_name, $surname, $mother_name, $birth_date, $birth_place, $gender, $marital_status, $nationality, $religion, $district, $area, $neighborhood, $street, $house_number, $building_type, $phone, $mobile, $email, $profession, $workplace, $monthly_income, $income_currency_id, $residence_status, $social_status, $family_members_count, $dependents_count, $special_needs, $notes]);
-            $message = 'تم إضافة المواطن بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة المواطن: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $citizen_number = trim($_POST['citizen_number']);
+        $full_name = trim($_POST['full_name']);
+        $father_name = trim($_POST['father_name']);
+        $grandfather_name = trim($_POST['grandfather_name']);
+        $surname = trim($_POST['surname']);
+        $mother_name = trim($_POST['mother_name']);
+        $birth_date = $_POST['birth_date'];
+        $birth_place = trim($_POST['birth_place']);
+        $gender = $_POST['gender'];
+        $marital_status = $_POST['marital_status'];
+        $nationality = trim($_POST['nationality']) ?: 'لبناني';
+        $religion = trim($_POST['religion']);
+        $district = trim($_POST['district']);
+        $area = trim($_POST['area']);
+        $neighborhood = trim($_POST['neighborhood']);
+        $street = trim($_POST['street']);
+        $house_number = trim($_POST['house_number']);
+        $building_type = $_POST['building_type'];
+        $phone = trim($_POST['phone']);
+        $mobile = trim($_POST['mobile']);
+        $email = trim($_POST['email']);
+        $profession = trim($_POST['profession']);
+        $workplace = trim($_POST['workplace']);
+        $monthly_income = !empty($_POST['monthly_income']) ? floatval($_POST['monthly_income']) : null;
+        $income_currency_id = !empty($_POST['income_currency_id']) ? intval($_POST['income_currency_id']) : null;
+        $residence_status = $_POST['residence_status'];
+        $social_status = $_POST['social_status'];
+        $family_members_count = intval($_POST['family_members_count']) ?: 1;
+        $dependents_count = intval($_POST['dependents_count']) ?: 0;
+        $special_needs = trim($_POST['special_needs']);
+        $notes = trim($_POST['notes']);
+        
+        if (!empty($full_name) && !empty($citizen_number)) {
+            try {
+                $query = "INSERT INTO citizens (citizen_number, full_name, father_name, grandfather_name, surname, mother_name, birth_date, birth_place, gender, marital_status, nationality, religion, district, area, neighborhood, street, house_number, building_type, phone, mobile, email, profession, workplace, monthly_income, income_currency_id, residence_status, social_status, family_members_count, dependents_count, special_needs, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$citizen_number, $full_name, $father_name, $grandfather_name, $surname, $mother_name, $birth_date, $birth_place, $gender, $marital_status, $nationality, $religion, $district, $area, $neighborhood, $street, $house_number, $building_type, $phone, $mobile, $email, $profession, $workplace, $monthly_income, $income_currency_id, $residence_status, $social_status, $family_members_count, $dependents_count, $special_needs, $notes]);
+                $message = 'تم إضافة المواطن بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة المواطن: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة تحديث حالة المواطن
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_citizen_status'])) {
-    $citizen_id = intval($_POST['citizen_id']);
-    $verification_status = $_POST['verification_status'];
-    
-    try {
-        $query = "UPDATE citizens SET verification_status = ?, last_update_date = CURRENT_DATE WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$verification_status, $citizen_id]);
-        $message = 'تم تحديث حالة التحقق بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث حالة المواطن: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $citizen_id = intval($_POST['citizen_id']);
+        $verification_status = $_POST['verification_status'];
+        
+        try {
+            $query = "UPDATE citizens SET verification_status = ?, last_update_date = CURRENT_DATE WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$verification_status, $citizen_id]);
+            $message = 'تم تحديث حالة التحقق بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث حالة المواطن: ' . $e->getMessage();
+        }
     }
 }
 
 // معالجة تحديث بيانات المواطن
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_citizen'])) {
-    $citizen_id = intval($_POST['citizen_id']);
-    $citizen_number = trim($_POST['citizen_number']);
-    $full_name = trim($_POST['full_name']);
-    $father_name = trim($_POST['father_name']);
-    $grandfather_name = trim($_POST['grandfather_name']);
-    $surname = trim($_POST['surname']);
-    $mother_name = trim($_POST['mother_name']);
-    $birth_date = $_POST['birth_date'];
-    $birth_place = trim($_POST['birth_place']);
-    $gender = $_POST['gender'];
-    $marital_status = $_POST['marital_status'];
-    $nationality = trim($_POST['nationality']) ?: 'لبناني';
-    $religion = trim($_POST['religion']);
-    $district = trim($_POST['district']);
-    $area = trim($_POST['area']);
-    $neighborhood = trim($_POST['neighborhood']);
-    $street = trim($_POST['street']);
-    $house_number = trim($_POST['house_number']);
-    $building_type = $_POST['building_type'];
-    $phone = trim($_POST['phone']);
-    $mobile = trim($_POST['mobile']);
-    $email = trim($_POST['email']);
-    $profession = trim($_POST['profession']);
-    $workplace = trim($_POST['workplace']);
-    $monthly_income = !empty($_POST['monthly_income']) ? floatval($_POST['monthly_income']) : null;
-    $income_currency_id = !empty($_POST['income_currency_id']) ? intval($_POST['income_currency_id']) : null;
-    $residence_status = $_POST['residence_status'];
-    $social_status = $_POST['social_status'];
-    $family_members_count = intval($_POST['family_members_count']) ?: 1;
-    $dependents_count = intval($_POST['dependents_count']) ?: 0;
-    $special_needs = trim($_POST['special_needs']);
-    $notes = trim($_POST['notes']);
-    
-    if (!empty($full_name) && !empty($citizen_number)) {
-        try {
-            $query = "UPDATE citizens SET 
-                citizen_number = ?, full_name = ?, father_name = ?, grandfather_name = ?, surname = ?, 
-                mother_name = ?, birth_date = ?, birth_place = ?, gender = ?, marital_status = ?, 
-                nationality = ?, religion = ?, district = ?, area = ?, neighborhood = ?, 
-                street = ?, house_number = ?, building_type = ?, phone = ?, mobile = ?, 
-                email = ?, profession = ?, workplace = ?, monthly_income = ?, income_currency_id = ?, residence_status = ?, 
-                social_status = ?, family_members_count = ?, dependents_count = ?, special_needs = ?, 
-                notes = ?, last_update_date = CURRENT_DATE 
-                WHERE id = ?";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$citizen_number, $full_name, $father_name, $grandfather_name, $surname, 
-                          $mother_name, $birth_date, $birth_place, $gender, $marital_status, 
-                          $nationality, $religion, $district, $area, $neighborhood, 
-                          $street, $house_number, $building_type, $phone, $mobile, 
-                          $email, $profession, $workplace, $monthly_income, $income_currency_id, $residence_status, 
-                          $social_status, $family_members_count, $dependents_count, $special_needs, 
-                          $notes, $citizen_id]);
-            $message = 'تم تحديث بيانات المواطن بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في تحديث بيانات المواطن: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $citizen_id = intval($_POST['citizen_id']);
+        $citizen_number = trim($_POST['citizen_number']);
+        $full_name = trim($_POST['full_name']);
+        $father_name = trim($_POST['father_name']);
+        $grandfather_name = trim($_POST['grandfather_name']);
+        $surname = trim($_POST['surname']);
+        $mother_name = trim($_POST['mother_name']);
+        $birth_date = $_POST['birth_date'];
+        $birth_place = trim($_POST['birth_place']);
+        $gender = $_POST['gender'];
+        $marital_status = $_POST['marital_status'];
+        $nationality = trim($_POST['nationality']) ?: 'لبناني';
+        $religion = trim($_POST['religion']);
+        $district = trim($_POST['district']);
+        $area = trim($_POST['area']);
+        $neighborhood = trim($_POST['neighborhood']);
+        $street = trim($_POST['street']);
+        $house_number = trim($_POST['house_number']);
+        $building_type = $_POST['building_type'];
+        $phone = trim($_POST['phone']);
+        $mobile = trim($_POST['mobile']);
+        $email = trim($_POST['email']);
+        $profession = trim($_POST['profession']);
+        $workplace = trim($_POST['workplace']);
+        $monthly_income = !empty($_POST['monthly_income']) ? floatval($_POST['monthly_income']) : null;
+        $income_currency_id = !empty($_POST['income_currency_id']) ? intval($_POST['income_currency_id']) : null;
+        $residence_status = $_POST['residence_status'];
+        $social_status = $_POST['social_status'];
+        $family_members_count = intval($_POST['family_members_count']) ?: 1;
+        $dependents_count = intval($_POST['dependents_count']) ?: 0;
+        $special_needs = trim($_POST['special_needs']);
+        $notes = trim($_POST['notes']);
+        
+        if (!empty($full_name) && !empty($citizen_number)) {
+            try {
+                $query = "UPDATE citizens SET 
+                    citizen_number = ?, full_name = ?, father_name = ?, grandfather_name = ?, surname = ?, 
+                    mother_name = ?, birth_date = ?, birth_place = ?, gender = ?, marital_status = ?, 
+                    nationality = ?, religion = ?, district = ?, area = ?, neighborhood = ?, 
+                    street = ?, house_number = ?, building_type = ?, phone = ?, mobile = ?, 
+                    email = ?, profession = ?, workplace = ?, monthly_income = ?, income_currency_id = ?, residence_status = ?, 
+                    social_status = ?, family_members_count = ?, dependents_count = ?, special_needs = ?, 
+                    notes = ?, last_update_date = CURRENT_DATE 
+                    WHERE id = ?";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$citizen_number, $full_name, $father_name, $grandfather_name, $surname, 
+                              $mother_name, $birth_date, $birth_place, $gender, $marital_status, 
+                              $nationality, $religion, $district, $area, $neighborhood, 
+                              $street, $house_number, $building_type, $phone, $mobile, 
+                              $email, $profession, $workplace, $monthly_income, $income_currency_id, $residence_status, 
+                              $social_status, $family_members_count, $dependents_count, $special_needs, 
+                              $notes, $citizen_id]);
+                $message = 'تم تحديث بيانات المواطن بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في تحديث بيانات المواطن: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة حذف المواطن
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_citizen'])) {
-    $citizen_id = intval($_POST['citizen_id']);
-    
-    try {
-        $query = "DELETE FROM citizens WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$citizen_id]);
-        $message = 'تم حذف المواطن بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في حذف المواطن: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $citizen_id = intval($_POST['citizen_id']);
+        
+        try {
+            $query = "DELETE FROM citizens WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$citizen_id]);
+            $message = 'تم حذف المواطن بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في حذف المواطن: ' . $e->getMessage();
+        }
     }
 }
 
@@ -522,6 +543,7 @@ $social_statuses = ['عادي', 'متقاعد', 'معاق', 'أرملة', 'يت�
             </div>
             
             <form method="POST" class="space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <!-- المعلومات الشخصية الأساسية -->
                 <div class="border-b pb-4">
                     <h4 class="text-lg font-medium text-gray-900 mb-3">المعلومات الشخصية الأساسية</h4>
@@ -930,6 +952,7 @@ $social_statuses = ['عادي', 'متقاعد', 'معاق', 'أرملة', 'يت�
             </div>
             
             <form method="POST" class="space-y-6">
+                <?php echo csrf_input('csrf_token'); ?>
                 <input type="hidden" name="citizen_id" id="edit_citizen_id">
                 
                 <!-- المعلومات الشخصية الأساسية -->

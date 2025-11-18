@@ -1,4 +1,9 @@
 <?php
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -14,50 +19,58 @@ $error = '';
 
 // معالجة إضافة مشروع جديد
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_project'])) {
-    $name = trim($_POST['name']);
-    $description = trim($_POST['description']);
-    $project_type = $_POST['project_type'];
-    $budget = floatval($_POST['budget']);
-    $budget_currency_id = intval($_POST['budget_currency_id']);
-    $start_date = $_POST['start_date'];
-    $expected_end_date = $_POST['expected_end_date'];
-    $location = trim($_POST['location']);
-    $contractor = trim($_POST['contractor']);
-    $donor_name = trim($_POST['donor_name']);
-    $donor_type = $_POST['donor_type'];
-    $donor_contact = trim($_POST['donor_contact']);
-    $funding_type = $_POST['funding_type'];
-    
-    if (!empty($name) && $budget > 0) {
-        try {
-            $query = "INSERT INTO projects (project_name, description, project_type, budget, budget_currency_id, start_date, end_date, location, contractor, donor_name, donor_type, donor_contact, funding_type, manager_id, status, progress_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'مخطط', 0)";
-            $stmt = $db->prepare($query);
-            $stmt->execute([$name, $description, $project_type, $budget, $budget_currency_id, $start_date, $expected_end_date, $location, $contractor, $donor_name, $donor_type, $donor_contact, $funding_type, $user['id']]);
-            $message = 'تم إضافة المشروع بنجاح!';
-        } catch (PDOException $e) {
-            $error = 'خطأ في إضافة المشروع: ' . $e->getMessage();
-        }
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
     } else {
-        $error = 'يرجى تعبئة الحقول المطلوبة';
+        $name = trim($_POST['name']);
+        $description = trim($_POST['description']);
+        $project_type = $_POST['project_type'];
+        $budget = floatval($_POST['budget']);
+        $budget_currency_id = intval($_POST['budget_currency_id']);
+        $start_date = $_POST['start_date'];
+        $expected_end_date = $_POST['expected_end_date'];
+        $location = trim($_POST['location']);
+        $contractor = trim($_POST['contractor']);
+        $donor_name = trim($_POST['donor_name']);
+        $donor_type = $_POST['donor_type'];
+        $donor_contact = trim($_POST['donor_contact']);
+        $funding_type = $_POST['funding_type'];
+        
+        if (!empty($name) && $budget > 0) {
+            try {
+                $query = "INSERT INTO projects (project_name, description, project_type, budget, budget_currency_id, start_date, end_date, location, contractor, donor_name, donor_type, donor_contact, funding_type, manager_id, status, progress_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'مخطط', 0)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$name, $description, $project_type, $budget, $budget_currency_id, $start_date, $expected_end_date, $location, $contractor, $donor_name, $donor_type, $donor_contact, $funding_type, $user['id']]);
+                $message = 'تم إضافة المشروع بنجاح!';
+            } catch (PDOException $e) {
+                $error = 'خطأ في إضافة المشروع: ' . $e->getMessage();
+            }
+        } else {
+            $error = 'يرجى تعبئة الحقول المطلوبة';
+        }
     }
 }
 
 // معالجة تحديث تقدم المشروع
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_progress'])) {
-    $project_id = intval($_POST['project_id']);
-    $progress_percentage = intval($_POST['progress_percentage']);
-    $status = $_POST['status'];
-    $actual_cost = floatval($_POST['actual_cost']);
-    $actual_cost_currency_id = intval($_POST['actual_cost_currency_id']);
-    $actual_end_date = !empty($_POST['actual_end_date']) ? $_POST['actual_end_date'] : null;
-    
-    try {
-        $query = "UPDATE projects SET progress_percentage = ?, status = ?, actual_cost = ?, actual_cost_currency_id = ?, end_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        $stmt = $db->prepare($query);
-        $stmt->execute([$progress_percentage, $status, $actual_cost, $actual_cost_currency_id, $actual_end_date, $project_id]);
-        $message = 'تم تحديث تقدم المشروع بنجاح!';
-    } catch (PDOException $e) {
-        $error = 'خطأ في تحديث المشروع: ' . $e->getMessage();
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $project_id = intval($_POST['project_id']);
+        $progress_percentage = intval($_POST['progress_percentage']);
+        $status = $_POST['status'];
+        $actual_cost = floatval($_POST['actual_cost']);
+        $actual_cost_currency_id = intval($_POST['actual_cost_currency_id']);
+        $actual_end_date = !empty($_POST['actual_end_date']) ? $_POST['actual_end_date'] : null;
+        
+        try {
+            $query = "UPDATE projects SET progress_percentage = ?, status = ?, actual_cost = ?, actual_cost_currency_id = ?, end_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+            $stmt = $db->prepare($query);
+            $stmt->execute([$progress_percentage, $status, $actual_cost, $actual_cost_currency_id, $actual_end_date, $project_id]);
+            $message = 'تم تحديث تقدم المشروع بنجاح!';
+        } catch (PDOException $e) {
+            $error = 'خطأ في تحديث المشروع: ' . $e->getMessage();
+        }
     }
 }
 
@@ -374,6 +387,7 @@ $project_types = ['تطوير', 'إنشاءات', 'صيانة', 'بنية تحت
             <h3 class="text-xl font-semibold mb-4">إضافة مشروع جديد</h3>
             
             <form method="POST" class="space-y-4">
+                <?php echo csrf_input('csrf_token'); ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">اسم المشروع *</label>

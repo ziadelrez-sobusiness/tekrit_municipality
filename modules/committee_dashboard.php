@@ -2,6 +2,11 @@
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 $auth->requireLogin();
 
 $database = new Database();
@@ -54,6 +59,10 @@ function redirectWithTab(int $committeeId, string $tab, array $extra = []): void
 
 // معالجة إضافة حركة مالية
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_transaction'])) {
+    if (!csrf_protect(false)) {
+        redirectWithTab($committeeId, 'finance', ['error' => 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.']);
+    }
+    
     $targetId = intval($_POST['committee_id'] ?? 0);
     if ($targetId !== $committeeId) {
         redirectWithTab($committeeId, 'finance', ['error' => 'اللجنة المحددة غير صحيحة']);
@@ -131,6 +140,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_transaction'])) {
 
 // معالجة إضافة محضر جلسة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_session'])) {
+    if (!csrf_protect(false)) {
+        redirectWithTab($committeeId, 'sessions', ['error' => 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.']);
+    }
+    
     $targetId = intval($_POST['committee_id'] ?? 0);
     if ($targetId !== $committeeId) {
         redirectWithTab($committeeId, 'sessions', ['error' => 'اللجنة المحددة غير صحيحة']);
@@ -177,6 +190,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_session'])) {
 
 // معالجة تعديل محضر جلسة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_session'])) {
+    if (!csrf_protect(false)) {
+        redirectWithTab($committeeId, 'sessions', ['error' => 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.']);
+    }
+    
     $sessionId = intval($_POST['session_id'] ?? 0);
     try {
         $stmt = $db->prepare("SELECT committee_id FROM committee_sessions WHERE id = ?");
@@ -226,6 +243,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_session'])) {
 
 // معالجة حذف محضر جلسة
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_session'])) {
+    if (!csrf_protect(false)) {
+        redirectWithTab($committeeId, 'sessions', ['error' => 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.']);
+    }
+    
     $sessionId = intval($_POST['session_id'] ?? 0);
     try {
         $stmt = $db->prepare("DELETE FROM committee_sessions WHERE id = ? AND committee_id = ?");
@@ -238,6 +259,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_session'])) {
 
 // معالجة إضافة قرار
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_decision'])) {
+    if (!csrf_protect(false)) {
+        redirectWithTab($committeeId, 'decisions', ['error' => 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.']);
+    }
+    
     $targetId = intval($_POST['committee_id'] ?? 0);
     if ($targetId !== $committeeId) {
         redirectWithTab($committeeId, 'decisions', ['error' => 'اللجنة المحددة غير صحيحة']);
@@ -282,6 +307,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_decision'])) {
 
 // معالجة تعديل قرار
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_decision'])) {
+    if (!csrf_protect(false)) {
+        redirectWithTab($committeeId, 'decisions', ['error' => 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.']);
+    }
+    
     $decisionId = intval($_POST['decision_id'] ?? 0);
     try {
         $stmt = $db->prepare("SELECT committee_id FROM committee_decisions WHERE id = ?");
@@ -329,6 +358,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_decision'])) {
 
 // معالجة حذف قرار
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_decision'])) {
+    if (!csrf_protect(false)) {
+        redirectWithTab($committeeId, 'decisions', ['error' => 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.']);
+    }
+    
     $decisionId = intval($_POST['decision_id'] ?? 0);
     try {
         $stmt = $db->prepare("DELETE FROM committee_decisions WHERE id = ? AND committee_id = ?");
@@ -709,6 +742,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <h2 class="text-xl font-bold text-gray-800">💰 الحركات المالية</h2>
                     <form method="POST" class="flex flex-wrap gap-2 items-end">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="committee_id" value="<?= $committeeId ?>">
                         <div>
                             <label class="block text-xs text-gray-500 mb-1">نوع الحركة</label>
@@ -991,6 +1025,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <h2 class="text-xl font-bold text-gray-800">📅 محاضر اجتماعات اللجنة</h2>
                     <form method="POST" class="w-full md:w-auto bg-gray-50 border rounded-lg p-4 space-y-3">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="committee_id" value="<?= $committeeId ?>">
                         <input type="hidden" name="add_session" value="1">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1074,6 +1109,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                            class="text-blue-600 hover:text-blue-900">✏️ تعديل</a>
                                         <form method="POST" style="display: inline;" 
                                               onsubmit="return confirm('هل أنت متأكد من حذف هذه الجلسة؟')">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="delete_session" value="1">
                                             <input type="hidden" name="session_id" value="<?= $session['id'] ?>">
                                             <button type="submit" class="text-red-600 hover:text-red-900">🗑️ حذف</button>
@@ -1100,6 +1136,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="flex flex-wrap justify-between items-center gap-4">
                     <h2 class="text-xl font-bold text-gray-800">🧾 قرارات اللجنة</h2>
                     <form method="POST" class="w-full md:w-auto bg-gray-50 border rounded-lg p-4 space-y-3">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="committee_id" value="<?= $committeeId ?>">
                         <input type="hidden" name="add_decision" value="1">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1201,6 +1238,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                            class="text-blue-600 hover:text-blue-900">✏️ تعديل</a>
                                         <form method="POST" style="display: inline;" 
                                               onsubmit="return confirm('هل أنت متأكد من حذف هذا القرار؟')">
+                                            <?php echo csrf_input('csrf_token'); ?>
                                             <input type="hidden" name="delete_decision" value="1">
                                             <input type="hidden" name="decision_id" value="<?= $decision['id'] ?>">
                                             <button type="submit" class="text-red-600 hover:text-red-900">🗑️ حذف</button>
@@ -1392,6 +1430,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="glass-card p-6 space-y-4">
                 <h3 class="text-xl font-bold">✏️ تعديل محضر الجلسة</h3>
                 <form method="POST" class="space-y-4">
+                    <?php echo csrf_input('csrf_token'); ?>
                     <input type="hidden" name="edit_session" value="1">
                     <input type="hidden" name="session_id" value="<?= $edit_session['id'] ?>">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1482,6 +1521,7 @@ $requestStatus = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="glass-card p-6 space-y-4">
                 <h3 class="text-xl font-bold">✏️ تعديل قرار</h3>
                 <form method="POST" class="space-y-4">
+                    <?php echo csrf_input('csrf_token'); ?>
                     <input type="hidden" name="edit_decision" value="1">
                     <input type="hidden" name="decision_id" value="<?= $edit_decision['id'] ?>">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

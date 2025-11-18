@@ -1,5 +1,11 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
+
+// تحميل CSRF Protection
+if (file_exists(__DIR__ . '/../includes/csrf_middleware.php')) {
+    require_once __DIR__ . '/../includes/csrf_middleware.php';
+}
+
 require_once '../includes/auth.php';
 require_once '../config/database.php';
 
@@ -188,72 +194,76 @@ $current_page = $_GET['page'] ?? 'departments';
 
 // معالجة الإجراءات
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    // إجراءات الأقسام
-    if ($action == 'add_department') {
-        $department_name = trim($_POST['department_name']);
-        $department_description = trim($_POST['department_description']);
-        $department_manager = trim($_POST['department_manager']);
+    // التحقق من CSRF
+    if (!csrf_protect(false)) {
+        $error_message = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $action = $_POST['action'] ?? '';
         
-        if (!empty($department_name)) {
-            try {
-                $stmt = $db->prepare("INSERT INTO departments (department_name, department_description, department_manager) VALUES (?, ?, ?)");
-                $stmt->execute([$department_name, $department_description, $department_manager]);
-                $success_message = "تم إضافة القسم '$department_name' بنجاح";
-            } catch (Exception $e) {
-                if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                    $error_message = "خطأ: اسم القسم '$department_name' موجود مسبقاً";
-                } else {
-                    $error_message = "خطأ في إضافة القسم: " . $e->getMessage();
-                }
-            }
-        } else {
-            $error_message = "اسم القسم مطلوب";
-        }
-    }
-    
-    elseif ($action == 'edit_department') {
-        $id = $_POST['id'];
-        $department_name = trim($_POST['department_name']);
-        $department_description = trim($_POST['department_description']);
-        $department_manager = trim($_POST['department_manager']);
-        $is_active = isset($_POST['is_active']) ? 1 : 0;
-        
-        if (!empty($department_name)) {
-            try {
-                $stmt = $db->prepare("UPDATE departments SET department_name = ?, department_description = ?, department_manager = ?, is_active = ? WHERE id = ?");
-                $stmt->execute([$department_name, $department_description, $department_manager, $is_active, $id]);
-                $success_message = "تم تحديث القسم '$department_name' بنجاح";
-            } catch (Exception $e) {
-                if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                    $error_message = "خطأ: اسم القسم '$department_name' موجود مسبقاً";
-                } else {
-                    $error_message = "خطأ في تحديث القسم: " . $e->getMessage();
-                }
-            }
-        }
-    }
-    
-    elseif ($action == 'delete_department') {
-        $id = $_POST['id'];
-        
-        try {
-            $check_stmt = $db->prepare("SELECT COUNT(*) as count FROM users WHERE department_id = ?");
-            $check_stmt->execute([$id]);
-            $count = $check_stmt->fetch()['count'];
+        // إجراءات الأقسام
+        if ($action == 'add_department') {
+            $department_name = trim($_POST['department_name']);
+            $department_description = trim($_POST['department_description']);
+            $department_manager = trim($_POST['department_manager']);
             
-            if ($count > 0) {
-                $error_message = "لا يمكن حذف القسم لأنه يحتوي على $count موظف/موظفين";
+            if (!empty($department_name)) {
+                try {
+                    $stmt = $db->prepare("INSERT INTO departments (department_name, department_description, department_manager) VALUES (?, ?, ?)");
+                    $stmt->execute([$department_name, $department_description, $department_manager]);
+                    $success_message = "تم إضافة القسم '$department_name' بنجاح";
+                } catch (Exception $e) {
+                    if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                        $error_message = "خطأ: اسم القسم '$department_name' موجود مسبقاً";
+                    } else {
+                        $error_message = "خطأ في إضافة القسم: " . $e->getMessage();
+                    }
+                }
             } else {
-                $stmt = $db->prepare("DELETE FROM departments WHERE id = ?");
-                $stmt->execute([$id]);
-                $success_message = "تم حذف القسم بنجاح";
+                $error_message = "اسم القسم مطلوب";
             }
-        } catch (Exception $e) {
-            $error_message = "خطأ في حذف القسم: " . $e->getMessage();
         }
-    }
+        
+        elseif ($action == 'edit_department') {
+            $id = $_POST['id'];
+            $department_name = trim($_POST['department_name']);
+            $department_description = trim($_POST['department_description']);
+            $department_manager = trim($_POST['department_manager']);
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            
+            if (!empty($department_name)) {
+                try {
+                    $stmt = $db->prepare("UPDATE departments SET department_name = ?, department_description = ?, department_manager = ?, is_active = ? WHERE id = ?");
+                    $stmt->execute([$department_name, $department_description, $department_manager, $is_active, $id]);
+                    $success_message = "تم تحديث القسم '$department_name' بنجاح";
+                } catch (Exception $e) {
+                    if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                        $error_message = "خطأ: اسم القسم '$department_name' موجود مسبقاً";
+                    } else {
+                        $error_message = "خطأ في تحديث القسم: " . $e->getMessage();
+                    }
+                }
+            }
+        }
+        
+        elseif ($action == 'delete_department') {
+            $id = $_POST['id'];
+            
+            try {
+                $check_stmt = $db->prepare("SELECT COUNT(*) as count FROM users WHERE department_id = ?");
+                $check_stmt->execute([$id]);
+                $count = $check_stmt->fetch()['count'];
+                
+                if ($count > 0) {
+                    $error_message = "لا يمكن حذف القسم لأنه يحتوي على $count موظف/موظفين";
+                } else {
+                    $stmt = $db->prepare("DELETE FROM departments WHERE id = ?");
+                    $stmt->execute([$id]);
+                    $success_message = "تم حذف القسم بنجاح";
+                }
+            } catch (Exception $e) {
+                $error_message = "خطأ في حذف القسم: " . $e->getMessage();
+            }
+        }
     
     // إجراءات اللجان
     elseif ($action == 'add_committee') {
@@ -553,6 +563,7 @@ if (isset($_GET['edit_dept'])) {
                     </h3>
                     
                     <form method="POST" class="space-y-4">
+                        <?php echo csrf_input('csrf_token'); ?>
                         <input type="hidden" name="action" value="<?php echo $edit_department ? 'edit_department' : 'add_department'; ?>">
                         <?php if ($edit_department): ?>
                             <input type="hidden" name="id" value="<?php echo $edit_department['id']; ?>">
@@ -670,6 +681,7 @@ if (isset($_GET['edit_dept'])) {
                                             </a>
                                             
                                             <form method="POST" class="inline" onsubmit="return confirm('هل تريد تغيير حالة هذا القسم؟')">
+                                                <?php echo csrf_input('csrf_token'); ?>
                                                 <input type="hidden" name="action" value="edit_department">
                                                 <input type="hidden" name="id" value="<?php echo $dept['id']; ?>">
                                                 <button type="submit" class="text-blue-600 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded transition duration-200">
@@ -679,6 +691,7 @@ if (isset($_GET['edit_dept'])) {
                                             
                                             <?php if ($dept['employee_count'] == 0): ?>
                                                 <form method="POST" class="inline" onsubmit="return confirm('هل تريد حذف هذا القسم نهائياً؟')">
+                                                    <?php echo csrf_input('csrf_token'); ?>
                                                     <input type="hidden" name="action" value="delete_department">
                                                     <input type="hidden" name="id" value="<?php echo $dept['id']; ?>">
                                                     <button type="submit" class="text-red-600 hover:text-red-900 bg-red-100 hover:bg-red-200 px-3 py-1 rounded transition duration-200">
