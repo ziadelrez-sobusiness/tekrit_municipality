@@ -223,8 +223,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_invoice'])) {
             $stmt->execute([$invoice_id]);
             $message = 'تم حذف الفاتورة بنجاح!';
         }
-    } catch (PDOException $e) {
-        $error = 'خطأ في حذف الفاتورة: ' . $e->getMessage();
+        } catch (PDOException $e) {
+            $error = 'خطأ في حذف الفاتورة: ' . $e->getMessage();
+        }
     }
 }
 
