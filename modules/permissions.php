@@ -30,7 +30,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     FROM permissions p
                     LEFT JOIN user_permissions up ON p.id = up.permission_id AND up.user_id = ? AND up.is_active = 1
                     WHERE p.is_active = 1
-                    ORDER BY p.module_name, p.sort_order, p.display_name
+                    ORDER BY
+                        CASE p.category
+                            WHEN 'general_admin' THEN 1
+                            WHEN 'finance' THEN 2
+                            WHEN 'projects' THEN 3
+                            WHEN 'citizens' THEN 4
+                            WHEN 'services' THEN 5
+                            WHEN 'maps' THEN 6
+                            WHEN 'website' THEN 7
+                            WHEN 'reports' THEN 8
+                            WHEN 'settings' THEN 9
+                            ELSE 10
+                        END,
+                        p.sort_order,
+                        p.display_name
                 ");
                 $stmt->execute([$user_id]);
                 $permissions = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -116,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 // جلب معرفات الصلاحيات المطلوبة
                 $placeholders = str_repeat('?,', count($templates[$template]) - 1) . '?';
-                $stmt = $db->prepare("SELECT id FROM permissions WHERE permission_key IN ($placeholders) AND is_active = 1");
+                $stmt = $db->prepare("SELECT id FROM permissions WHERE permission_name IN ($placeholders) AND is_active = 1");
                 $stmt->execute($templates[$template]);
                 $permission_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
@@ -563,6 +577,7 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
         }
 
         function displayPermissions(permissions) {
+
             // تنظيم الصلاحيات حسب الفئات المطابقة تماماً للقائمة الرئيسية (9 فئات)
             const categories = {
                 'general_admin': { name: '🏛️ الإدارة العامة', permissions: [], color: 'indigo' },
@@ -640,6 +655,33 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                 else if (['settings', 'system'].includes(module) ||
                          permissionKey.includes('setting') || permissionKey.includes('system')) {
                     category = 'settings';
+
+            // أسماء الفئات بالعربية (مطابقة تماماً للقائمة الرئيسية)
+            const categoryNames = {
+                'general_admin': { name: '🏛️ الإدارة العامة', color: 'indigo' },
+                'finance': { name: '💰 النظام المالي', color: 'green' },
+                'projects': { name: '🏗️ المشاريع والعقود', color: 'blue' },
+                'citizens': { name: '👥 خدمات المواطنين', color: 'purple' },
+                'services': { name: '🚚 الخدمات والصيانة', color: 'orange' },
+                'maps': { name: '🗺️ الخرائط والمرافق', color: 'teal' },
+                'website': { name: '🌐 الموقع والاتصالات', color: 'cyan' },
+                'reports': { name: '📊 التقارير والأرشفة', color: 'pink' },
+                'settings': { name: '⚙️ الإعدادات', color: 'gray' }
+            };
+
+            // تجميع الصلاحيات حسب الفئة (من قاعدة البيانات مباشرة)
+            const categories = {};
+
+            permissions.forEach(perm => {
+                const category = perm.category || 'other';
+
+                if (!categories[category]) {
+                    categories[category] = {
+                        name: categoryNames[category]?.name || '📁 أخرى',
+                        color: categoryNames[category]?.color || 'slate',
+                        permissions: []
+                    };
+
                 }
 
                 categories[category].permissions.push(perm);

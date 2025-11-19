@@ -5,6 +5,8 @@ if (file_exists(__DIR__ . '/includes/init_security.php')) {
 }
 
 require_once 'includes/auth.php';
+require_once 'includes/auth_helper.php';
+require_once 'includes/menu_config.php';
 $auth = new Auth();
 
 if (!$auth->isLoggedIn()) {
@@ -24,6 +26,23 @@ if (!$user || !$user['id']) {
     session_destroy();
     header('Location: public/index.php');
     exit();
+}
+
+// دالة مساعدة لعرض الرابط فقط إذا كان المستخدم لديه الصلاحية
+function showLink($permission_name, $html) {
+    if (hasPermission($permission_name)) {
+        echo $html;
+    }
+}
+
+// دالة للتحقق إذا كان هناك أي صلاحية في الفئة
+function hasCategoryPermission($permissions_array) {
+    foreach ($permissions_array as $perm) {
+        if (hasPermission($perm)) {
+            return true;
+        }
+    }
+    return false;
 }
 ?>
 <!DOCTYPE html>
@@ -108,268 +127,10 @@ if (!$user || !$user['id']) {
                     <span class="mr-3 font-semibold">لوحة التحكم الرئيسية</span>
                 </a>
 
-                <!-- ═══════════════════════════════════ -->
-                <!-- 🏛️ الإدارة العامة -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">🏛️ الإدارة العامة</p>
-                </div>
-
-                <a href="modules/municipality_management.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🏛️</span>
-                    <span class="mr-3">إدارة البلدية</span>
-                </a>
-
-                <a href="modules/council_management.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">👥</span>
-                    <span class="mr-3">المجلس البلدي</span>
-                </a>
-
-                <a href="modules/hr.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">👔</span>
-                    <span class="mr-3">الموارد البشرية</span>
-                </a>
-
-                <a href="modules/permissions.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🔐</span>
-                    <span class="mr-3">الصلاحيات</span>
-                </a>
-
-                <!-- ═══════════════════════════════════ -->
-                <!-- 💰 النظام المالي -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">💰 النظام المالي</p>
-                </div>
-
-                <a href="modules/financial_dashboard.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 bg-gradient-to-l from-indigo-700">
-                    <span class="sidebar-icon">📊</span>
-                    <span class="mr-3 font-semibold">لوحة التحكم المالية</span>
-                </a>
-
-                <a href="modules/finance.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">💵</span>
-                    <span class="mr-3">المعاملات المالية</span>
-                </a>
-
-                <a href="modules/budgets.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📊</span>
-                    <span class="mr-3">الميزانيات</span>
-                </a>
-
-                <a href="modules/suppliers.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🏪</span>
-                    <span class="mr-3">الموردين</span>
-                </a>
-
-                <a href="modules/invoices.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📄</span>
-                    <span class="mr-3">الفواتير</span>
-                </a>
-
-                <a href="modules/tax_collection.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🧾</span>
-                    <span class="mr-3">الجباية</span>
-                </a>
-
-                <a href="modules/donations.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">💖</span>
-                    <span class="mr-3">التبرعات</span>
-                </a>
-
-                <a href="modules/contributions.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🤝</span>
-                    <span class="mr-3">المساهمات الشعبية</span>
-                </a>
-
-                <a href="modules/currencies.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">💱</span>
-                    <span class="mr-3">العملات</span>
-                </a>
-
-                <a href="modules/tax_types.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📋</span>
-                    <span class="mr-3">أنواع الضرائب</span>
-                </a>
-
-                <!-- ═══════════════════════════════════ -->
-                <!-- 🏗️ المشاريع والعقود -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">🏗️ المشاريع والعقود</p>
-                </div>
-
-                <a href="modules/projects_unified.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 bg-gradient-to-l from-green-700">
-                    <span class="sidebar-icon">🏗️</span>
-                    <span class="mr-3 font-semibold">إدارة المشاريع</span>
-                </a>
-
-                <a href="modules/projects_finance.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">💵</span>
-                    <span class="mr-3">التتبع المالي للمشاريع</span>
-                </a>
-
-                <a href="modules/contracts.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📋</span>
-                    <span class="mr-3">العقود والمناقصات</span>
-                </a>
-
-                <a href="modules/donor_organizations.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🏛️</span>
-                    <span class="mr-3">المنظمات المانحة</span>
-                </a>
-
-                <!-- ═══════════════════════════════════ -->
-                <!-- 👥 خدمات المواطنين -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">👥 خدمات المواطنين</p>
-                </div>
-
-                <a href="modules/citizens.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">👨‍👩‍👧‍👦</span>
-                    <span class="mr-3">إدارة المواطنين</span>
-                </a>
-
-                <a href="modules/citizens_accounts.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">👤</span>
-                    <span class="mr-3">حسابات المواطنين</span>
-                </a>
-
-                <a href="modules/complaints.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📢</span>
-                    <span class="mr-3">الشكاوى</span>
-                </a>
-
-                <a href="modules/building_permit.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📝</span>
-                    <span class="mr-3">رخص البناء</span>
-                </a>
-
-                <a href="modules/violations.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">⚠️</span>
-                    <span class="mr-3">المخالفات</span>
-                </a>
-
-                <!-- ═══════════════════════════════════ -->
-                <!-- 🚚 الخدمات والصيانة -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">🚚 الخدمات والصيانة</p>
-                </div>
-
-                <a href="modules/vehicles.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🚚</span>
-                    <span class="mr-3">الآليات</span>
-                </a>
-
-                <a href="modules/drivers_section.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🚗</span>
-                    <span class="mr-3">السائقين</span>
-                </a>
-
-                <a href="modules/maintenance.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🔧</span>
-                    <span class="mr-3">الصيانة</span>
-                </a>
-
-                <a href="modules/waste.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🗑️</span>
-                    <span class="mr-3">النفايات</span>
-                </a>
-
-                <a href="modules/inventory.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📦</span>
-                    <span class="mr-3">المخزون</span>
-                </a>
-
-                <!-- ═══════════════════════════════════ -->
-                <!-- 🗺️ الخرائط والمرافق -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">🗺️ الخرائط والمرافق</p>
-                </div>
-
-                <a href="modules/facilities_management.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🏢</span>
-                    <span class="mr-3">إدارة المرافق</span>
-                </a>
-
-                <a href="modules/facilities_categories.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📂</span>
-                    <span class="mr-3">فئات المرافق</span>
-                </a>
-
-                <a href="modules/map_settings.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🗺️</span>
-                    <span class="mr-3">إعدادات الخريطة</span>
-                </a>
-
-                <!-- ═══════════════════════════════════ -->
-                <!-- 🌐 الموقع والاتصالات -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">🌐 الموقع والاتصالات</p>
-                </div>
-
-                <a href="modules/public_content_management.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🌐</span>
-                    <span class="mr-3">الموقع العام</span>
-                </a>
-
-                <a href="modules/contact_management.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📞</span>
-                    <span class="mr-3">اتصل بنا</span>
-                </a>
-
-                <a href="modules/telegram_messages.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">✈️</span>
-                    <span class="mr-3">رسائل Telegram</span>
-                </a>
-
-                <a href="modules/sms.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📱</span>
-                    <span class="mr-3">الرسائل النصية</span>
-                </a>
-
-                <!-- ═══════════════════════════════════ -->
-                <!-- 📊 التقارير والأرشفة -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">📊 التقارير والأرشفة</p>
-                </div>
-
-                <a href="modules/reports.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 bg-gradient-to-l from-purple-700">
-                    <span class="sidebar-icon">📊</span>
-                    <span class="mr-3 font-semibold">التقارير الموحدة</span>
-                </a>
-
-                <a href="modules/archive.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">📁</span>
-                    <span class="mr-3">الأرشيف الإلكتروني</span>
-                </a>
-
-                <a href="all_tables_manager.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🗄️</span>
-                    <span class="mr-3">الجداول المرجعية</span>
-                </a>
-
-                <!-- ═══════════════════════════════════ -->
-                <!-- ⚙️ الإعدادات -->
-                <!-- ═══════════════════════════════════ -->
-                <div class="mt-4 mb-2 px-4 border-t border-indigo-600 pt-3">
-                    <p class="text-xs text-indigo-300 font-bold uppercase tracking-wider">⚙️ الإعدادات</p>
-                </div>
-
-                <a href="modules/system_settings.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">⚙️</span>
-                    <span class="mr-3">إعدادات النظام</span>
-                </a>
-
-                <a href="modules/telegram_settings.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">✈️</span>
-                    <span class="mr-3">إعدادات Telegram</span>
-                </a>
+                <?php
+                // عرض القائمة بناءً على الصلاحيات
+                renderMenu($menu_items);
+                ?>
 
             </nav>
         </aside>
