@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 // جلب معرفات الصلاحيات المطلوبة
                 $placeholders = str_repeat('?,', count($templates[$template]) - 1) . '?';
-                $stmt = $db->prepare("SELECT id FROM permissions WHERE permission_key IN ($placeholders) AND is_active = 1");
+                $stmt = $db->prepare("SELECT id FROM permissions WHERE permission_name IN ($placeholders) AND is_active = 1");
                 $stmt->execute($templates[$template]);
                 $permission_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
