@@ -1,6 +1,6 @@
 <?php
 // ملف debug لفحص استجابة AJAX
-require_once '../config/database.php';
+require_once 'config/database.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
