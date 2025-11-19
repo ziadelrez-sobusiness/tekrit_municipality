@@ -192,13 +192,7 @@ if (!$user || !$user['id']) {
                     <span class="sidebar-icon">📊</span>
                     <span class="mr-3">إدارة الميزانيات</span>
                 </a>
-                
-                <!-- المشاريع المالية -->
-                <a href="modules/projects_finance.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
-                    <span class="sidebar-icon">🏗️</span>
-                    <span class="mr-3">المشاريع - الجانب المالي</span>
-                </a>
-                
+
                 <!-- إدارة الجباية -->
                 <a href="modules/tax_collection.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
                     <span class="sidebar-icon">🧾</span>
@@ -206,7 +200,7 @@ if (!$user || !$user['id']) {
                 </a>
                 
                 <!-- إدارة المخزون والمشتريات -->
-                <a @click.prevent="showSection('inventory', $event.currentTarget)" href="#" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
+                <a href="modules/inventory.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
                     <span class="sidebar-icon">📦</span>
                     <span class="mr-3">المخزون والمشتريات</span>
                 </a>
@@ -218,7 +212,7 @@ if (!$user || !$user['id']) {
                 </a>
                 
                 <!-- إدارة الصيانة الشاملة -->
-                <a @click.prevent="showSection('maintenance', $event.currentTarget)" href="#" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
+                <a href="modules/maintenance.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
                     <span class="sidebar-icon">🔧</span>
                     <span class="mr-3">الصيانة الشاملة</span>
                 </a>
@@ -260,7 +254,7 @@ if (!$user || !$user['id']) {
                 </a>
                 
                 <!-- إدارة المخالفات -->
-                <a @click.prevent="showSection('violations', $event.currentTarget)" href="#" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
+                <a href="modules/violations.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
                     <span class="sidebar-icon">⚠️</span>
                     <span class="mr-3">إدارة المخالفات</span>
                 </a>
@@ -272,13 +266,13 @@ if (!$user || !$user['id']) {
                 </a>
                 
                 <!-- إرسال الرسائل النصية -->
-                <a @click.prevent="showSection('sms', $event.currentTarget)" href="#" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
+                <a href="modules/sms.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
                     <span class="sidebar-icon">📱</span>
                     <span class="mr-3">الرسائل النصية</span>
                 </a>
                 
                 <!-- العقود والمناقصات -->
-                <a @click.prevent="showSection('contracts', $event.currentTarget)" href="#" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
+                <a href="modules/contracts.php" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700">
                     <span class="sidebar-icon">📋</span>
                     <span class="mr-3">العقود والمناقصات</span>
                 </a>
