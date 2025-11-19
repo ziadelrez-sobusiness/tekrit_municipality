@@ -577,85 +577,6 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
         }
 
         function displayPermissions(permissions) {
-
-            // تنظيم الصلاحيات حسب الفئات المطابقة تماماً للقائمة الرئيسية (9 فئات)
-            const categories = {
-                'general_admin': { name: '🏛️ الإدارة العامة', permissions: [], color: 'indigo' },
-                'finance': { name: '💰 النظام المالي', permissions: [], color: 'green' },
-                'projects': { name: '🏗️ المشاريع والعقود', permissions: [], color: 'blue' },
-                'citizens': { name: '👥 خدمات المواطنين', permissions: [], color: 'purple' },
-                'services': { name: '🚚 الخدمات والصيانة', permissions: [], color: 'orange' },
-                'maps': { name: '🗺️ الخرائط والمرافق', permissions: [], color: 'teal' },
-                'website': { name: '🌐 الموقع والاتصالات', permissions: [], color: 'cyan' },
-                'reports': { name: '📊 التقارير والأرشفة', permissions: [], color: 'pink' },
-                'settings': { name: '⚙️ الإعدادات', permissions: [], color: 'gray' }
-            };
-
-            // توزيع الصلاحيات على الفئات
-            permissions.forEach(perm => {
-                const module = perm.module_name || '';
-                const permissionKey = perm.permission_key || '';
-
-                // تحديد الفئة المناسبة بناءً على اسم الوحدة ومفتاح الصلاحية
-                let category = 'general_admin'; // افتراضي: الإدارة العامة
-                
-                // 🏛️ الإدارة العامة
-                if (['core', 'hr', 'permissions', 'municipality', 'council', 'users'].includes(module) ||
-                    permissionKey.includes('municipality') || permissionKey.includes('council') || 
-                    permissionKey.includes('hr') || permissionKey.includes('permissions') || 
-                    permissionKey.includes('users_')) {
-                    category = 'general_admin';
-                }
-                // 💰 النظام المالي
-                else if (['finance', 'budgets', 'suppliers', 'invoices', 'tax', 'currencies', 'donations', 'contributions'].includes(module) ||
-                         permissionKey.includes('finance') || permissionKey.includes('budget') || 
-                         permissionKey.includes('supplier') || permissionKey.includes('invoice') || 
-                         permissionKey.includes('tax') || permissionKey.includes('currency') ||
-                         permissionKey.includes('donation') || permissionKey.includes('contribution')) {
-                    category = 'finance';
-                }
-                // 🏗️ المشاريع والعقود
-                else if (['projects', 'contracts', 'donors'].includes(module) ||
-                         permissionKey.includes('project') || permissionKey.includes('contract') || 
-                         permissionKey.includes('donor')) {
-                    category = 'projects';
-                }
-                // 👥 خدمات المواطنين
-                else if (['citizens', 'complaints', 'permits', 'violations', 'building_permit'].includes(module) ||
-                         permissionKey.includes('citizen') || permissionKey.includes('complaint') || 
-                         permissionKey.includes('permit') || permissionKey.includes('violation')) {
-                    category = 'citizens';
-                }
-                // 🚚 الخدمات والصيانة
-                else if (['services', 'vehicles', 'maintenance', 'waste', 'inventory', 'drivers'].includes(module) ||
-                         permissionKey.includes('vehicle') || permissionKey.includes('maintenance') || 
-                         permissionKey.includes('waste') || permissionKey.includes('inventory') ||
-                         permissionKey.includes('driver')) {
-                    category = 'services';
-                }
-                // 🗺️ الخرائط والمرافق
-                else if (['maps', 'facilities'].includes(module) ||
-                         permissionKey.includes('map') || permissionKey.includes('facility')) {
-                    category = 'maps';
-                }
-                // 🌐 الموقع والاتصالات
-                else if (['website', 'telegram', 'sms', 'notifications', 'contact', 'public_content'].includes(module) ||
-                         permissionKey.includes('website') || permissionKey.includes('telegram') || 
-                         permissionKey.includes('sms') || permissionKey.includes('notification') ||
-                         permissionKey.includes('contact') || permissionKey.includes('public')) {
-                    category = 'website';
-                }
-                // 📊 التقارير والأرشفة
-                else if (['reports', 'archive', 'tables'].includes(module) ||
-                         permissionKey.includes('report') || permissionKey.includes('archive') ||
-                         permissionKey.includes('table')) {
-                    category = 'reports';
-                }
-                // ⚙️ الإعدادات
-                else if (['settings', 'system'].includes(module) ||
-                         permissionKey.includes('setting') || permissionKey.includes('system')) {
-                    category = 'settings';
-
             // أسماء الفئات بالعربية (مطابقة تماماً للقائمة الرئيسية)
             const categoryNames = {
                 'general_admin': { name: '🏛️ الإدارة العامة', color: 'indigo' },
@@ -672,27 +593,99 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
             // تجميع الصلاحيات حسب الفئة (من قاعدة البيانات مباشرة)
             const categories = {};
 
+            // Debug: طباعة البيانات القادمة
+            console.log('الصلاحيات المستلمة:', permissions);
+            console.log('عدد الصلاحيات:', permissions.length);
+
             permissions.forEach(perm => {
-                const category = perm.category || 'other';
+                // استخدام category من قاعدة البيانات، أو تحديده بناءً على module_name و permission_key
+                let category = perm.category;
+                
+                // إذا لم تكن الفئة موجودة في قاعدة البيانات، نحددها بناءً على module_name و permission_key
+                if (!category || !categoryNames[category]) {
+                    const module = perm.module_name || '';
+                    const permissionKey = perm.permission_key || '';
+                    
+                    // تحديد الفئة بناءً على module_name و permission_key
+                    if (['core', 'hr', 'permissions', 'municipality', 'council', 'users'].includes(module) ||
+                        permissionKey.includes('municipality') || permissionKey.includes('council') || 
+                        permissionKey.includes('hr') || permissionKey.includes('permissions') || 
+                        permissionKey.includes('users_')) {
+                        category = 'general_admin';
+                    }
+                    else if (['finance', 'budgets', 'suppliers', 'invoices', 'tax', 'currencies', 'donations', 'contributions'].includes(module) ||
+                             permissionKey.includes('finance') || permissionKey.includes('budget') || 
+                             permissionKey.includes('supplier') || permissionKey.includes('invoice') || 
+                             permissionKey.includes('tax') || permissionKey.includes('currency') ||
+                             permissionKey.includes('donation') || permissionKey.includes('contribution')) {
+                        category = 'finance';
+                    }
+                    else if (['projects', 'contracts', 'donors'].includes(module) ||
+                             permissionKey.includes('project') || permissionKey.includes('contract') || 
+                             permissionKey.includes('donor')) {
+                        category = 'projects';
+                    }
+                    else if (['citizens', 'complaints', 'permits', 'violations', 'building_permit'].includes(module) ||
+                             permissionKey.includes('citizen') || permissionKey.includes('complaint') || 
+                             permissionKey.includes('permit') || permissionKey.includes('violation')) {
+                        category = 'citizens';
+                    }
+                    else if (['services', 'vehicles', 'maintenance', 'waste', 'inventory', 'drivers'].includes(module) ||
+                             permissionKey.includes('vehicle') || permissionKey.includes('maintenance') || 
+                             permissionKey.includes('waste') || permissionKey.includes('inventory') ||
+                             permissionKey.includes('driver')) {
+                        category = 'services';
+                    }
+                    else if (['maps', 'facilities'].includes(module) ||
+                             permissionKey.includes('map') || permissionKey.includes('facility')) {
+                        category = 'maps';
+                    }
+                    else if (['website', 'telegram', 'sms', 'notifications', 'contact', 'public_content'].includes(module) ||
+                             permissionKey.includes('website') || permissionKey.includes('telegram') || 
+                             permissionKey.includes('sms') || permissionKey.includes('notification') ||
+                             permissionKey.includes('contact') || permissionKey.includes('public')) {
+                        category = 'website';
+                    }
+                    else if (['reports', 'archive', 'tables'].includes(module) ||
+                             permissionKey.includes('report') || permissionKey.includes('archive') ||
+                             permissionKey.includes('table')) {
+                        category = 'reports';
+                    }
+                    else if (['settings', 'system'].includes(module) ||
+                             permissionKey.includes('setting') || permissionKey.includes('system')) {
+                        category = 'settings';
+                    }
+                    else {
+                        category = 'general_admin'; // افتراضي
+                    }
+                }
 
                 if (!categories[category]) {
                     categories[category] = {
-                        name: categoryNames[category]?.name || '📁 أخرى',
-                        color: categoryNames[category]?.color || 'slate',
+                        name: categoryNames[category]?.name || '🏛️ الإدارة العامة',
+                        color: categoryNames[category]?.color || 'indigo',
                         permissions: []
                     };
-
                 }
 
                 categories[category].permissions.push(perm);
             });
 
+            // Debug: طباعة الفئات المجمعة
+            console.log('الفئات المجمعة:', categories);
+
+            // عرض جميع الفئات المطلوبة (حتى لو كانت فارغة)
+            const orderedCategories = ['general_admin', 'finance', 'projects', 'citizens', 'services', 'maps', 'website', 'reports', 'settings'];
+            
             let html = `<div class="space-y-4">`;
 
-            // عرض كل فئة مع صلاحياتها (حتى لو كانت فارغة لعرض جميع الفئات)
-            Object.keys(categories).forEach(catKey => {
-                const cat = categories[catKey];
-                // إزالة الشرط لإظهار جميع الفئات حتى لو كانت فارغة
+            // عرض كل فئة مع صلاحياتها حسب الترتيب المحدد
+            orderedCategories.forEach(catKey => {
+                const cat = categories[catKey] || {
+                    name: categoryNames[catKey]?.name || '📁 أخرى',
+                    color: categoryNames[catKey]?.color || 'slate',
+                    permissions: []
+                };
 
                 const checkedCount = cat.permissions.filter(p => p.granted == 1).length;
 
