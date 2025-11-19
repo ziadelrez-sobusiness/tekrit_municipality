@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار عرض الصلاحيات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .permission-category {
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            border-left: 4px solid #6366f1;
+        }
+        .permission-item {
+            transition: all 0.2s ease;
+        }
+        .permission-item:hover {
+            background-color: #f0f9ff !important;
+            border-color: #3b82f6 !important;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">🔍 اختبار عرض الصلاحيات</h1>
+            <p style="color: #666;">هذا الاختبار يحاكي تماماً ما يحدث في صفحة permissions.php</p>
+
+            <div style="margin-top: 20px;">
+                <label>اختر مستخدم:</label>
+                <select id="userSelect" style="padding: 8px; margin: 0 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="1">admin (ID: 1)</option>
+                    <option value="2">ziad (ID: 2)</option>
+                    <option value="3">walid (ID: 3)</option>
+                </select>
+                <button onclick="loadPermissions()" style="background: #4f46e5; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer;">
+                    تحميل الصلاحيات
+                </button>
+            </div>
+
+            <div id="statusBox" style="margin-top: 20px; padding: 15px; background: #e0f2fe; border-radius: 5px; display: none;">
+                <strong>الحالة:</strong> <span id="statusText"></span>
+            </div>
+        </div>
+
+        <div id="permissionsContent" style="background: white; padding: 20px; border-radius: 10px;">
+            <p style="text-align: center; color: #999; padding: 40px;">اضغط "تحميل الصلاحيات" لعرض الصلاحيات</p>
+        </div>
+    </div>
+
+    <script>
+        function loadPermissions() {
+            const userId = document.getElementById('userSelect').value;
+            const statusBox = document.getElementById('statusBox');
+            const statusText = document.getElementById('statusText');
+
+            statusBox.style.display = 'block';
+            statusText.textContent = 'جاري التحميل...';
+            statusBox.style.background = '#fef3c7';
+
+            fetch(`debug_permissions_ajax.php?user_id=${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('استجابة السيرفر:', data);
+
+                    if (data.success) {
+                        statusText.textContent = `✅ تم تحميل ${data.total_permissions} صلاحية بنجاح`;
+                        statusBox.style.background = '#d1fae5';
+
+                        // عرض الصلاحيات
+                        displayPermissions(data.permissions);
+                    } else {
+                        statusText.textContent = `❌ خطأ: ${data.error}`;
+                        statusBox.style.background = '#fee2e2';
+                    }
+                })
+                .catch(error => {
+                    console.error('خطأ:', error);
+                    statusText.textContent = `❌ خطأ: ${error.message}`;
+                    statusBox.style.background = '#fee2e2';
+                });
+        }
+
+        function displayPermissions(permissions) {
+            console.log('عدد الصلاحيات المستلمة:', permissions.length);
+            console.log('أول صلاحية:', permissions[0]);
+
+            // أسماء الفئات بالعربية (نفس الكود من permissions.php)
+            const categoryNames = {
+                'general_admin': { name: '🏛️ الإدارة العامة', color: 'indigo' },
+                'finance': { name: '💰 النظام المالي', color: 'green' },
+                'projects': { name: '🏗️ المشاريع والعقود', color: 'blue' },
+                'citizens': { name: '👥 خدمات المواطنين', color: 'purple' },
+                'services': { name: '🚚 الخدمات والصيانة', color: 'orange' },
+                'maps': { name: '🗺️ الخرائط والمرافق', color: 'teal' },
+                'website': { name: '🌐 الموقع والاتصالات', color: 'cyan' },
+                'reports': { name: '📊 التقارير والأرشفة', color: 'pink' },
+                'settings': { name: '⚙️ الإعدادات', color: 'gray' }
+            };
+
+            // تجميع الصلاحيات حسب الفئة (من قاعدة البيانات مباشرة)
+            const categories = {};
+
+            permissions.forEach(perm => {
+                const category = perm.category || 'other';
+                console.log(`صلاحية: ${perm.display_name}, فئة: ${category}`);
+
+                if (!categories[category]) {
+                    categories[category] = {
+                        name: categoryNames[category]?.name || '📁 أخرى',
+                        color: categoryNames[category]?.color || 'slate',
+                        permissions: []
+                    };
+                }
+
+                categories[category].permissions.push(perm);
+            });
+
+            console.log('الفئات المجمعة:', Object.keys(categories));
+            console.log('عدد الفئات:', Object.keys(categories).length);
+
+            let html = `<div class="space-y-4">`;
+
+            // عرض كل فئة مع صلاحياتها
+            Object.keys(categories).forEach(catKey => {
+                const cat = categories[catKey];
+                console.log(`عرض فئة: ${cat.name}, عدد الصلاحيات: ${cat.permissions.length}`);
+
+                if (cat.permissions.length === 0) return;
+
+                const checkedCount = cat.permissions.filter(p => p.granted == 1).length;
+
+                html += `
+                    <div class="permission-category border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                        <div class="bg-gradient-to-r from-${cat.color}-50 to-white px-5 py-4 border-b border-gray-200">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="text-lg font-bold text-gray-800">${cat.name}</span>
+                                    <span class="mr-2 text-sm text-gray-600">(${checkedCount}/${cat.permissions.length})</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 space-y-2">
+                `;
+
+                cat.permissions.forEach(perm => {
+                    const isChecked = perm.granted == 1;
+                    html += `
+                        <div class="permission-item flex items-center p-3 bg-white border-2 border-gray-200 rounded-lg">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''}
+                                   class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded">
+                            <label class="mr-3 flex-1">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <span class="text-2xl ml-3">${perm.icon || '🔑'}</span>
+                                        <div>
+                                            <div class="font-semibold text-gray-900">${perm.display_name}</div>
+                                            ${perm.description ? `<div class="text-sm text-gray-500 mt-0.5">${perm.description}</div>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+
+            console.log('طول HTML المولد:', html.length);
+            document.getElementById('permissionsContent').innerHTML = html;
+        }
+
+        // تحميل تلقائي عند فتح الصفحة
+        window.addEventListener('load', () => {
+            loadPermissions();
+        });
+    </script>
+</body>
+</html>
