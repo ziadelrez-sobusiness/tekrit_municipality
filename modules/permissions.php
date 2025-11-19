@@ -181,24 +181,26 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔐 إدارة الصلاحيات - بلدية تكريت</title>
+    <title>إدارة الصلاحيات - بلدية تكريت</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="../public/assets/css/tekrit-theme.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            overflow-x: hidden;
+        }
+        .main-content {
+            height: 100vh;
+            overflow-y: auto;
         }
         .card-hover {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
         }
         .status-active {
             background-color: #dcfce7;
@@ -264,254 +266,241 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
         .animate-slide-in {
             animation: slideIn 0.3s ease-out;
         }
-        .stat-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
-            border-top: 3px solid;
-        }
-        .stat-card-1 { border-color: #3b82f6; }
-        .stat-card-2 { border-color: #10b981; }
-        .stat-card-3 { border-color: #8b5cf6; }
-        .stat-card-4 { border-color: #f59e0b; }
     </style>
 </head>
-<body class="bg-gray-100">
-    <!-- Navigation Bar -->
-    <nav class="bg-gradient-to-r from-indigo-800 to-purple-800 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="../comprehensive_dashboard.php" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition ml-4 flex items-center">
-                        <span class="ml-2">←</span> العودة للوحة التحكم
-                    </a>
-                    <div class="mr-4">
-                        <h1 class="text-xl font-bold text-white">إدارة الصلاحيات</h1>
-                        <p class="text-sm text-indigo-100">نظام التحكم الشامل في صلاحيات المستخدمين</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4 space-x-reverse">
-                    <div class="text-sm text-white bg-white bg-opacity-20 px-4 py-2 rounded-lg">
-                        <span class="ml-2">👤</span>
-                        <span class="font-semibold"><?= htmlspecialchars($user['full_name']) ?></span>
-                    </div>
-                    <a href="../logout.php" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition flex items-center">
-                        <span class="ml-2">🚪</span> تسجيل الخروج
-                    </a>
-                </div>
+<body class="bg-slate-100 text-slate-800">
+    <div class="flex flex-col h-screen">
+        <!-- Top bar -->
+        <header class="bg-white shadow-md p-4 flex justify-between items-center flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <a href="../comprehensive_dashboard.php" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                    <span class="ml-2">←</span> العودة للقائمة الرئيسية
+                </a>
+                <h1 class="text-xl font-semibold text-slate-700">🔐 إدارة الصلاحيات والمستخدمين</h1>
             </div>
-        </div>
-    </nav>
-
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="mb-8 animate-slide-in">
-            <h1 class="text-4xl font-bold text-white mb-2">🔐 نظام إدارة الصلاحيات والمستخدمين</h1>
-            <p class="text-indigo-100 text-lg">تحكم شامل ومتقدم في صلاحيات النظام</p>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="stat-card stat-card-1 p-6 rounded-xl shadow-lg card-hover animate-slide-in">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">المستخدمون النشطون</p>
-                        <p class="text-3xl font-bold text-gray-900"><?= $stats['active_users'] ?></p>
-                        <p class="text-xs text-blue-600 mt-1">مستخدم نشط</p>
-                    </div>
-                    <div class="p-4 rounded-full bg-blue-100">
-                        <span class="text-3xl">👥</span>
-                    </div>
-                </div>
+            <div class="flex items-center space-x-reverse space-x-4">
+                <span class="text-sm">أهلاً، <?= htmlspecialchars($user['full_name'] ?? 'المستخدم') ?></span>
+                <a href="../logout.php" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mr-4">خروج</a>
             </div>
+        </header>
 
-            <div class="stat-card stat-card-2 p-6 rounded-xl shadow-lg card-hover animate-slide-in" style="animation-delay: 0.1s">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">إجمالي الصلاحيات</p>
-                        <p class="text-3xl font-bold text-gray-900"><?= $stats['total_permissions'] ?></p>
-                        <p class="text-xs text-green-600 mt-1">صلاحية متاحة</p>
-                    </div>
-                    <div class="p-4 rounded-full bg-green-100">
-                        <span class="text-3xl">🔑</span>
-                    </div>
+        <!-- Main content -->
+        <div class="main-content flex-1 flex flex-col overflow-y-auto">
+
+            <!-- Page content -->
+            <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+                <!-- Header Section -->
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">نظام إدارة الصلاحيات</h2>
+                    <p class="text-slate-600">تحكم شامل ومتقدم في صلاحيات المستخدمين</p>
                 </div>
-            </div>
 
-            <div class="stat-card stat-card-3 p-6 rounded-xl shadow-lg card-hover animate-slide-in" style="animation-delay: 0.2s">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">صلاحيات ممنوحة</p>
-                        <p class="text-3xl font-bold text-gray-900"><?= $stats['total_user_permissions'] ?></p>
-                        <p class="text-xs text-purple-600 mt-1">صلاحية مفعلة</p>
-                    </div>
-                    <div class="p-4 rounded-full bg-purple-100">
-                        <span class="text-3xl">⚡</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card stat-card-4 p-6 rounded-xl shadow-lg card-hover animate-slide-in" style="animation-delay: 0.3s">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 mb-1">مستخدمون بصلاحيات</p>
-                        <p class="text-3xl font-bold text-gray-900"><?= $stats['users_with_permissions'] ?></p>
-                        <p class="text-xs text-orange-600 mt-1">لديهم صلاحيات</p>
-                    </div>
-                    <div class="p-4 rounded-full bg-orange-100">
-                        <span class="text-3xl">📊</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <!-- Users List -->
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold flex items-center">
-                                <span class="text-2xl ml-2">👥</span> قائمة المستخدمين
-                            </h3>
-                            <button onclick="refreshUsers()" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg text-sm transition flex items-center">
-                                <span class="ml-1">🔄</span> تحديث
-                            </button>
-                        </div>
-
-                        <div class="relative">
-                            <input type="text"
-                                   id="searchInput"
-                                   placeholder="🔍 البحث عن مستخدم..."
-                                   class="w-full px-4 py-2.5 pr-10 border-0 rounded-lg focus:ring-2 focus:ring-white text-gray-900 placeholder-gray-500"
-                                   onkeyup="searchUsers(this.value)">
-                            <span class="absolute left-3 top-3 text-gray-400">🔍</span>
-                        </div>
-                    </div>
-
-                    <div id="usersList" class="p-4 space-y-3 max-h-[600px] overflow-y-auto">
-                        <?php foreach ($users as $user_item): ?>
-                        <div class="user-item nav-item border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-indigo-500 hover:shadow-md transition"
-                             data-user-id="<?= $user_item['id'] ?>"
-                             data-username="<?= htmlspecialchars($user_item['username']) ?>"
-                             data-fullname="<?= htmlspecialchars($user_item['full_name']) ?>"
-                             onclick="selectUser(<?= $user_item['id'] ?>)">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center mb-2">
-                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold ml-3">
-                                            <?= mb_substr($user_item['full_name'], 0, 1) ?>
-                                        </div>
-                                        <div>
-                                            <h6 class="font-semibold text-gray-900"><?= htmlspecialchars($user_item['full_name']) ?></h6>
-                                            <p class="text-sm text-gray-500">@<?= htmlspecialchars($user_item['username']) ?></p>
-                                        </div>
-                                    </div>
-                                    <div class="mr-13">
-                                        <p class="text-sm text-indigo-600 mb-1">
-                                            <span class="ml-1">🏢</span><?= htmlspecialchars($user_item['department']) ?>
-                                        </p>
-                                        <p class="text-xs text-gray-500 flex items-center">
-                                            <span class="ml-1">🔑</span>
-                                            <span class="font-semibold text-gray-700"><?= $user_item['permissions_count'] ?></span>
-                                            <span class="mr-1">صلاحية</span>
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="text-left flex flex-col items-end">
-                                    <span class="<?= $user_item['is_active'] == 1 ? 'status-active' : 'status-inactive' ?> mb-2">
-                                        <?= $user_item['is_active'] == 1 ? '✓ نشط' : '⊗ غير نشط' ?>
-                                    </span>
-                                    <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                                        <?= htmlspecialchars($user_item['user_type']) ?>
-                                    </span>
-                                </div>
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm card-hover animate-slide-in">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">المستخدمون النشطون</p>
+                                <p class="text-3xl font-bold text-gray-900"><?= $stats['active_users'] ?></p>
+                                <p class="text-xs text-blue-600 mt-1">مستخدم نشط</p>
+                            </div>
+                            <div class="p-4 rounded-full bg-blue-100">
+                                <span class="text-3xl">👥</span>
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm card-hover animate-slide-in" style="animation-delay: 0.1s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">إجمالي الصلاحيات</p>
+                                <p class="text-3xl font-bold text-gray-900"><?= $stats['total_permissions'] ?></p>
+                                <p class="text-xs text-green-600 mt-1">صلاحية متاحة</p>
+                            </div>
+                            <div class="p-4 rounded-full bg-green-100">
+                                <span class="text-3xl">🔑</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm card-hover animate-slide-in" style="animation-delay: 0.2s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">صلاحيات ممنوحة</p>
+                                <p class="text-3xl font-bold text-gray-900"><?= $stats['total_user_permissions'] ?></p>
+                                <p class="text-xs text-purple-600 mt-1">صلاحية مفعلة</p>
+                            </div>
+                            <div class="p-4 rounded-full bg-purple-100">
+                                <span class="text-3xl">⚡</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm card-hover animate-slide-in" style="animation-delay: 0.3s">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 mb-1">مستخدمون بصلاحيات</p>
+                                <p class="text-3xl font-bold text-gray-900"><?= $stats['users_with_permissions'] ?></p>
+                                <p class="text-xs text-orange-600 mt-1">لديهم صلاحيات</p>
+                            </div>
+                            <div class="p-4 rounded-full bg-orange-100">
+                                <span class="text-3xl">📊</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Permissions Section -->
-            <div class="lg:col-span-3">
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div class="bg-gradient-to-r from-green-600 to-blue-600 text-white p-6">
-                        <div class="flex items-center justify-between flex-wrap gap-3">
-                            <h3 class="text-lg font-semibold flex items-center">
-                                <span class="text-2xl ml-2">🔐</span> صلاحيات المستخدم
-                            </h3>
-                            <div id="toolsSection" style="display: none;" class="flex items-center gap-2 flex-wrap">
-                                <!-- قوالب جاهزة -->
-                                <div x-data="{ open: false }" class="relative">
-                                    <button @click="open = !open" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-2 rounded-lg transition text-sm flex items-center">
-                                        <span class="ml-1">📋</span> قوالب جاهزة
+                <!-- Main Content -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <!-- Users List -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                            <div class="bg-indigo-800 text-white p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold flex items-center">
+                                        <span class="text-2xl ml-2">👥</span> قائمة المستخدمين
+                                    </h3>
+                                    <button onclick="refreshUsers()" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1.5 rounded-lg text-sm transition flex items-center">
+                                        <span class="ml-1">🔄</span> تحديث
                                     </button>
-                                    <div x-show="open" @click.away="open = false"
-                                         class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-50 overflow-hidden"
-                                         style="display: none;">
-                                        <button onclick="applyTemplate('admin')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
-                                            <span class="ml-2">👑</span> مدير النظام
-                                        </button>
-                                        <button onclick="applyTemplate('accountant')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
-                                            <span class="ml-2">💰</span> محاسب
-                                        </button>
-                                        <button onclick="applyTemplate('hr_manager')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
-                                            <span class="ml-2">👔</span> مدير موارد بشرية
-                                        </button>
-                                        <button onclick="applyTemplate('service_manager')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
-                                            <span class="ml-2">👥</span> مدير خدمات
-                                        </button>
-                                        <button onclick="applyTemplate('viewer')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
-                                            <span class="ml-2">👁️</span> مراقب (عرض فقط)
-                                        </button>
-                                    </div>
                                 </div>
 
-                                <!-- نسخ صلاحيات -->
-                                <div x-data="{ open: false }" class="relative">
-                                    <button @click="open = !open" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-2 rounded-lg transition text-sm flex items-center">
-                                        <span class="ml-1">📋</span> نسخ من مستخدم
-                                    </button>
-                                    <div x-show="open" @click.away="open = false"
-                                         id="copyFromDropdown"
-                                         class="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto"
-                                         style="display: none;">
-                                        <!-- سيتم ملؤها ديناميكياً -->
+                                <div class="relative">
+                                    <input type="text"
+                                           id="searchInput"
+                                           placeholder="🔍 البحث عن مستخدم..."
+                                           class="w-full px-4 py-2.5 pr-10 border-0 rounded-lg focus:ring-2 focus:ring-white text-gray-900 placeholder-gray-500"
+                                           onkeyup="searchUsers(this.value)">
+                                    <span class="absolute left-3 top-3 text-gray-400">🔍</span>
+                                </div>
+                            </div>
+
+                            <div id="usersList" class="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                                <?php foreach ($users as $user_item): ?>
+                                <div class="user-item nav-item border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-indigo-500 hover:shadow-md transition"
+                                     data-user-id="<?= $user_item['id'] ?>"
+                                     data-username="<?= htmlspecialchars($user_item['username']) ?>"
+                                     data-fullname="<?= htmlspecialchars($user_item['full_name']) ?>"
+                                     onclick="selectUser(<?= $user_item['id'] ?>)">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <div class="flex items-center mb-2">
+                                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold ml-3">
+                                                    <?= mb_substr($user_item['full_name'], 0, 1) ?>
+                                                </div>
+                                                <div>
+                                                    <h6 class="font-semibold text-gray-900"><?= htmlspecialchars($user_item['full_name']) ?></h6>
+                                                    <p class="text-sm text-gray-500">@<?= htmlspecialchars($user_item['username']) ?></p>
+                                                </div>
+                                            </div>
+                                            <div class="mr-13">
+                                                <p class="text-sm text-indigo-600 mb-1">
+                                                    <span class="ml-1">🏢</span><?= htmlspecialchars($user_item['department']) ?>
+                                                </p>
+                                                <p class="text-xs text-gray-500 flex items-center">
+                                                    <span class="ml-1">🔑</span>
+                                                    <span class="font-semibold text-gray-700"><?= $user_item['permissions_count'] ?></span>
+                                                    <span class="mr-1">صلاحية</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="text-left flex flex-col items-end">
+                                            <span class="<?= $user_item['is_active'] == 1 ? 'status-active' : 'status-inactive' ?> mb-2">
+                                                <?= $user_item['is_active'] == 1 ? '✓ نشط' : '⊗ غير نشط' ?>
+                                            </span>
+                                            <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                                <?= htmlspecialchars($user_item['user_type']) ?>
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <!-- حفظ -->
-                                <button id="saveBtn" onclick="savePermissions()"
-                                        style="display: none;"
-                                        class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition text-sm flex items-center font-semibold">
-                                    <span class="ml-1">💾</span> حفظ التغييرات
-                                </button>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     </div>
 
-                    <div id="permissionsSection" class="relative min-h-[400px]">
-                        <div id="permissionsContent" class="p-6">
-                            <div class="text-center py-20">
-                                <div class="text-8xl mb-4">🔐</div>
-                                <h5 class="text-2xl font-semibold text-gray-700 mb-3">اختر مستخدماً لإدارة صلاحياته</h5>
-                                <p class="text-gray-500 text-lg mb-6">يمكنك البحث عن المستخدم في القائمة الجانبية واختياره</p>
-                                <div class="flex justify-center gap-4 text-sm text-gray-600">
-                                    <div class="flex items-center">
-                                        <span class="ml-2">✓</span> منح وإدارة الصلاحيات
+                    <!-- Permissions Section -->
+                    <div class="lg:col-span-3">
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                            <div class="bg-indigo-800 text-white p-6">
+                                <div class="flex items-center justify-between flex-wrap gap-3">
+                                    <h3 class="text-lg font-semibold flex items-center">
+                                        <span class="text-2xl ml-2">🔐</span> صلاحيات المستخدم
+                                    </h3>
+                                    <div id="toolsSection" style="display: none;" class="flex items-center gap-2 flex-wrap">
+                                        <!-- قوالب جاهزة -->
+                                        <div x-data="{ open: false }" class="relative">
+                                            <button @click="open = !open" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-2 rounded-lg transition text-sm flex items-center">
+                                                <span class="ml-1">📋</span> قوالب جاهزة
+                                            </button>
+                                            <div x-show="open" @click.away="open = false"
+                                                 class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-xl z-50 overflow-hidden"
+                                                 style="display: none;">
+                                                <button onclick="applyTemplate('admin')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
+                                                    <span class="ml-2">👑</span> مدير النظام
+                                                </button>
+                                                <button onclick="applyTemplate('accountant')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
+                                                    <span class="ml-2">💰</span> محاسب
+                                                </button>
+                                                <button onclick="applyTemplate('hr_manager')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
+                                                    <span class="ml-2">👔</span> مدير موارد بشرية
+                                                </button>
+                                                <button onclick="applyTemplate('service_manager')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
+                                                    <span class="ml-2">👥</span> مدير خدمات
+                                                </button>
+                                                <button onclick="applyTemplate('viewer')" class="w-full text-right px-4 py-2 hover:bg-gray-100 text-gray-700 text-sm">
+                                                    <span class="ml-2">👁️</span> مراقب (عرض فقط)
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- نسخ صلاحيات -->
+                                        <div x-data="{ open: false }" class="relative">
+                                            <button @click="open = !open" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-2 rounded-lg transition text-sm flex items-center">
+                                                <span class="ml-1">📋</span> نسخ من مستخدم
+                                            </button>
+                                            <div x-show="open" @click.away="open = false"
+                                                 id="copyFromDropdown"
+                                                 class="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-xl z-50 max-h-64 overflow-y-auto"
+                                                 style="display: none;">
+                                                <!-- سيتم ملؤها ديناميكياً -->
+                                            </div>
+                                        </div>
+
+                                        <!-- حفظ -->
+                                        <button id="saveBtn" onclick="savePermissions()"
+                                                style="display: none;"
+                                                class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition text-sm flex items-center font-semibold">
+                                            <span class="ml-1">💾</span> حفظ التغييرات
+                                        </button>
                                     </div>
-                                    <div class="flex items-center">
-                                        <span class="ml-2">✓</span> استخدام القوالب الجاهزة
-                                    </div>
-                                    <div class="flex items-center">
-                                        <span class="ml-2">✓</span> نسخ الصلاحيات بين المستخدمين
+                                </div>
+                            </div>
+
+                            <div id="permissionsSection" class="relative min-h-[400px]">
+                                <div id="permissionsContent" class="p-6">
+                                    <div class="text-center py-20">
+                                        <div class="text-8xl mb-4">🔐</div>
+                                        <h5 class="text-2xl font-semibold text-gray-700 mb-3">اختر مستخدماً لإدارة صلاحياته</h5>
+                                        <p class="text-gray-500 text-lg mb-6">يمكنك البحث عن المستخدم في القائمة على اليسار واختياره</p>
+                                        <div class="flex justify-center gap-4 text-sm text-gray-600">
+                                            <div class="flex items-center">
+                                                <span class="ml-2">✓</span> منح وإدارة الصلاحيات
+                                            </div>
+                                            <div class="flex items-center">
+                                                <span class="ml-2">✓</span> استخدام القوالب الجاهزة
+                                            </div>
+                                            <div class="flex items-center">
+                                                <span class="ml-2">✓</span> نسخ الصلاحيات بين المستخدمين
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 
@@ -574,7 +563,7 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
         }
 
         function displayPermissions(permissions) {
-            // تنظيم الصلاحيات حسب الفئات الجديدة (10 فئات متطابقة مع القائمة)
+            // تنظيم الصلاحيات حسب الفئات المطابقة تماماً للقائمة الرئيسية (9 فئات)
             const categories = {
                 'general_admin': { name: '🏛️ الإدارة العامة', permissions: [], color: 'indigo' },
                 'finance': { name: '💰 النظام المالي', permissions: [], color: 'green' },
@@ -584,33 +573,72 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                 'maps': { name: '🗺️ الخرائط والمرافق', permissions: [], color: 'teal' },
                 'website': { name: '🌐 الموقع والاتصالات', permissions: [], color: 'cyan' },
                 'reports': { name: '📊 التقارير والأرشفة', permissions: [], color: 'pink' },
-                'settings': { name: '⚙️ الإعدادات', permissions: [], color: 'gray' },
-                'other': { name: '📁 أخرى', permissions: [], color: 'slate' }
+                'settings': { name: '⚙️ الإعدادات', permissions: [], color: 'gray' }
             };
 
             // توزيع الصلاحيات على الفئات
             permissions.forEach(perm => {
-                const module = perm.module_name || 'other';
+                const module = perm.module_name || '';
+                const permissionKey = perm.permission_key || '';
 
-                // تحديد الفئة المناسبة بناءً على اسم الوحدة
-                let category = 'other';
-                if (['core', 'hr', 'permissions', 'municipality', 'council'].includes(module)) {
+                // تحديد الفئة المناسبة بناءً على اسم الوحدة ومفتاح الصلاحية
+                let category = 'general_admin'; // افتراضي: الإدارة العامة
+                
+                // 🏛️ الإدارة العامة
+                if (['core', 'hr', 'permissions', 'municipality', 'council', 'users'].includes(module) ||
+                    permissionKey.includes('municipality') || permissionKey.includes('council') || 
+                    permissionKey.includes('hr') || permissionKey.includes('permissions') || 
+                    permissionKey.includes('users_')) {
                     category = 'general_admin';
-                } else if (['finance', 'budgets', 'suppliers', 'invoices', 'tax'].includes(module)) {
+                }
+                // 💰 النظام المالي
+                else if (['finance', 'budgets', 'suppliers', 'invoices', 'tax', 'currencies', 'donations', 'contributions'].includes(module) ||
+                         permissionKey.includes('finance') || permissionKey.includes('budget') || 
+                         permissionKey.includes('supplier') || permissionKey.includes('invoice') || 
+                         permissionKey.includes('tax') || permissionKey.includes('currency') ||
+                         permissionKey.includes('donation') || permissionKey.includes('contribution')) {
                     category = 'finance';
-                } else if (['projects', 'contracts', 'donors'].includes(module)) {
+                }
+                // 🏗️ المشاريع والعقود
+                else if (['projects', 'contracts', 'donors'].includes(module) ||
+                         permissionKey.includes('project') || permissionKey.includes('contract') || 
+                         permissionKey.includes('donor')) {
                     category = 'projects';
-                } else if (['citizens', 'complaints', 'permits', 'violations'].includes(module)) {
+                }
+                // 👥 خدمات المواطنين
+                else if (['citizens', 'complaints', 'permits', 'violations', 'building_permit'].includes(module) ||
+                         permissionKey.includes('citizen') || permissionKey.includes('complaint') || 
+                         permissionKey.includes('permit') || permissionKey.includes('violation')) {
                     category = 'citizens';
-                } else if (['services', 'vehicles', 'maintenance', 'waste', 'inventory'].includes(module)) {
+                }
+                // 🚚 الخدمات والصيانة
+                else if (['services', 'vehicles', 'maintenance', 'waste', 'inventory', 'drivers'].includes(module) ||
+                         permissionKey.includes('vehicle') || permissionKey.includes('maintenance') || 
+                         permissionKey.includes('waste') || permissionKey.includes('inventory') ||
+                         permissionKey.includes('driver')) {
                     category = 'services';
-                } else if (['maps', 'facilities'].includes(module)) {
+                }
+                // 🗺️ الخرائط والمرافق
+                else if (['maps', 'facilities'].includes(module) ||
+                         permissionKey.includes('map') || permissionKey.includes('facility')) {
                     category = 'maps';
-                } else if (['website', 'telegram', 'sms', 'notifications'].includes(module)) {
+                }
+                // 🌐 الموقع والاتصالات
+                else if (['website', 'telegram', 'sms', 'notifications', 'contact', 'public_content'].includes(module) ||
+                         permissionKey.includes('website') || permissionKey.includes('telegram') || 
+                         permissionKey.includes('sms') || permissionKey.includes('notification') ||
+                         permissionKey.includes('contact') || permissionKey.includes('public')) {
                     category = 'website';
-                } else if (['reports', 'archive'].includes(module)) {
+                }
+                // 📊 التقارير والأرشفة
+                else if (['reports', 'archive', 'tables'].includes(module) ||
+                         permissionKey.includes('report') || permissionKey.includes('archive') ||
+                         permissionKey.includes('table')) {
                     category = 'reports';
-                } else if (['settings', 'system'].includes(module)) {
+                }
+                // ⚙️ الإعدادات
+                else if (['settings', 'system'].includes(module) ||
+                         permissionKey.includes('setting') || permissionKey.includes('system')) {
                     category = 'settings';
                 }
 
@@ -619,10 +647,10 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
 
             let html = `<div class="space-y-4">`;
 
-            // عرض كل فئة مع صلاحياتها
+            // عرض كل فئة مع صلاحياتها (حتى لو كانت فارغة لعرض جميع الفئات)
             Object.keys(categories).forEach(catKey => {
                 const cat = categories[catKey];
-                if (cat.permissions.length === 0) return;
+                // إزالة الشرط لإظهار جميع الفئات حتى لو كانت فارغة
 
                 const checkedCount = cat.permissions.filter(p => p.granted == 1).length;
 
@@ -632,8 +660,9 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                             <div class="flex justify-between items-center">
                                 <div>
                                     <span class="text-lg font-bold text-gray-800">${cat.name}</span>
-                                    <span class="mr-2 text-sm text-gray-600">(${checkedCount}/${cat.permissions.length})</span>
+                                    <span class="mr-2 text-sm text-gray-600">${cat.permissions.length > 0 ? `(${checkedCount}/${cat.permissions.length})` : '(0/0)'}</span>
                                 </div>
+                                ${cat.permissions.length > 0 ? `
                                 <div class="flex gap-2">
                                     <button class="bg-${cat.color}-500 hover:bg-${cat.color}-600 text-white px-3 py-1.5 rounded-lg text-sm transition"
                                             onclick="selectAllCategory('${catKey}')">
@@ -644,14 +673,19 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                                         ✗ إلغاء الكل
                                     </button>
                                 </div>
+                                ` : '<div class="text-sm text-gray-400">لا توجد صلاحيات في هذه الفئة</div>'}
                             </div>
                         </div>
                         <div class="p-4 space-y-2">
                 `;
 
-                cat.permissions.forEach(perm => {
-                    html += createPermissionHTML(perm, catKey);
-                });
+                if (cat.permissions.length > 0) {
+                    cat.permissions.forEach(perm => {
+                        html += createPermissionHTML(perm, catKey);
+                    });
+                } else {
+                    html += `<div class="text-center py-4 text-gray-400">لا توجد صلاحيات متاحة في هذه الفئة</div>`;
+                }
 
                 html += `
                         </div>
