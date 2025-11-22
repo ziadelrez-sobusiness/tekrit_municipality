@@ -182,18 +182,27 @@ try {
             
             // إضافة أزرار تفاعلية
             $baseUrl = getBaseUrl();
+            $trackComplaintUrl = $baseUrl . '/public/track-complaint.php';
+            $trackRequestUrl = $baseUrl . '/public/track-request.php';
+            $dashboardUrl = $baseUrl . '/public/citizen-dashboard.php?code=' . urlencode($accessCode);
+            
+            webhookLog("🔗 Base URL: " . $baseUrl);
+            webhookLog("🔍 تتبع شكواي URL: " . $trackComplaintUrl);
+            webhookLog("🔍 تتبع طلباتي URL: " . $trackRequestUrl);
+            webhookLog("👤 حسابي الشخصي URL: " . $dashboardUrl);
+            
             $keyboard = [
                 'inline_keyboard' => [
                     [
-                        ['text' => '👤 حسابي الشخصي', 'url' => $baseUrl . '/public/citizen-dashboard.php?code=' . urlencode($accessCode)]
+                        ['text' => '👤 حسابي الشخصي', 'url' => $dashboardUrl]
                     ],
                     [
                         ['text' => '📝 تقديم طلب', 'url' => $baseUrl . '/public/citizen-requests.php'],
-                        ['text' => '🔍 تتبع طلباتي', 'url' => $baseUrl . '/public/track-request.php']
+                        ['text' => '🔍 تتبع طلباتي', 'url' => $trackRequestUrl]
                     ],
                     [
                         ['text' => '📢 تقديم شكوى', 'url' => $baseUrl . '/public/citizen-complaints.php'],
-                        ['text' => '🔍 تتبع شكواي', 'url' => $baseUrl . '/public/track-complaint.php']
+                        ['text' => '🔍 تتبع شكواي', 'url' => $trackComplaintUrl]
                     ]
                 ]
             ];
@@ -202,6 +211,7 @@ try {
             webhookLog("Message preview: " . substr($responseMessage, 0, 100) . "...");
             webhookLog("Has keyboard: " . ($keyboard ? 'YES' : 'NO'));
             webhookLog("Bot Token exists: " . (!empty($botToken) ? 'YES' : 'NO'));
+            webhookLog("Keyboard JSON: " . json_encode($keyboard, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
             
             $sendResult = sendTelegramMessage($botToken, $chatId, $responseMessage, $keyboard);
             
@@ -474,7 +484,14 @@ function sendPendingMessages($db, $botToken, $citizenId, $chatId) {
  */
 function getBaseUrl() {
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    return $protocol . '://' . $host . '/tekrit_municipality';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8080';
+    $basePath = '/tekrit_municipality';
+    
+    // التأكد من أن المنفذ موجود في localhost
+    if (strpos($host, 'localhost') !== false && strpos($host, ':') === false) {
+        $host = 'localhost:8080';
+    }
+    
+    return $protocol . '://' . $host . $basePath;
 }
 
