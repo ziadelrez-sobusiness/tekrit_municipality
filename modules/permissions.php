@@ -549,6 +549,7 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
         }
 
         function loadUserPermissions(userId) {
+            console.log('🔵 بدء تحميل الصلاحيات للمستخدم:', userId);
             showLoading();
 
             fetch('permissions.php', {
@@ -558,17 +559,32 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
                 },
                 body: `action=get_user_permissions&user_id=${userId}`
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    userPermissions = data.permissions;
-                    displayPermissions(data.permissions);
-                    document.getElementById('saveBtn').style.display = 'flex';
-                } else {
-                    throw new Error(data.message);
+            .then(response => {
+                console.log('🔵 استجابة السيرفر:', response);
+                return response.text();
+            })
+            .then(text => {
+                console.log('🔵 النص المستلم:', text.substring(0, 500));
+                try {
+                    const data = JSON.parse(text);
+                    console.log('🔵 البيانات المحولة:', data);
+
+                    if (data.success) {
+                        console.log('✅ نجح! عدد الصلاحيات:', data.permissions.length);
+                        userPermissions = data.permissions;
+                        displayPermissions(data.permissions);
+                        document.getElementById('saveBtn').style.display = 'flex';
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (e) {
+                    console.error('❌ خطأ في تحويل JSON:', e);
+                    console.error('النص الكامل:', text);
+                    throw new Error('الاستجابة ليست JSON صحيح: ' + text.substring(0, 100));
                 }
             })
             .catch(error => {
+                console.error('❌ خطأ:', error);
                 showError('خطأ في تحميل الصلاحيات: ' + error.message);
             })
             .finally(() => {
@@ -577,6 +593,9 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
         }
 
         function displayPermissions(permissions) {
+            console.log('🟢 displayPermissions called with', permissions.length, 'permissions');
+            console.log('🟢 أول صلاحية:', permissions[0]);
+
             // أسماء الفئات بالعربية (مطابقة تماماً للقائمة الرئيسية)
             const categoryNames = {
                 'general_admin': { name: '🏛️ الإدارة العامة', color: 'indigo' },
@@ -730,7 +749,10 @@ $stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
 
             html += `</div>`;
 
+            console.log('🟢 طول HTML المولد:', html.length);
+            console.log('🟢 عدد الفئات:', Object.keys(categories).length);
             document.getElementById('permissionsContent').innerHTML = html;
+            console.log('✅ تم عرض الصلاحيات في الصفحة!');
         }
 
         function createPermissionHTML(perm, category) {
