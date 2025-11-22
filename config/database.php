@@ -16,7 +16,9 @@ class Database {
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch(PDOException $exception) {
-            echo "خطأ في الاتصال بقاعدة البيانات: " . $exception->getMessage();
+            // لا نعرض الخطأ مباشرة، نترك للكود المتصل التعامل معه
+            error_log("Database connection error: " . $exception->getMessage());
+            $this->conn = null;
         }
 
         return $this->conn;

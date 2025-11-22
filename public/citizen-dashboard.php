@@ -10,9 +10,32 @@ require_once '../config/database.php';
 $database = new Database();
 $db = $database->getConnection();
 
+if (!$db) {
+    ?>
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>خطأ في الاتصال</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50 p-8">
+        <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6 text-center">
+            <div class="text-5xl mb-4">⚠️</div>
+            <h1 class="text-xl font-bold text-red-600 mb-4">خطأ في الاتصال بقاعدة البيانات</h1>
+            <p class="text-gray-700 mb-4">يرجى التحقق من أن MySQL مشغل في XAMPP</p>
+            <a href="index.php" class="inline-block bg-blue-600 text-white px-4 py-2 rounded">العودة</a>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
 $error_message = '';
 $citizen = null;
 $requests = [];
+$complaints = [];
 $messages = [];
 $stats = [];
 
@@ -44,23 +67,49 @@ if (isset($_GET['code'])) {
             // جلب طلبات المواطن
             $requests = $accountHelper->getCitizenRequests($citizen['phone']);
             
-            // DEBUG: عرض معلومات التصحيح
-            error_log("=== DEBUG citizen-dashboard.php ===");
-            error_log("Citizen Phone: " . $citizen['phone']);
-            error_log("Requests Count: " . count($requests));
-            error_log("Requests Data: " . print_r($requests, true));
-            
-            // إذا لم يجد طلبات، جرّب البحث المباشر في قاعدة البيانات
-            if (empty($requests)) {
-                error_log("Trying direct database query...");
-                $directStmt = $db->query("SELECT COUNT(*) as total FROM citizen_requests");
-                $totalRequests = $directStmt->fetch(PDO::FETCH_ASSOC)['total'];
-                error_log("Total requests in database: " . $totalRequests);
+            // جلب شكاوى المواطن
+            try {
+                $originalPhone = $citizen['phone'] ?? '';
                 
-                // جلب جميع أرقام الهواتف
-                $phonesStmt = $db->query("SELECT DISTINCT citizen_phone FROM citizen_requests LIMIT 10");
-                $allPhones = $phonesStmt->fetchAll(PDO::FETCH_COLUMN);
-                error_log("Sample phones in database: " . print_r($allPhones, true));
+                error_log("=== Fetching Complaints Debug ===");
+                error_log("Citizen ID: " . ($citizen['id'] ?? 'NULL'));
+                error_log("Citizen Phone: " . $originalPhone);
+                
+                // استخدام استعلام بسيط جداً أولاً (بدون subquery)
+                $sql = "SELECT * FROM complaints WHERE citizen_id = ? OR citizen_phone = ? ORDER BY created_at DESC LIMIT 50";
+                
+                error_log("SQL Query (Simple): " . $sql);
+                error_log("Params: citizen_id=" . ($citizen['id'] ?? 'NULL') . ", citizen_phone=" . $originalPhone);
+                
+                $complaintsStmt = $db->prepare($sql);
+                $complaintsStmt->execute([$citizen['id'], $originalPhone]);
+                $complaints = $complaintsStmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                error_log("Found " . count($complaints) . " complaints (simple query)");
+                
+                // إضافة category_display و updates_count يدوياً
+                foreach ($complaints as &$complaint) {
+                    $complaint['category_display'] = $complaint['category'] ?? $complaint['complaint_type'] ?? 'غير محدد';
+                    
+                    // جلب عدد التحديثات
+                    try {
+                        $updatesStmt = $db->prepare("SELECT COUNT(*) as count FROM complaint_updates WHERE complaint_id = ? AND is_visible_to_citizen = 1");
+                        $updatesStmt->execute([$complaint['id']]);
+                        $updatesResult = $updatesStmt->fetch(PDO::FETCH_ASSOC);
+                        $complaint['updates_count'] = $updatesResult['count'] ?? 0;
+                    } catch (Exception $e) {
+                        $complaint['updates_count'] = 0;
+                    }
+                }
+                unset($complaint); // إزالة المرجع
+                
+                if (!empty($complaints)) {
+                    error_log("First complaint ID: " . $complaints[0]['id']);
+                }
+            } catch (Exception $e) {
+                error_log("Error fetching complaints: " . $e->getMessage());
+                error_log("Stack trace: " . $e->getTraceAsString());
+                $complaints = [];
             }
             
             // جلب رسائل المواطن
@@ -68,6 +117,15 @@ if (isset($_GET['code'])) {
             
             // جلب الإحصائيات
             $stats = $accountHelper->getCitizenStats($citizen['phone']);
+            
+            // إضافة إحصائيات الشكاوى
+            $stats['total_complaints'] = count($complaints);
+            $stats['active_complaints'] = count(array_filter($complaints, function($c) {
+                return in_array($c['status'], ['جديدة', 'قيد المراجعة', 'قيد المعالجة']);
+            }));
+            $stats['completed_complaints'] = count(array_filter($complaints, function($c) {
+                return $c['status'] === 'مكتملة';
+            }));
             
         } else {
             $error_message = $accountResult['error'] ?? "رمز الدخول غير صحيح";
@@ -84,8 +142,63 @@ if (isset($_GET['code'])) {
     if ($accountResult['success']) {
         $citizen = $accountResult['account'];
         $requests = $accountHelper->getCitizenRequests($citizen['phone']);
+        
+        // جلب شكاوى المواطن
+        try {
+            $originalPhone = $citizen['phone'] ?? '';
+            
+            error_log("=== Fetching Complaints Debug (Session) ===");
+            error_log("Citizen ID: " . ($citizen['id'] ?? 'NULL'));
+            error_log("Citizen Phone: " . $originalPhone);
+            
+            // استخدام استعلام بسيط جداً أولاً (بدون subquery)
+            $sql = "SELECT * FROM complaints WHERE citizen_id = ? OR citizen_phone = ? ORDER BY created_at DESC LIMIT 50";
+            
+            error_log("SQL Query (Session, Simple): " . $sql);
+            error_log("Params (Session): citizen_id=" . ($citizen['id'] ?? 'NULL') . ", citizen_phone=" . $originalPhone);
+            
+            $complaintsStmt = $db->prepare($sql);
+            $complaintsStmt->execute([$citizen['id'], $originalPhone]);
+            $complaints = $complaintsStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Found " . count($complaints) . " complaints (Session, simple query)");
+            
+            // إضافة category_display و updates_count يدوياً
+            foreach ($complaints as &$complaint) {
+                $complaint['category_display'] = $complaint['category'] ?? $complaint['complaint_type'] ?? 'غير محدد';
+                
+                // جلب عدد التحديثات
+                try {
+                    $updatesStmt = $db->prepare("SELECT COUNT(*) as count FROM complaint_updates WHERE complaint_id = ? AND is_visible_to_citizen = 1");
+                    $updatesStmt->execute([$complaint['id']]);
+                    $updatesResult = $updatesStmt->fetch(PDO::FETCH_ASSOC);
+                    $complaint['updates_count'] = $updatesResult['count'] ?? 0;
+                } catch (Exception $e) {
+                    $complaint['updates_count'] = 0;
+                }
+            }
+            unset($complaint); // إزالة المرجع
+            
+            if (!empty($complaints)) {
+                error_log("First complaint ID (Session): " . $complaints[0]['id']);
+            }
+        } catch (Exception $e) {
+            error_log("Error fetching complaints: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $complaints = [];
+        }
+        
         $messages = $accountHelper->getCitizenMessages($citizen['id']);
         $stats = $accountHelper->getCitizenStats($citizen['phone']);
+        
+        // إضافة إحصائيات الشكاوى
+        $stats['total_complaints'] = count($complaints);
+        $stats['active_complaints'] = count(array_filter($complaints, function($c) {
+            return in_array($c['status'], ['جديدة', 'قيد المراجعة', 'قيد المعالجة']);
+        }));
+        $stats['completed_complaints'] = count(array_filter($complaints, function($c) {
+            return $c['status'] === 'مكتملة';
+        }));
     } else {
         session_destroy();
         $error_message = "انتهت صلاحية الجلسة. يرجى إدخال رمز الدخول مرة أخرى.";
@@ -185,7 +298,7 @@ if (isset($_GET['code'])) {
                 </div>
                 
                 <!-- الإحصائيات -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div class="bg-blue-50 rounded-lg p-4 text-center">
                         <div class="text-3xl font-bold text-blue-600"><?= $stats['total_requests'] ?? count($requests) ?></div>
                         <div class="text-sm text-blue-800">إجمالي الطلبات</div>
@@ -194,13 +307,13 @@ if (isset($_GET['code'])) {
                         <div class="text-3xl font-bold text-green-600"><?= $stats['active_requests'] ?? 0 ?></div>
                         <div class="text-sm text-green-800">طلبات نشطة</div>
                     </div>
-                    <div class="bg-yellow-50 rounded-lg p-4 text-center">
-                        <div class="text-3xl font-bold text-yellow-600"><?= $stats['completed_requests'] ?? 0 ?></div>
-                        <div class="text-sm text-yellow-800">مكتملة</div>
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-red-600"><?= $stats['total_complaints'] ?? count($complaints) ?></div>
+                        <div class="text-sm text-red-800">إجمالي الشكاوى</div>
                     </div>
-                    <div class="bg-purple-50 rounded-lg p-4 text-center">
-                        <div class="text-3xl font-bold text-purple-600"><?= count($messages) ?></div>
-                        <div class="text-sm text-purple-800">الرسائل</div>
+                    <div class="bg-orange-50 rounded-lg p-4 text-center">
+                        <div class="text-3xl font-bold text-orange-600"><?= $stats['active_complaints'] ?? 0 ?></div>
+                        <div class="text-sm text-orange-800">شكاوى نشطة</div>
                     </div>
                 </div>
                 
@@ -272,6 +385,110 @@ if (isset($_GET['code'])) {
                                     <a href="track-request.php?tracking=<?= urlencode($request['tracking_number']) ?>" 
                                        class="inline-block bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition">
                                         🔍 تتبع
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- الشكاوى -->
+            <div id="complaints" class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">📢 شكواي</h2>
+                    <a href="citizen-complaints.php" class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 transition text-sm">
+                        ➕ شكوى جديدة
+                    </a>
+                </div>
+                
+                <?php 
+                // Debug: عرض معلومات التشخيص (يمكن إزالة true لإخفاءه)
+                if (isset($_GET['debug'])) {
+                    echo "<div class='bg-yellow-50 border border-yellow-400 rounded p-4 mb-4 text-sm'>";
+                    echo "<strong>🔍 Debug Info:</strong><br>";
+                    echo "عدد الشكاوى في المتغير: " . count($complaints) . "<br>";
+                    echo "Citizen ID: " . ($citizen['id'] ?? 'N/A') . "<br>";
+                    echo "Citizen Phone: " . ($citizen['phone'] ?? 'N/A') . "<br>";
+                    echo "Is empty: " . (empty($complaints) ? 'YES' : 'NO') . "<br>";
+                    if (!empty($complaints)) {
+                        echo "<strong>الشكاوى:</strong><br>";
+                        echo "<pre class='mt-2 text-xs bg-white p-2 rounded overflow-auto max-h-64'>";
+                        print_r($complaints);
+                        echo "</pre>";
+                    } else {
+                        echo "<strong class='text-red-600'>⚠️ لا توجد شكاوى في المتغير \$complaints</strong><br>";
+                        // محاولة جلب مباشرة
+                        try {
+                            $testStmt = $db->prepare("SELECT * FROM complaints WHERE citizen_id = ? OR citizen_phone = ? LIMIT 5");
+                            $testStmt->execute([$citizen['id'], $citizen['phone']]);
+                            $testComplaints = $testStmt->fetchAll(PDO::FETCH_ASSOC);
+                            echo "<strong>اختبار مباشر:</strong> وجد " . count($testComplaints) . " شكوى<br>";
+                            if (!empty($testComplaints)) {
+                                echo "<pre class='mt-2 text-xs bg-white p-2 rounded overflow-auto max-h-64'>";
+                                print_r($testComplaints);
+                                echo "</pre>";
+                            }
+                        } catch (Exception $e) {
+                            echo "خطأ في الاختبار المباشر: " . $e->getMessage();
+                        }
+                    }
+                    echo "</div>";
+                }
+                ?>
+                
+                <?php if (empty($complaints)): ?>
+                    <div class="text-center py-12">
+                        <div class="text-6xl mb-4">📭</div>
+                        <p class="text-xl text-gray-600">لا توجد شكاوى حتى الآن</p>
+                        <a href="citizen-complaints.php" class="inline-block mt-4 bg-red-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700 transition">
+                            ➕ تقديم شكوى جديدة
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <div class="space-y-4">
+                        <?php foreach ($complaints as $complaint): ?>
+                            <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-red-400 transition">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-800 mb-1">
+                                            <?= htmlspecialchars($complaint['subject']) ?>
+                                        </h3>
+                                        <p class="text-sm text-gray-600">
+                                            🔢 <?= htmlspecialchars($complaint['complaint_number'] ?? '#' . $complaint['id']) ?>
+                                        </p>
+                                    </div>
+                                    <span class="px-3 py-1 rounded-full text-sm font-bold 
+                                        <?php 
+                                        switch($complaint['status']) {
+                                            case 'جديدة': echo 'bg-red-100 text-red-800'; break;
+                                            case 'قيد المراجعة': echo 'bg-yellow-100 text-yellow-800'; break;
+                                            case 'قيد المعالجة': echo 'bg-blue-100 text-blue-800'; break;
+                                            case 'مكتملة': echo 'bg-green-100 text-green-800'; break;
+                                            case 'مؤجلة': echo 'bg-gray-100 text-gray-800'; break;
+                                            case 'مرفوضة': echo 'bg-red-100 text-red-800'; break;
+                                            default: echo 'bg-gray-100 text-gray-800';
+                                        }
+                                        ?>">
+                                        <?= htmlspecialchars($complaint['status']) ?>
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                                    <?php 
+                                    // دعم أسماء الأعمدة المختلفة: category, complaint_type, category_display
+                                    $category = $complaint['category_display'] ?? $complaint['category'] ?? $complaint['complaint_type'] ?? 'غير محدد';
+                                    $dateField = $complaint['created_at'] ?? $complaint['date_submitted'] ?? 'now';
+                                    ?>
+                                    <span>📂 <?= htmlspecialchars($category) ?></span>
+                                    <span>📅 <?= date('Y-m-d', strtotime($dateField)) ?></span>
+                                    <?php if (isset($complaint['updates_count']) && $complaint['updates_count'] > 0): ?>
+                                        <span>💬 <?= $complaint['updates_count'] ?> تحديث</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="flex gap-2">
+                                    <a href="citizen-complaint-details.php?number=<?= urlencode($complaint['complaint_number'] ?? $complaint['id']) ?>" 
+                                       class="inline-block bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition">
+                                        👁️ التفاصيل الكاملة
                                     </a>
                                 </div>
                             </div>

@@ -12,7 +12,17 @@ $success_message = '';
 
 // معالجة البحث عن الطلب
 if ($_SERVER['REQUEST_METHOD'] == 'POST' || isset($_GET['tracking_number'])) {
-    $tracking_number = trim($_POST['tracking_number'] ?? $_GET['tracking_number'] ?? '');
+    // دعم الطريقتين: حقول منفصلة أو رقم كامل
+    if (isset($_POST['prefix']) && isset($_POST['year']) && isset($_POST['number'])) {
+        // بناء رقم التتبع من الحقول المنفصلة
+        $prefix = trim($_POST['prefix'] ?? 'REQ-');
+        $year = trim($_POST['year'] ?? '');
+        $number = trim($_POST['number'] ?? '');
+        $tracking_number = $prefix . $year . '-' . str_pad($number, 5, '0', STR_PAD_LEFT);
+    } else {
+        // الطريقة القديمة: رقم كامل
+        $tracking_number = trim($_POST['tracking_number'] ?? $_GET['tracking_number'] ?? '');
+    }
     
     if (!empty($tracking_number)) {
         try {
@@ -456,18 +466,68 @@ function getProgressPercentage($status) {
                         <h2 class="text-xl font-semibold text-gray-900">البحث عن الطلب</h2>
                     </div>
                     <div class="card-body">
-                        <form method="POST">
-                            <div class="form-group">
-                                <label for="tracking_number" class="form-label required">رقم التتبع</label>
-                                <input type="text" id="tracking_number" name="tracking_number" required
-                                       class="form-control" placeholder="مثال: REQ-2024-12345"
-                                       value="<?= htmlspecialchars($_POST['tracking_number'] ?? '') ?>">
-                                <div class="form-text">أدخل رقم التتبع الذي حصلت عليه عند تقديم الطلب</div>
+                        <form method="POST" id="tracking-form">
+                            <div class="mb-4" dir="ltr">
+                                <div class="flex items-end gap-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="text-sm text-blue-800 mb-2 font-bold text-lg">REQ-</div>
+                                    </div>
+                                    <div class="form-group flex-1">
+                                        <label for="year" class="form-label required">السنة</label>
+                                        <input type="text" id="year" name="year" required
+                                               class="form-control text-center font-mono"
+                                               placeholder="2025"
+                                               maxlength="4"
+                                               pattern="[0-9]{4}"
+                                               value="<?= htmlspecialchars($_POST['year'] ?? date('Y')) ?>">
+                                        <div class="form-text text-xs">4 أرقام</div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <div class="text-sm text-gray-600 mb-2 font-bold text-lg">-</div>
+                                    </div>
+                                    <div class="form-group flex-1">
+                                        <label for="number" class="form-label required">الرقم</label>
+                                        <input type="text" id="number" name="number" required
+                                               class="form-control text-center font-mono"
+                                               placeholder="00001"
+                                               maxlength="5"
+                                               pattern="[0-9]+"
+                                               value="<?= htmlspecialchars($_POST['number'] ?? '') ?>">
+                                        <div class="form-text text-xs">5 أرقام</div>
+                                    </div>
+                                </div>
                             </div>
+                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="text-sm text-blue-800 text-center">
+                                    <strong>رقم التتبع الكامل:</strong>
+                                    <span id="full-tracking-number" class="font-mono text-lg font-bold" dir="ltr">REQ-<?= date('Y') ?>-00000</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="prefix" name="prefix" value="REQ-">
                             <button type="submit" class="btn btn-primary w-full">البحث</button>
                         </form>
                     </div>
                 </div>
+                
+                <script>
+                    // تحديث رقم التتبع الكامل تلقائياً
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const prefix = 'REQ-';
+                        const year = document.getElementById('year');
+                        const number = document.getElementById('number');
+                        const fullNumber = document.getElementById('full-tracking-number');
+                        
+                        function updateFullNumber() {
+                            const y = year.value || '<?= date('Y') ?>';
+                            const n = number.value ? String(number.value).padStart(5, '0') : '00000';
+                            fullNumber.textContent = prefix + y + '-' + n;
+                        }
+                        
+                        year.addEventListener('input', updateFullNumber);
+                        number.addEventListener('input', updateFullNumber);
+                        updateFullNumber();
+                    });
+                </script>
             <?php endif; ?>
 
             <!-- Messages -->

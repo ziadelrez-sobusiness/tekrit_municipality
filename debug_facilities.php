@@ -114,22 +114,76 @@ try {
     $url = "http://localhost:8080/tekrit_municipality/modules/facilities_api.php?action=get_facilities";
     echo "<p>محاولة الاتصال بـ: <code>{$url}</code></p>";
 
-    $response = @file_get_contents($url);
+    // محاولة استخدام cURL أولاً (أكثر موثوقية)
+    $response = false;
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($response === false || !empty($curl_error)) {
+            echo "<p class='error'>خطأ cURL: " . htmlspecialchars($curl_error) . "</p>";
+            $response = false;
+        } elseif ($http_code !== 200) {
+            echo "<p class='error'>HTTP Code: " . $http_code . "</p>";
+        }
+    }
+    
+    // إذا فشل cURL، جرب file_get_contents
+    if ($response === false && ini_get('allow_url_fopen')) {
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 10,
+                'ignore_errors' => true
+            ]
+        ]);
+        $response = @file_get_contents($url, false, $context);
+    }
 
-    if ($response) {
-        $data = json_decode($response, true);
-        if ($data && isset($data['success'])) {
-            if ($data['success']) {
-                echo "<p class='success'>✅ API يعمل! عدد المرافق المعادة: " . count($data['facilities']) . "</p>";
-            } else {
-                echo "<p class='error'>❌ API يعمل لكن مع خطأ: " . ($data['error'] ?? 'غير معروف') . "</p>";
-            }
-        } else {
-            echo "<p class='error'>❌ الاستجابة ليست JSON صحيح</p>";
-            echo "<pre>" . htmlspecialchars(substr($response, 0, 500)) . "</pre>";
+    if ($response === false) {
+        $error = error_get_last();
+        echo "<p class='error'>❌ فشل الاتصال بـ API</p>";
+        if ($error) {
+            echo "<p class='error'>تفاصيل الخطأ: " . htmlspecialchars($error['message']) . "</p>";
         }
     } else {
-        echo "<p class='error'>❌ فشل الاتصال بـ API</p>";
+        $data = json_decode($response, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            echo "<p class='error'>❌ الاستجابة ليست JSON صحيح</p>";
+            echo "<p>خطأ JSON: " . json_last_error_msg() . "</p>";
+            echo "<pre>" . htmlspecialchars(substr($response, 0, 500)) . "</pre>";
+        } elseif ($data && isset($data['success'])) {
+            if ($data['success']) {
+                $facilities_count = isset($data['facilities']) && is_array($data['facilities']) 
+                    ? count($data['facilities']) 
+                    : 0;
+                echo "<p class='success'>✅ API يعمل! عدد المرافق المعادة: " . $facilities_count . "</p>";
+                
+                if (isset($data['count'])) {
+                    echo "<p>عدد المرافق (من API): " . $data['count'] . "</p>";
+                }
+                
+                if ($facilities_count > 0 && isset($data['facilities'][0])) {
+                    echo "<h3>مثال على مرفق واحد:</h3>";
+                    echo "<pre>" . htmlspecialchars(json_encode($data['facilities'][0], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) . "</pre>";
+                }
+            } else {
+                echo "<p class='error'>❌ API يعمل لكن مع خطأ: " . htmlspecialchars($data['error'] ?? 'غير معروف') . "</p>";
+                if (isset($data['debug_info'])) {
+                    echo "<pre>" . htmlspecialchars(json_encode($data['debug_info'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) . "</pre>";
+                }
+            }
+        } else {
+            echo "<p class='error'>❌ الاستجابة غير متوقعة</p>";
+            echo "<pre>" . htmlspecialchars(substr($response, 0, 500)) . "</pre>";
+        }
     }
 } catch (Exception $e) {
     echo "<p class='error'>خطأ: " . $e->getMessage() . "</p>";

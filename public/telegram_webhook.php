@@ -156,13 +156,29 @@ try {
             $stmt->execute([$account['phone'] ?? '']);
             $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             
+            // جلب شكاوى المواطن
+            $complaintsStmt = $db->prepare("
+                SELECT COUNT(*) as total_complaints,
+                       SUM(CASE WHEN status IN ('جديدة', 'قيد المراجعة', 'قيد المعالجة') THEN 1 ELSE 0 END) as active_complaints
+                FROM complaints 
+                WHERE citizen_id = ? OR citizen_phone = ?
+            ");
+            $complaintsStmt->execute([$account['id'], $account['phone'] ?? '']);
+            $complaintsStats = $complaintsStmt->fetch(PDO::FETCH_ASSOC);
+            
             if ($stats && $stats['total_requests'] > 0) {
                 $responseMessage .= "📊 إحصائيات طلباتك:\n";
                 $responseMessage .= "• إجمالي الطلبات: " . $stats['total_requests'] . "\n";
                 $responseMessage .= "• الطلبات النشطة: " . ($stats['active_requests'] ?? 0) . "\n\n";
             }
             
-            $responseMessage .= "🔔 ستستلم الآن جميع الإشعارات المتعلقة بطلباتك.";
+            if ($complaintsStats && $complaintsStats['total_complaints'] > 0) {
+                $responseMessage .= "📢 إحصائيات شكواك:\n";
+                $responseMessage .= "• إجمالي الشكاوى: " . $complaintsStats['total_complaints'] . "\n";
+                $responseMessage .= "• الشكاوى النشطة: " . ($complaintsStats['active_complaints'] ?? 0) . "\n\n";
+            }
+            
+            $responseMessage .= "🔔 ستستلم الآن جميع الإشعارات المتعلقة بطلباتك وشكواك.";
             
             // إضافة أزرار تفاعلية
             $baseUrl = getBaseUrl();
@@ -174,6 +190,10 @@ try {
                     [
                         ['text' => '📝 تقديم طلب', 'url' => $baseUrl . '/public/citizen-requests.php'],
                         ['text' => '🔍 تتبع طلباتي', 'url' => $baseUrl . '/public/track-request.php']
+                    ],
+                    [
+                        ['text' => '📢 تقديم شكوى', 'url' => $baseUrl . '/public/citizen-complaints.php'],
+                        ['text' => '🔍 تتبع شكواي', 'url' => $baseUrl . '/public/track-complaint.php']
                     ]
                 ]
             ];

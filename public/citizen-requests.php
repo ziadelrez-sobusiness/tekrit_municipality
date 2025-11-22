@@ -55,16 +55,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $hasSubmitRequest) {
             error_log("Starting database transaction...");
             $db->beginTransaction();
             
-            // إنشاء رقم تتبع فريد
-            $tracking_number = 'REQ-' . date('Y') . '-' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-            
-            // التحقق من عدم تكرار رقم التتبع
-            $check_stmt = $db->prepare("SELECT COUNT(*) FROM citizen_requests WHERE tracking_number = ?");
-            $check_stmt->execute([$tracking_number]);
-            while ($check_stmt->fetchColumn() > 0) {
-                $tracking_number = 'REQ-' . date('Y') . '-' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-                $check_stmt->execute([$tracking_number]);
-            }
+            // إنشاء رقم تتبع فريد بالتنسيق REQ-YYYY-XXXXX
+            $year = date('Y');
+            // الحصول على آخر رقم مستخدم في هذه السنة
+            $lastNumberStmt = $db->prepare("
+                SELECT MAX(CAST(SUBSTRING(tracking_number, 9) AS UNSIGNED)) as last_number
+                FROM citizen_requests 
+                WHERE tracking_number LIKE CONCAT('REQ-', ?, '-%')
+            ");
+            $lastNumberStmt->execute([$year]);
+            $lastNumber = $lastNumberStmt->fetch(PDO::FETCH_ASSOC)['last_number'] ?? 0;
+            $nextNumber = $lastNumber + 1;
+            $tracking_number = 'REQ-' . $year . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
             
             // إدراج الطلب الأساسي
             $stmt = $db->prepare("

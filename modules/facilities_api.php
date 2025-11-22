@@ -313,7 +313,14 @@ try {
 
 // إرسال الاستجابة
 if ($useApiSecurity && class_exists('ApiSecurity')) {
-    ApiSecurity::sendSuccess($response);
+    // ApiSecurity::sendSuccess() يغلف البيانات في 'data'، لكن نحتاج للبنية الأصلية
+    // الحل: نمرر البيانات في additional parameter للحفاظ على البنية
+    $dataToSend = $response;
+    unset($dataToSend['success']); // إزالة success لأن ApiSecurity يضيفها تلقائياً
+    
+    // إرسال البيانات - additional parameters ستدمج مع response
+    // النتيجة: {success: true, data: {...}, facilities: [...], count: ...}
+    ApiSecurity::sendSuccess([], 200, $dataToSend);
 } else {
     echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 }

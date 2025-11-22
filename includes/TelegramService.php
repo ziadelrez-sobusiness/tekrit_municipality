@@ -266,6 +266,183 @@ class TelegramService {
     }
     
     /**
+     * إرسال إشعار عند تقديم شكوى جديدة
+     */
+    public function sendComplaintNotification($citizenData, $complaintData, $accessCode) {
+        error_log("=== sendComplaintNotification CALLED ===");
+        error_log("Enabled: " . ($this->enabled ? 'YES' : 'NO'));
+        error_log("Bot Token: " . (empty($this->botToken) ? 'EMPTY' : 'SET'));
+        
+        if (!$this->enabled || empty($this->botToken)) {
+            error_log("❌ TelegramService::sendComplaintNotification - Bot not enabled or token missing");
+            return ['success' => false, 'message' => 'Telegram Bot غير مفعّل'];
+        }
+        
+        // إذا لم يكن المواطن مربوطاً بـ Telegram، لا نرسل
+        if (empty($citizenData['telegram_chat_id'])) {
+            error_log("⚠️ Citizen not linked to Telegram, skipping notification");
+            return ['success' => false, 'message' => 'المواطن غير مربوط بـ Telegram'];
+        }
+        
+        try {
+            // الحصول على قالب الرسالة
+            $stmt = $this->db->prepare("
+                SELECT setting_value 
+                FROM website_settings 
+                WHERE setting_key = 'telegram_complaint_template'
+            ");
+            $stmt->execute();
+            $template = $stmt->fetchColumn();
+            
+            // بناء الروابط
+            $baseUrl = $this->getBaseUrl();
+            $dashboardUrl = $baseUrl . '/public/citizen-dashboard.php?code=' . urlencode($accessCode ?? '');
+            
+            if (!$template) {
+                // قالب افتراضي
+                $template = "✅ مرحباً بك في بلدية تكريت - عكار!\n\n📢 تم تقديم شكواك بنجاح:\n\n🔢 رقم الشكوى: {complaint_number}\n📝 الموضوع: {subject}\n📂 الفئة: {category}\n📅 التاريخ: {date}\n\n💡 يمكنك تتبع شكواك والدخول لحسابك الشخصي باستخدام الرمز الثابت:\n🔐 {access_code}\n\nسيتم إبلاغك بأي تحديثات على شكواك.\n\n🔗 حسابك الشخصي:\n{dashboard_url}";
+            }
+            
+            // استبدال المتغيرات
+            $message = str_replace(
+                [
+                    '{complaint_number}', 
+                    '{subject}', 
+                    '{category}', 
+                    '{date}', 
+                    '{access_code}', 
+                    '{citizen_name}',
+                    '{dashboard_url}'
+                ],
+                [
+                    $complaintData['complaint_number'] ?? '',
+                    $complaintData['subject'] ?? '',
+                    $complaintData['category'] ?? '',
+                    date('Y-m-d'),
+                    $accessCode ?? '',
+                    $citizenData['name'] ?? '',
+                    $dashboardUrl
+                ],
+                $template
+            );
+            
+            // إضافة أزرار تفاعلية (فقط إذا لم يكن localhost)
+            $keyboard = null;
+            if (strpos($baseUrl, 'localhost') === false && strpos($baseUrl, '127.0.0.1') === false) {
+                $keyboard = [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '👤 حسابي الشخصي', 'url' => $dashboardUrl]
+                        ]
+                    ]
+                ];
+            } else {
+                $message .= "\n\n🔗 حسابك الشخصي:\n" . $dashboardUrl;
+            }
+            
+            $logId = $this->logMessage(
+                $citizenData['citizen_id'],
+                $citizenData['telegram_chat_id'],
+                $complaintData['complaint_id'] ?? null,
+                'complaint_submitted',
+                $message
+            );
+            
+            $sent = $this->sendMessage($citizenData['telegram_chat_id'], $message, $keyboard);
+            
+            if ($sent['success']) {
+                $this->updateMessageStatus($logId, 'sent');
+                return ['success' => true];
+            } else {
+                $errorMsg = $sent['error'] ?? 'فشل الإرسال';
+                $this->updateMessageStatus($logId, 'failed', $errorMsg);
+                return ['success' => false, 'error' => $errorMsg];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Telegram Complaint Notification Error: " . $e->getMessage());
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * إرسال إشعار عند تحديث حالة الشكوى
+     */
+    public function sendComplaintStatusUpdate($citizenData, $complaintData, $newStatus, $notes = '') {
+        if (!$this->enabled || empty($this->botToken)) {
+            return ['success' => false, 'message' => 'Telegram Bot غير مفعّل'];
+        }
+        
+        if (empty($citizenData['telegram_chat_id'])) {
+            return ['success' => false, 'message' => 'المواطن غير مربوط بـ Telegram'];
+        }
+        
+        try {
+            $stmt = $this->db->prepare("
+                SELECT setting_value 
+                FROM website_settings 
+                WHERE setting_key = 'telegram_complaint_status_template'
+            ");
+            $stmt->execute();
+            $template = $stmt->fetchColumn();
+            
+            if (!$template) {
+                $template = "📢 تحديث حالة الشكوى\n\n🔢 {complaint_number}\n📝 {subject}\n\n🔄 الحالة: {new_status}\n\n💬 {notes}";
+            }
+            
+            $message = str_replace(
+                ['{complaint_number}', '{subject}', '{new_status}', '{notes}'],
+                [
+                    $complaintData['complaint_number'] ?? '',
+                    $complaintData['subject'] ?? '',
+                    $newStatus,
+                    $notes
+                ],
+                $template
+            );
+            
+            $baseUrl = $this->getBaseUrl();
+            $dashboardUrl = $baseUrl . '/public/citizen-dashboard.php?code=' . urlencode($citizenData['access_code'] ?? '');
+            
+            $keyboard = null;
+            if (strpos($baseUrl, 'localhost') === false && strpos($baseUrl, '127.0.0.1') === false) {
+                $keyboard = [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '👤 حسابي الشخصي', 'url' => $dashboardUrl]
+                        ]
+                    ]
+                ];
+            } else {
+                $message .= "\n\n🔗 حسابك الشخصي:\n" . $dashboardUrl;
+            }
+            
+            $logId = $this->logMessage(
+                $citizenData['citizen_id'],
+                $citizenData['telegram_chat_id'],
+                $complaintData['complaint_id'] ?? null,
+                'complaint_status_update',
+                $message
+            );
+            
+            $sent = $this->sendMessage($citizenData['telegram_chat_id'], $message, $keyboard);
+            
+            if ($sent['success']) {
+                $this->updateMessageStatus($logId, 'sent');
+                return ['success' => true];
+            } else {
+                $errorMsg = $sent['error'] ?? 'فشل الإرسال';
+                $this->updateMessageStatus($logId, 'failed', $errorMsg);
+                return ['success' => false, 'error' => $errorMsg];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Telegram Complaint Status Update Error: " . $e->getMessage());
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+    
+    /**
      * إرسال إشعار إداري عند تقديم طلب جديد
      */
     public function sendAdminNotification($requestData) {

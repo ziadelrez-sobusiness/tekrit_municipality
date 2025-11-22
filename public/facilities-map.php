@@ -109,15 +109,42 @@ $t = $texts[$lang];
     <!-- Leaflet CSS & JS (خريطة مفتوحة المصدر كبديل لـ Google Maps) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // تعطيل source maps لتجنب أخطاء CSP
+        if (typeof L !== 'undefined' && L.Icon && L.Icon.Default) {
+            L.Icon.Default.prototype._getIconUrl = L.Icon.Default.prototype._getIconUrl || function(name) {
+                return 'https://unpkg.com/leaflet@1.9.4/dist/images/' + name;
+            };
+        }
+    </script>
     
     <!-- Leaflet MarkerCluster -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script>
+        // تعطيل source maps لتجنب أخطاء CSP
+        if (typeof window !== 'undefined') {
+            // منع محاولات تحميل source maps
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('.map')) {
+                    return Promise.reject(new Error('Source map loading disabled'));
+                }
+                return originalFetch.apply(this, args);
+            };
+        }
+    </script>
     
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        #map { height: 70vh; min-height: 500px; }
+        #map { 
+            height: 70vh; 
+            min-height: 500px; 
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
         .facility-popup {
             max-width: 300px;
             font-family: 'Cairo', sans-serif;
@@ -175,6 +202,23 @@ $t = $texts[$lang];
         /* Map should have lower z-index */
         .leaflet-container {
             z-index: 1 !important;
+        }
+        
+        /* Ensure map container is visible */
+        #map {
+            background-color: #e5e7eb;
+        }
+        
+        /* Loading state for map */
+        .map-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 70vh;
+            min-height: 500px;
+            background-color: #f3f4f6;
+            color: #6b7280;
+            font-size: 18px;
         }
     </style>
 </head>
@@ -276,7 +320,14 @@ $t = $texts[$lang];
             </div>
             
             <!-- Map -->
-            <div id="map"></div>
+            <div id="map">
+                <div class="map-loading" id="mapLoading">
+                    <div class="text-center">
+                        <div class="loading-spinner"></div>
+                        <p class="mt-3"><?= $t['loading'] ?></p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Search Results (Mobile) -->
@@ -330,28 +381,73 @@ $t = $texts[$lang];
 
         // تهيئة الخريطة
         function initMap() {
-            // إنشاء الخريطة
-            map = L.map('map').setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
+            try {
+                // التحقق من وجود عنصر الخريطة
+                const mapElement = document.getElementById('map');
+                if (!mapElement) {
+                    console.error('❌ عنصر الخريطة غير موجود!');
+                    return;
+                }
 
-            // إضافة طبقة الخريطة (OpenStreetMap)
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19,
-            }).addTo(map);
+                // إخفاء رسالة التحميل
+                const mapLoading = document.getElementById('mapLoading');
+                if (mapLoading) {
+                    mapLoading.style.display = 'none';
+                }
 
-            // إنشاء مجموعة تجميع النقاط
-            if (MAP_CONFIG.enableClustering) {
-                markerClusterGroup = L.markerClusterGroup({
-                    chunkedLoading: true,
-                    spiderfyOnMaxZoom: true,
-                    showCoverageOnHover: false,
-                    zoomToBoundsOnClick: true
+                // إنشاء الخريطة
+                map = L.map('map', {
+                    center: MAP_CONFIG.center,
+                    zoom: MAP_CONFIG.zoom,
+                    zoomControl: true
                 });
-                map.addLayer(markerClusterGroup);
-            }
 
-            // تحميل المرافق
-            loadFacilities();
+                // إضافة طبقة الخريطة (OpenStreetMap)
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19,
+                }).addTo(map);
+
+                // إعادة رسم الخريطة بعد تحميلها بالكامل
+                setTimeout(() => {
+                    if (map) {
+                        map.invalidateSize();
+                        console.log('✅ تم إعادة رسم الخريطة');
+                    }
+                }, 300);
+
+                // إنشاء مجموعة تجميع النقاط
+                if (MAP_CONFIG.enableClustering) {
+                    markerClusterGroup = L.markerClusterGroup({
+                        chunkedLoading: true,
+                        spiderfyOnMaxZoom: true,
+                        showCoverageOnHover: false,
+                        zoomToBoundsOnClick: true
+                    });
+                    map.addLayer(markerClusterGroup);
+                }
+
+                console.log('✅ تم تهيئة الخريطة بنجاح');
+                
+                // تحميل المرافق بعد تهيئة الخريطة
+                setTimeout(() => {
+                    loadFacilities();
+                }, 500);
+            } catch (error) {
+                console.error('❌ خطأ في تهيئة الخريطة:', error);
+                const mapLoading = document.getElementById('mapLoading');
+                if (mapLoading) {
+                    mapLoading.innerHTML = `
+                        <div class="text-center">
+                            <p class="text-red-600 font-bold">❌ خطأ في تحميل الخريطة</p>
+                            <p class="text-sm mt-2">${error.message}</p>
+                            <button onclick="location.reload()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
+                                إعادة تحميل الصفحة
+                            </button>
+                        </div>
+                    `;
+                }
+            }
         }
 
         // تحميل المرافق من قاعدة البيانات
@@ -366,18 +462,78 @@ $t = $texts[$lang];
                     lang: MAP_CONFIG.language
                 });
 
-                const response = await fetch('../modules/facilities_api.php?' + params);
+                const apiUrl = '../modules/facilities_api.php?' + params;
+                console.log('🔗 جاري الاتصال بـ API:', apiUrl);
+
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
+                console.log('📦 البيانات المستلمة من API:', data);
+                console.log('📊 تفاصيل البيانات:', {
+                    success: data.success,
+                    hasFacilities: !!(data.facilities || (data.data && data.data.facilities)),
+                    facilitiesType: typeof (data.facilities || (data.data && data.data.facilities)),
+                    facilitiesIsArray: Array.isArray(data.facilities || (data.data && data.data.facilities)),
+                    facilitiesLength: (data.facilities || (data.data && data.data.facilities) || []).length,
+                    error: data.error,
+                    count: data.count || (data.data && data.data.count),
+                    dataKeys: Object.keys(data)
+                });
 
                 if (data.success) {
-                    allFacilities = data.facilities;
-                    displayFacilitiesOnMap(data.facilities);
-                    updateFacilityCount(data.facilities.length);
+                    // ApiSecurity قد يغلف البيانات في 'data'، لذا نتحقق من كلا المكانين
+                    const facilities = data.facilities || (data.data && data.data.facilities) || [];
+                    
+                    if (Array.isArray(facilities) && facilities.length > 0) {
+                        allFacilities = facilities;
+                        console.log(`✅ تم تحميل ${facilities.length} مرفق`);
+                        displayFacilitiesOnMap(facilities);
+                        updateFacilityCount(facilities.length);
+                    } else if (Array.isArray(facilities) && facilities.length === 0) {
+                        console.log('⚠️ لا توجد مرافق في قاعدة البيانات');
+                        allFacilities = [];
+                        updateFacilityCount(0);
+                        // عرض رسالة للمستخدم
+                        if (MAP_CONFIG.language === 'ar') {
+                            console.warn('لا توجد مرافق متاحة للعرض');
+                        }
+                    } else {
+                        console.error('❌ البيانات المستلمة غير صحيحة:', data);
+                        console.error('تفاصيل:', {
+                            dataType: typeof data,
+                            dataKeys: Object.keys(data),
+                            dataData: data.data,
+                            facilities: data.facilities
+                        });
+                        updateFacilityCount(0);
+                        alert(MAP_CONFIG.language === 'ar' ? 
+                            'خطأ في تنسيق البيانات المستلمة من API' : 
+                            'Error in data format received from API');
+                    }
                 } else {
-                    console.error('Error loading facilities:', data.error);
+                    console.error('❌ خطأ في تحميل المرافق:', data.error || 'خطأ غير معروف');
+                    updateFacilityCount(0);
+                    
+                    // عرض رسالة للمستخدم
+                    const errorMessage = data.error || (MAP_CONFIG.language === 'ar' ? 'خطأ غير معروف' : 'Unknown error');
+                    console.error('تفاصيل الخطأ:', {
+                        error: data.error,
+                        debug_info: data.debug_info,
+                        fullResponse: data
+                    });
+                    
+                    if (data.error) {
+                        alert((MAP_CONFIG.language === 'ar' ? 'خطأ في تحميل المرافق: ' : 'Error loading facilities: ') + errorMessage);
+                    }
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('❌ خطأ في الاتصال بـ API:', error);
+                updateFacilityCount(0);
+                alert('حدث خطأ في تحميل المرافق. يرجى التحقق من اتصال الإنترنت.');
             } finally {
                 showLoading(false);
             }
@@ -385,23 +541,46 @@ $t = $texts[$lang];
 
         // عرض المرافق على الخريطة
         function displayFacilitiesOnMap(facilities) {
+            if (!map) {
+                console.error('❌ الخريطة غير مهيأة!');
+                return;
+            }
+
             // مسح النقاط السابقة
             clearMarkers();
 
             if (facilities.length === 0) {
+                console.log('⚠️ لا توجد مرافق للعرض');
                 return;
             }
 
-            facilities.forEach(facility => {
-                const marker = createFacilityMarker(facility);
-                markers.push(marker);
-                
-                if (MAP_CONFIG.enableClustering) {
-                    markerClusterGroup.addLayer(marker);
-                } else {
-                    marker.addTo(map);
+            console.log(`📍 جاري عرض ${facilities.length} مرفق على الخريطة`);
+
+            facilities.forEach((facility, index) => {
+                try {
+                    // التحقق من صحة الإحداثيات
+                    if (!facility.latitude || !facility.longitude) {
+                        console.warn(`⚠️ مرفق بدون إحداثيات: ${facility.name_ar || facility.id}`);
+                        return;
+                    }
+
+                    const marker = createFacilityMarker(facility);
+                    markers.push(marker);
+                    
+                    if (MAP_CONFIG.enableClustering && markerClusterGroup) {
+                        markerClusterGroup.addLayer(marker);
+                    } else {
+                        marker.addTo(map);
+                    }
+                } catch (error) {
+                    console.error(`❌ خطأ في إنشاء نقطة للمرفق ${facility.id}:`, error);
                 }
             });
+
+            // إعادة رسم الخريطة
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
 
             // ضبط مركز الخريطة والزوم تلقائياً بناءً على المرافق
             autoFitMapToFacilities(facilities);
@@ -409,18 +588,29 @@ $t = $texts[$lang];
 
         // ضبط مركز الخريطة تلقائياً بناءً على المرافق الموجودة
         function autoFitMapToFacilities(facilities) {
-            if (facilities.length === 0) return;
+            if (!map || facilities.length === 0) return;
 
-            // إنشاء مجموعة من النقاط لحساب الحدود
-            const latLngs = facilities.map(facility => [facility.latitude, facility.longitude]);
-            
-            if (facilities.length === 1) {
-                // إذا كان هناك مرفق واحد فقط، اعرضه بزوم 15
-                map.setView([facilities[0].latitude, facilities[0].longitude], 15);
-            } else {
-                // إذا كان هناك أكثر من مرفق، احسب الحدود واعرض جميع المرافق
-                const group = new L.featureGroup(markers);
-                map.fitBounds(group.getBounds().pad(0.1)); // إضافة هامش 10%
+            try {
+                if (facilities.length === 1) {
+                    // إذا كان هناك مرفق واحد فقط، اعرضه بزوم 15
+                    map.setView([facilities[0].latitude, facilities[0].longitude], 15);
+                } else if (markers.length > 0) {
+                    // إذا كان هناك أكثر من مرفق، احسب الحدود واعرض جميع المرافق
+                    const group = L.featureGroup(markers);
+                    const bounds = group.getBounds();
+                    if (bounds.isValid()) {
+                        map.fitBounds(bounds.pad(0.1)); // إضافة هامش 10%
+                    } else {
+                        // إذا فشل حساب الحدود، استخدم الإعدادات الافتراضية
+                        map.setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
+                    }
+                } else {
+                    // إذا لم تكن هناك نقاط، استخدم الإعدادات الافتراضية
+                    map.setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
+                }
+            } catch (error) {
+                console.error('❌ خطأ في ضبط عرض الخريطة:', error);
+                map.setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
             }
         }
 
@@ -665,11 +855,17 @@ $t = $texts[$lang];
 
         // مسح النقاط
         function clearMarkers() {
+            if (!map) return;
+            
             markers.forEach(marker => {
-                if (MAP_CONFIG.enableClustering) {
-                    markerClusterGroup.removeLayer(marker);
-                } else {
-                    map.removeLayer(marker);
+                try {
+                    if (MAP_CONFIG.enableClustering && markerClusterGroup) {
+                        markerClusterGroup.removeLayer(marker);
+                    } else {
+                        map.removeLayer(marker);
+                    }
+                } catch (error) {
+                    console.warn('خطأ في إزالة نقطة:', error);
                 }
             });
             markers = [];
@@ -801,26 +997,44 @@ $t = $texts[$lang];
 
         // تهيئة الصفحة
         document.addEventListener('DOMContentLoaded', function() {
-            initMap();
+            console.log('🚀 بدء تهيئة الصفحة...');
             
-            // تحميل المرافق تلقائياً عند فتح الصفحة
-            setTimeout(() => {
-                loadFacilities();
-            }, 1000); // انتظار ثانية واحدة لضمان تحميل الخريطة
+            // التحقق من تحميل Leaflet
+            if (typeof L === 'undefined') {
+                console.error('❌ Leaflet لم يتم تحميله!');
+                alert('خطأ في تحميل مكتبة الخريطة. يرجى تحديث الصفحة.');
+                return;
+            }
+            
+            console.log('✅ Leaflet محمّل بنجاح');
+            
+            // تهيئة الخريطة
+            try {
+                initMap();
+            } catch (error) {
+                console.error('❌ خطأ في تهيئة الخريطة:', error);
+                alert('حدث خطأ في تحميل الخريطة. يرجى تحديث الصفحة.');
+            }
             
             // ربط البحث بالضغط على Enter
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchFacilities();
-                }
-            });
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchFacilities();
+                    }
+                });
+            }
 
             // إغلاق النافذة المنبثقة عند النقر خارجها
-            document.getElementById('facilityModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeFacilityModal();
-                }
-            });
+            const facilityModal = document.getElementById('facilityModal');
+            if (facilityModal) {
+                facilityModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeFacilityModal();
+                    }
+                });
+            }
         });
     </script>
 

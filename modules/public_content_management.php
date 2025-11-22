@@ -1225,10 +1225,10 @@ $stats = [
                             class="tab-button py-4 px-1 border-b-2 font-medium text-sm <?= $active_tab == 'news' ? 'active' : 'border-transparent text-gray-500' ?>">
                         📰 الأخبار والأنشطة
                     </button>
-                    <button onclick="showTab('projects')" 
+                    <!--<button onclick="showTab('projects')" 
                             class="tab-button py-4 px-1 border-b-2 font-medium text-sm <?= $active_tab == 'projects' ? 'active' : 'border-transparent text-gray-500' ?>">
                         🏗️ المشاريع الإنمائية
-                    </button>
+                    </button>-->
                     <button onclick="showTab('initiatives')" 
                             class="tab-button py-4 px-1 border-b-2 font-medium text-sm <?= $active_tab == 'initiatives' ? 'active' : 'border-transparent text-gray-500' ?>">
                         🌱 المبادرات

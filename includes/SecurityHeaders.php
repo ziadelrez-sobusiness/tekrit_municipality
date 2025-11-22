@@ -54,7 +54,8 @@ class SecurityHeaders {
                 "'self'",
                 "'unsafe-inline'", // للسماح بـ inline styles
                 'https://fonts.googleapis.com',
-                'https://cdn.tailwindcss.com'
+                'https://cdn.tailwindcss.com',
+                'https://unpkg.com' // لـ Leaflet CSS
             ],
             'font-src' => [
                 "'self'",
@@ -72,7 +73,9 @@ class SecurityHeaders {
                 'https://api.telegram.org',
                 'https://graph.facebook.com',
                 'https://www.google.com', // لـ Google reCAPTCHA verification
-                'https://cdn.jsdelivr.net' // لتحميل source maps للـ charts
+                'https://cdn.jsdelivr.net', // لتحميل source maps للـ charts
+                'https://unpkg.com', // لـ Leaflet source maps
+                'https://*.tile.openstreetmap.org' // لـ OpenStreetMap tiles
             ],
             'frame-src' => [
                 "'self'",
