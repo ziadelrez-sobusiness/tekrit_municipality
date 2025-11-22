@@ -448,6 +448,60 @@ function getProgressPercentage($status) {
                 page-break-inside: avoid;
             }
         }
+
+        /* تنسيقات responsive للموبايل والتابلت */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+
+            .card {
+                margin-bottom: 1rem;
+            }
+
+            .card-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.5rem !important;
+            }
+
+            .badge {
+                font-size: 0.75rem;
+            }
+
+            .timeline-item {
+                padding-right: 1rem;
+            }
+
+            .timeline-content {
+                padding: 0.75rem;
+            }
+
+            .file-item {
+                padding: 0.5rem;
+            }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) {
+            /* تنسيقات للتابلت */
+            .container {
+                max-width: 720px;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            /* تنسيقات للديسكتوب */
+            .container {
+                max-width: 1140px;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -461,39 +515,68 @@ function getProgressPercentage($status) {
 
             <!-- Search Form -->
             <?php if (!$request): ?>
-                <div class="card max-w-md mx-auto mb-8">
+                <div class="card max-w-md mx-auto mb-8 sm:max-w-lg">
                     <div class="card-header">
                         <h2 class="text-xl font-semibold text-gray-900">البحث عن الطلب</h2>
                     </div>
                     <div class="card-body">
                         <form method="POST" id="tracking-form">
-                            <div class="mb-4" dir="ltr">
-                                <div class="flex items-end gap-3">
-                                    <div class="flex-shrink-0">
-                                        <div class="text-sm text-blue-800 mb-2 font-bold text-lg">REQ-</div>
+                            <div class="mb-4">
+                                <!-- Desktop and Tablet Layout -->
+                                <div class="hidden sm:block" dir="ltr">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <div class="flex-shrink-0">
+                                            <span class="text-blue-800 font-bold text-xl">REQ-</span>
+                                        </div>
+                                        <div class="w-32">
+                                            <label for="year" class="form-label required text-right">السنة</label>
+                                            <input type="text" id="year" name="year" required
+                                                   class="form-control text-center font-mono"
+                                                   placeholder="2025"
+                                                   maxlength="4"
+                                                   pattern="[0-9]{4}"
+                                                   value="<?= htmlspecialchars($_POST['year'] ?? date('Y')) ?>">
+                                            <div class="form-text text-xs text-right">4 أرقام</div>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <span class="text-gray-600 font-bold text-xl">-</span>
+                                        </div>
+                                        <div class="w-32">
+                                            <label for="number" class="form-label required text-right">الرقم</label>
+                                            <input type="text" id="number" name="number" required
+                                                   class="form-control text-center font-mono"
+                                                   placeholder="00001"
+                                                   maxlength="5"
+                                                   pattern="[0-9]+"
+                                                   value="<?= htmlspecialchars($_POST['number'] ?? '') ?>">
+                                            <div class="form-text text-xs text-right">5 أرقام</div>
+                                        </div>
                                     </div>
-                                    <div class="form-group flex-1">
-                                        <label for="year" class="form-label required">السنة</label>
-                                        <input type="text" id="year" name="year" required
-                                               class="form-control text-center font-mono"
-                                               placeholder="2025"
-                                               maxlength="4"
-                                               pattern="[0-9]{4}"
-                                               value="<?= htmlspecialchars($_POST['year'] ?? date('Y')) ?>">
-                                        <div class="form-text text-xs">4 أرقام</div>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <div class="text-sm text-gray-600 mb-2 font-bold text-lg">-</div>
-                                    </div>
-                                    <div class="form-group flex-1">
-                                        <label for="number" class="form-label required">الرقم</label>
-                                        <input type="text" id="number" name="number" required
-                                               class="form-control text-center font-mono"
-                                               placeholder="00001"
-                                               maxlength="5"
-                                               pattern="[0-9]+"
-                                               value="<?= htmlspecialchars($_POST['number'] ?? '') ?>">
-                                        <div class="form-text text-xs">5 أرقام</div>
+                                </div>
+
+                                <!-- Mobile Layout -->
+                                <div class="block sm:hidden" dir="rtl">
+                                    <div class="space-y-4">
+                                        <div class="form-group">
+                                            <label for="year-mobile" class="form-label required">السنة</label>
+                                            <input type="text" id="year-mobile" name="year" required
+                                                   class="form-control text-center font-mono"
+                                                   placeholder="2025"
+                                                   maxlength="4"
+                                                   pattern="[0-9]{4}"
+                                                   value="<?= htmlspecialchars($_POST['year'] ?? date('Y')) ?>">
+                                            <div class="form-text">أدخل 4 أرقام للسنة</div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="number-mobile" class="form-label required">رقم الطلب</label>
+                                            <input type="text" id="number-mobile" name="number" required
+                                                   class="form-control text-center font-mono"
+                                                   placeholder="00001"
+                                                   maxlength="5"
+                                                   pattern="[0-9]+"
+                                                   value="<?= htmlspecialchars($_POST['number'] ?? '') ?>">
+                                            <div class="form-text">أدخل رقم الطلب (5 أرقام)</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -513,18 +596,70 @@ function getProgressPercentage($status) {
                     // تحديث رقم التتبع الكامل تلقائياً
                     document.addEventListener('DOMContentLoaded', function() {
                         const prefix = 'REQ-';
-                        const year = document.getElementById('year');
-                        const number = document.getElementById('number');
+                        const yearDesktop = document.getElementById('year');
+                        const numberDesktop = document.getElementById('number');
+                        const yearMobile = document.getElementById('year-mobile');
+                        const numberMobile = document.getElementById('number-mobile');
                         const fullNumber = document.getElementById('full-tracking-number');
-                        
+
                         function updateFullNumber() {
-                            const y = year.value || '<?= date('Y') ?>';
-                            const n = number.value ? String(number.value).padStart(5, '0') : '00000';
-                            fullNumber.textContent = prefix + y + '-' + n;
+                            // Get values from visible fields
+                            let y, n;
+                            if (window.innerWidth >= 640) {
+                                // Desktop/Tablet
+                                y = yearDesktop?.value || '<?= date('Y') ?>';
+                                n = numberDesktop?.value || '';
+                            } else {
+                                // Mobile
+                                y = yearMobile?.value || '<?= date('Y') ?>';
+                                n = numberMobile?.value || '';
+                            }
+
+                            const formattedNumber = n ? String(n).padStart(5, '0') : '00000';
+                            fullNumber.textContent = prefix + y + '-' + formattedNumber;
                         }
-                        
-                        year.addEventListener('input', updateFullNumber);
-                        number.addEventListener('input', updateFullNumber);
+
+                        // Sync desktop and mobile inputs
+                        function syncInputs(source, target) {
+                            if (source && target) {
+                                target.value = source.value;
+                            }
+                        }
+
+                        // Add event listeners for desktop inputs
+                        if (yearDesktop) {
+                            yearDesktop.addEventListener('input', function() {
+                                syncInputs(yearDesktop, yearMobile);
+                                updateFullNumber();
+                            });
+                        }
+
+                        if (numberDesktop) {
+                            numberDesktop.addEventListener('input', function() {
+                                syncInputs(numberDesktop, numberMobile);
+                                updateFullNumber();
+                            });
+                        }
+
+                        // Add event listeners for mobile inputs
+                        if (yearMobile) {
+                            yearMobile.addEventListener('input', function() {
+                                syncInputs(yearMobile, yearDesktop);
+                                updateFullNumber();
+                            });
+                        }
+
+                        if (numberMobile) {
+                            numberMobile.addEventListener('input', function() {
+                                syncInputs(numberMobile, numberDesktop);
+                                updateFullNumber();
+                            });
+                        }
+
+                        // Update on window resize
+                        window.addEventListener('resize', updateFullNumber);
+
+                        // Initial update
                         updateFullNumber();
                     });
                 </script>
@@ -556,22 +691,22 @@ function getProgressPercentage($status) {
                 <!-- Progress Bar -->
                 <div class="card mb-6">
                     <div class="card-body">
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
                             <h3 class="text-lg font-semibold text-gray-900">حالة الطلب</h3>
-                            <span class="badge <?= getStatusColor($request['status']) ?>">
+                            <span class="badge <?= getStatusColor($request['status']) ?> self-start sm:self-auto">
                                 <?= htmlspecialchars($request['status']) ?>
                             </span>
                         </div>
-                        
-                        <div class="progress mb-2">
+
+                        <div class="progress mb-3">
                             <div class="progress-bar" style="width: <?= getProgressPercentage($request['status']) ?>%"></div>
                         </div>
-                        
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span>تم التقديم</span>
+
+                        <div class="grid grid-cols-2 sm:flex sm:justify-between gap-2 text-xs sm:text-sm text-gray-600 text-center">
+                            <span class="sm:text-right">تم التقديم</span>
                             <span>قيد المراجعة</span>
                             <span>قيد التنفيذ</span>
-                            <span>مكتمل</span>
+                            <span class="sm:text-left">مكتمل</span>
                         </div>
                     </div>
                 </div>
@@ -585,32 +720,32 @@ function getProgressPercentage($status) {
                         </div>
                         <div class="card-body">
                             <div class="space-y-3">
-                                <div class="flex justify-between">
+                                <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                     <span class="font-medium text-gray-700">رقم التتبع:</span>
-                                    <span class="text-blue-600 font-mono"><?= htmlspecialchars($request['tracking_number']) ?></span>
+                                    <span class="text-blue-600 font-mono break-all"><?= htmlspecialchars($request['tracking_number']) ?></span>
                                 </div>
-                                <div class="flex justify-between">
+                                <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                     <span class="font-medium text-gray-700">نوع الطلب:</span>
                                     <span><?= htmlspecialchars($request['type_name'] ?: 'غير محدد') ?></span>
                                 </div>
-                                <div class="flex justify-between">
+                                <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                     <span class="font-medium text-gray-700">عنوان الطلب:</span>
-                                    <span><?= htmlspecialchars($request['request_title']) ?></span>
+                                    <span class="break-words"><?= htmlspecialchars($request['request_title']) ?></span>
                                 </div>
-                                <div class="flex justify-between">
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                                     <span class="font-medium text-gray-700">الأولوية:</span>
-                                    <span class="badge <?= $request['priority_level'] == 'عاجل' ? 'badge-red' : ($request['priority_level'] == 'مهم' ? 'badge-yellow' : 'badge-gray') ?>">
+                                    <span class="badge <?= $request['priority_level'] == 'عاجل' ? 'badge-red' : ($request['priority_level'] == 'مهم' ? 'badge-yellow' : 'badge-gray') ?> self-start sm:self-auto">
                                         <?= htmlspecialchars($request['priority_level']) ?>
                                     </span>
                                 </div>
-                                <div class="flex justify-between">
+                                <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                     <span class="font-medium text-gray-700">تاريخ التقديم:</span>
-                                    <span><?= date('Y-m-d H:i', strtotime($request['created_at'])) ?></span>
+                                    <span class="text-sm sm:text-base"><?= date('Y-m-d H:i', strtotime($request['created_at'])) ?></span>
                                 </div>
                                 <?php if ($request['estimated_completion_date']): ?>
-                                    <div class="flex justify-between">
+                                    <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                         <span class="font-medium text-gray-700">التاريخ المتوقع للإنجاز:</span>
-                                        <span><?= date('Y-m-d', strtotime($request['estimated_completion_date'])) ?></span>
+                                        <span class="text-sm sm:text-base"><?= date('Y-m-d', strtotime($request['estimated_completion_date'])) ?></span>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -624,23 +759,23 @@ function getProgressPercentage($status) {
                         </div>
                         <div class="card-body">
                             <div class="space-y-3">
-                                <div class="flex justify-between">
+                                <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                     <span class="font-medium text-gray-700">الاسم:</span>
-                                    <span><?= htmlspecialchars($request['citizen_name']) ?></span>
+                                    <span class="break-words"><?= htmlspecialchars($request['citizen_name']) ?></span>
                                 </div>
-                                <div class="flex justify-between">
+                                <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                     <span class="font-medium text-gray-700">الهاتف:</span>
-                                    <span><?= htmlspecialchars($request['citizen_phone']) ?></span>
+                                    <span dir="ltr" class="text-left sm:text-right"><?= htmlspecialchars($request['citizen_phone']) ?></span>
                                 </div>
                                 <?php if ($request['citizen_email']): ?>
-                                    <div class="flex justify-between">
+                                    <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                         <span class="font-medium text-gray-700">البريد الإلكتروني:</span>
-                                        <span><?= htmlspecialchars($request['citizen_email']) ?></span>
+                                        <span dir="ltr" class="text-left sm:text-right break-all"><?= htmlspecialchars($request['citizen_email']) ?></span>
                                     </div>
                                 <?php endif; ?>
-                                <div class="flex justify-between">
+                                <div class="flex flex-col sm:flex-row sm:justify-between gap-1">
                                     <span class="font-medium text-gray-700">العنوان:</span>
-                                    <span><?= htmlspecialchars($request['citizen_address']) ?></span>
+                                    <span class="break-words"><?= htmlspecialchars($request['citizen_address']) ?></span>
                                 </div>
                             </div>
                         </div>
@@ -871,12 +1006,12 @@ function getProgressPercentage($status) {
                 <!-- Actions -->
                 <div class="card no-print">
                     <div class="card-body">
-                        <div class="flex flex-wrap gap-4">
-                            <a href="citizen-requests.php" class="btn btn-primary">تقديم طلب جديد</a>
-                            <button onclick="window.print()" class="btn btn-secondary">طباعة</button>
-                            <form method="POST" class="inline">
+                        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4">
+                            <a href="citizen-requests.php" class="btn btn-primary w-full sm:w-auto">تقديم طلب جديد</a>
+                            <button onclick="window.print()" class="btn btn-secondary w-full sm:w-auto">طباعة</button>
+                            <form method="POST" class="w-full sm:w-auto">
                                 <input type="hidden" name="tracking_number" value="">
-                                <button type="submit" class="btn btn-outline">البحث عن طلب آخر</button>
+                                <button type="submit" class="btn btn-outline w-full sm:w-auto">البحث عن طلب آخر</button>
                             </form>
                         </div>
                     </div>
