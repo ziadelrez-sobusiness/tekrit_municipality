@@ -66,7 +66,7 @@ class AIService {
             switch ($image_provider) {
                 case 'dall-e':
                 case 'dall-e-3':
-                    return $this->generateDALLE Image($prompt, $size, $quality);
+                    return $this->generateDALLEImage($prompt, $size, $quality);
                 case 'stable-diffusion':
                     return $this->generateStableDiffusionImage($prompt, $size);
                 default:
