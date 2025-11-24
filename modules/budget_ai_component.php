@@ -99,23 +99,8 @@ let generatedBudget = null;
 
 // فتح المعالج
 function openAIWizard() {
-    // التحقق من تفعيل AI
-    fetch('../api/ai_budget_generate.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'check_status' })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.enabled === false) {
-            alert('الذكاء الاصطناعي غير مفعل. يرجى تفعيله من إعدادات النظام أولاً.');
-            return;
-        }
-        document.getElementById('aiBudgetWizardModal').style.display = 'flex';
-    })
-    .catch(() => {
-        document.getElementById('aiBudgetWizardModal').style.display = 'flex';
-    });
+    // فتح المعالج مباشرة
+    document.getElementById('aiBudgetWizardModal').style.display = 'flex';
 }
 
 // إغلاق المعالج
@@ -150,7 +135,9 @@ function nextStep() {
     }
 
     if (currentStep === 1) {
-        // تحميل الأسئلة
+        // تحميل الأسئلة - سينتقل للخطوة التالية بعد تحميلها
+        currentStep++;
+        updateWizardUI();
         loadQuestions();
     } else if (currentStep === 2) {
         // التحقق من الإجابات
@@ -158,16 +145,15 @@ function nextStep() {
             alert('يرجى الإجابة على جميع الأسئلة المطلوبة');
             return;
         }
-        // إنشاء الميزانية
+        // إنشاء الميزانية - سينتقل للخطوة التالية بعد الإنشاء
+        currentStep++;
+        updateWizardUI();
         generateBudget();
     } else if (currentStep === 3) {
         // حفظ الميزانية
         saveBudget();
         return;
     }
-
-    currentStep++;
-    updateWizardUI();
 }
 
 // الخطوة السابقة
@@ -224,18 +210,31 @@ function loadQuestions() {
             budget_type: selectedBudgetType
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        // التحقق من استجابة الخادم
+        if (!response.ok) {
+            throw new Error('خطأ في الاتصال بالخادم: ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('API Response:', data); // للتدقيق
+
         if (data.success) {
             questions = data.questions;
+            if (!questions || questions.length === 0) {
+                throw new Error('لم يتم إرجاع أسئلة من الخادم');
+            }
             renderQuestions();
         } else {
-            alert('خطأ في تحميل الأسئلة: ' + data.error);
+            alert('خطأ في تحميل الأسئلة: ' + (data.error || 'خطأ غير معروف'));
+            previousStep(); // العودة للخطوة السابقة
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('حدث خطأ في الاتصال');
+        console.error('Error loading questions:', error);
+        alert('حدث خطأ في الاتصال:\n' + error.message + '\n\nيرجى التأكد من:\n1. تفعيل الذكاء الاصطناعي في الإعدادات\n2. الاتصال بالإنترنت\n3. صلاحيات الملفات');
+        previousStep(); // العودة للخطوة السابقة
     });
 }
 
