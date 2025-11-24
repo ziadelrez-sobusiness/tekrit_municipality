@@ -8,6 +8,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/currency_helper.php';
 require_once __DIR__ . '/../includes/settings_helper.php';
+require_once __DIR__ . '/../includes/ai_helper.php';
 
 // التأكد من تسجيل الدخول وصلاحية الإدارة
 $auth->requireLogin();
@@ -84,16 +85,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_system_setting
         $default_currency = intval($_POST['default_currency']);
         $system_name = trim($_POST['system_name']);
         $admin_email = trim($_POST['admin_email']);
-        
+
         try {
             // تحديث الإعدادات في جدول system_settings
             setSetting('default_currency_id', $default_currency, 'معرف العملة الافتراضية للنظام');
             setSetting('system_name', $system_name, 'اسم النظام');
             setSetting('admin_email', $admin_email, 'بريد المدير الإلكتروني');
-            
+
             $message = 'تم تحديث إعدادات النظام بنجاح! العملة الافتراضية الآن: ' . $default_currency;
         } catch (Exception $e) {
             $error = 'خطأ في تحديث الإعدادات: ' . $e->getMessage();
+        }
+    }
+}
+
+// معالجة إعدادات الذكاء الاصطناعي
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_ai_settings'])) {
+    if (!csrf_protect(false)) {
+        $error = 'تم رفض الطلب لأسباب أمنية. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+    } else {
+        $ai_provider = trim($_POST['ai_provider']);
+        $ai_api_key = trim($_POST['ai_api_key']);
+        $ai_model = trim($_POST['ai_model']);
+        $ai_enabled = isset($_POST['ai_enabled']) ? 1 : 0;
+        $ai_image_provider = trim($_POST['ai_image_provider']);
+
+        try {
+            // التحقق من صحة البيانات
+            $ai_helper_instance = new AIHelper();
+            $validation_errors = $ai_helper_instance->validateAISettings($ai_provider, $ai_api_key, $ai_model);
+
+            if (!empty($validation_errors)) {
+                $error = 'أخطاء في البيانات المدخلة:<br>' . implode('<br>', $validation_errors);
+            } else {
+                // حفظ الإعدادات
+                if (saveAISettings($ai_provider, $ai_api_key, $ai_model, $ai_enabled, $ai_image_provider)) {
+                    $message = 'تم تحديث إعدادات الذكاء الاصطناعي بنجاح!';
+                } else {
+                    $error = 'حدث خطأ أثناء حفظ إعدادات الذكاء الاصطناعي';
+                }
+            }
+        } catch (Exception $e) {
+            $error = 'خطأ في تحديث إعدادات الذكاء الاصطناعي: ' . $e->getMessage();
         }
     }
 }
@@ -138,6 +171,11 @@ try {
 
 // الحصول على العملة الافتراضية الحالية
 $current_default_currency = getDefaultCurrency();
+
+// جلب إعدادات الذكاء الاصطناعي
+$ai_settings = getAISettings();
+$ai_helper_instance = new AIHelper();
+$supported_providers = $ai_helper_instance->getSupportedProviders();
 ?>
 
 <!DOCTYPE html>
@@ -241,6 +279,9 @@ $current_default_currency = getDefaultCurrency();
                         <button onclick="showTab('system')" class="tab-button py-4 px-2 border-b-2 border-blue-500 text-blue-600 font-medium">
                             ⚙️ إعدادات عامة
                         </button>
+                        <button onclick="showTab('ai')" class="tab-button py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
+                            🤖 الذكاء الاصطناعي
+                        </button>
                         <button onclick="showTab('currencies')" class="tab-button py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
                             💱 إدارة العملات
                         </button>
@@ -279,6 +320,121 @@ $current_default_currency = getDefaultCurrency();
                         <button type="submit" name="update_system_settings" 
                                 class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
                             💾 حفظ الإعدادات
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tab: إعدادات الذكاء الاصطناعي -->
+                <div id="ai-tab" class="tab-content p-6">
+                    <form method="POST" class="space-y-6" id="aiSettingsForm">
+                        <?php echo csrf_input('csrf_token'); ?>
+                        <h3 class="text-xl font-semibold">🤖 إعدادات الذكاء الاصطناعي</h3>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <p class="text-sm text-blue-800">
+                                <strong>📌 ملاحظة:</strong> يتيح لك هذا القسم تكوين خدمات الذكاء الاصطناعي لمساعدتك في إنشاء المحتوى تلقائياً. يتم تشفير مفتاح API لضمان الأمان.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- نوع مزود الخدمة -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    نوع مزود الذكاء الاصطناعي *
+                                </label>
+                                <select name="ai_provider" id="ai_provider" required onchange="updateAIModels()"
+                                        class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    <?php foreach ($supported_providers as $key => $provider): ?>
+                                        <option value="<?= $key ?>" <?= $ai_settings['provider'] === $key ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($provider['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">اختر مزود خدمة الذكاء الاصطناعي</p>
+                            </div>
+
+                            <!-- نموذج AI -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    النموذج المستخدم *
+                                </label>
+                                <select name="ai_model" id="ai_model" required
+                                        class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- سيتم ملؤها ديناميكياً بواسطة JavaScript -->
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">النموذج المستخدم للذكاء الاصطناعي</p>
+                            </div>
+
+                            <!-- API Key -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    مفتاح API *
+                                </label>
+                                <div class="relative">
+                                    <input type="password" name="ai_api_key" id="ai_api_key" required
+                                           value="<?= htmlspecialchars($ai_settings['api_key']) ?>"
+                                           placeholder="أدخل مفتاح API الخاص بك"
+                                           class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    <button type="button" onclick="toggleApiKeyVisibility()"
+                                            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                                        <span id="eye-icon">👁️</span>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    🔒 سيتم تشفير المفتاح تلقائياً عند الحفظ
+                                </p>
+                            </div>
+
+                            <!-- خدمة إنشاء الصور -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    خدمة إنشاء الصور
+                                </label>
+                                <select name="ai_image_provider" id="ai_image_provider"
+                                        class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="auto" <?= $ai_settings['image_provider'] === 'auto' ? 'selected' : '' ?>>
+                                        تلقائي (حسب المزود)
+                                    </option>
+                                    <option value="dall-e-3" <?= $ai_settings['image_provider'] === 'dall-e-3' ? 'selected' : '' ?>>
+                                        DALL-E 3 (OpenAI)
+                                    </option>
+                                    <option value="stable-diffusion" <?= $ai_settings['image_provider'] === 'stable-diffusion' ? 'selected' : '' ?>>
+                                        Stable Diffusion
+                                    </option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">للأخبار والمشاريع</p>
+                            </div>
+
+                            <!-- تفعيل الذكاء الاصطناعي -->
+                            <div class="flex items-center">
+                                <div class="flex items-center h-full">
+                                    <input type="checkbox" name="ai_enabled" id="ai_enabled" value="1"
+                                           <?= $ai_settings['enabled'] ? 'checked' : '' ?>
+                                           class="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                    <label for="ai_enabled" class="mr-3 text-base font-medium text-gray-700">
+                                        تفعيل الذكاء الاصطناعي في النظام
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- معلومات إضافية -->
+                        <div class="bg-gray-50 rounded-lg p-4 border">
+                            <h4 class="font-semibold mb-2 text-gray-800">📋 حالة الذكاء الاصطناعي</h4>
+                            <div class="space-y-1 text-sm">
+                                <p><strong>الحالة:</strong>
+                                    <span class="<?= $ai_settings['enabled'] ? 'text-green-600' : 'text-red-600' ?>">
+                                        <?= $ai_settings['enabled'] ? '✅ مفعل' : '❌ معطل' ?>
+                                    </span>
+                                </p>
+                                <p><strong>المزود الحالي:</strong> <?= htmlspecialchars($supported_providers[$ai_settings['provider']]['name'] ?? 'غير محدد') ?></p>
+                                <p><strong>النموذج الحالي:</strong> <?= htmlspecialchars($ai_settings['model']) ?></p>
+                            </div>
+                        </div>
+
+                        <button type="submit" name="update_ai_settings"
+                                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                            💾 حفظ إعدادات الذكاء الاصطناعي
                         </button>
                     </form>
                 </div>
@@ -396,24 +552,72 @@ $current_default_currency = getDefaultCurrency();
     </div>
 
     <script>
+        // بيانات المزودين والنماذج
+        const providers = <?= json_encode($supported_providers, JSON_UNESCAPED_UNICODE) ?>;
+        const currentModel = '<?= $ai_settings['model'] ?>';
+
         function showTab(tabName) {
             // إخفاء جميع التبويبات
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
+
             // إظهار التبويب المحدد
             document.getElementById(tabName + '-tab').classList.add('active');
-            
+
             // تحديث أزرار التبويبات
             document.querySelectorAll('.tab-button').forEach(button => {
                 button.classList.remove('border-blue-500', 'text-blue-600');
                 button.classList.add('border-transparent', 'text-gray-500');
             });
-            
+
             event.target.classList.remove('border-transparent', 'text-gray-500');
             event.target.classList.add('border-blue-500', 'text-blue-600');
         }
+
+        // تحديث النماذج عند تغيير المزود
+        function updateAIModels() {
+            const provider = document.getElementById('ai_provider').value;
+            const modelSelect = document.getElementById('ai_model');
+
+            // مسح الخيارات الحالية
+            modelSelect.innerHTML = '';
+
+            // إضافة النماذج الجديدة
+            if (providers[provider] && providers[provider].models) {
+                providers[provider].models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+
+                    // تحديد النموذج الحالي
+                    if (model === currentModel) {
+                        option.selected = true;
+                    }
+
+                    modelSelect.appendChild(option);
+                });
+            }
+        }
+
+        // إظهار/إخفاء مفتاح API
+        function toggleApiKeyVisibility() {
+            const apiKeyInput = document.getElementById('ai_api_key');
+            const eyeIcon = document.getElementById('eye-icon');
+
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                eyeIcon.textContent = '🙈';
+            } else {
+                apiKeyInput.type = 'password';
+                eyeIcon.textContent = '👁️';
+            }
+        }
+
+        // تحميل النماذج عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAIModels();
+        });
     </script>
 </body>
 </html> 

@@ -528,9 +528,12 @@ if ($selected_budget_id) {
                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition shadow-lg flex items-center gap-2">
                         📊 التقرير الشامل
                     </a>
+                    <button onclick="openAIWizard()" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition shadow-lg flex items-center gap-2">
+                        🤖 إنشاء بالذكاء الاصطناعي
+                    </button>
                     <?php if (!empty($committees)): ?>
                     <button onclick="openModal('createAutoBudgetModal')" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition shadow-lg">
-                        ⚡ إنشاء ميزانية تلقائية
+                        ⚡ إنشاء تلقائية (قوالب)
                     </button>
                     <?php endif; ?>
                     <button onclick="openModal('addBudgetModal')" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition shadow-lg">
@@ -1426,6 +1429,9 @@ if ($selected_budget_id) {
         </div>
     </div>
     <?php endif; ?>
+
+    <!-- تضمين مكونات الذكاء الاصطناعي -->
+    <?php include 'budget_ai_component.php'; ?>
 
     <script>
         function openModal(modalId) {
