@@ -22,18 +22,33 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // قراءة البيانات
 $input = json_decode(file_get_contents('php://input'), true);
 
+// التعامل مع JSON غير صحيح
+if (json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'error' => 'بيانات JSON غير صحيحة: ' . json_last_error_msg()
+    ]);
+    exit;
+}
+
 if (!$input) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'بيانات غير صحيحة']);
+    echo json_encode(['success' => false, 'error' => 'لا توجد بيانات']);
     exit;
 }
 
 $action = $input['action'] ?? '';
 
+// تسجيل الطلب للتدقيق (في بيئة التطوير فقط)
+if (defined('DEBUG_MODE') && DEBUG_MODE) {
+    error_log("AI Budget API Request - Action: $action, Budget Type: " . ($input['budget_type'] ?? 'N/A'));
+}
+
 try {
     switch ($action) {
         case 'get_questions':
-            // إرجاع الأسئلة
+            // إرجاع الأسئلة (لا يحتاج تفعيل AI)
             $budget_type = $input['budget_type'] ?? 'general';
             $questions = $budget_type === 'general' ?
                 AIBudgetQuestions::getMunicipalBudgetQuestions() :
@@ -41,7 +56,8 @@ try {
 
             echo json_encode([
                 'success' => true,
-                'questions' => $questions
+                'questions' => $questions,
+                'budget_type' => $budget_type
             ]);
             break;
 
