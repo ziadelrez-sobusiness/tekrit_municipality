@@ -208,6 +208,12 @@ $stats = [
                         📚 أمثلة APIs
                     </a>
                     <a href="important_links_management.php" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm md:text-base">
+                        📋 عرض الروابط (<?= $db->query("SELECT COUNT(*) FROM important_links WHERE is_active = 1")->fetchColumn() ?>)
+                    </a>
+                    <a href="../public/important-links.php" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm md:text-base">
+                        🌐 عرض الصفحة العامة
+                    </a>
+                    <a href="important_links_management.php" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm md:text-base">
                         🔙 العودة
                     </a>
                 </div>
@@ -380,8 +386,10 @@ $stats = [
                             <th class="px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-700">النوع</th>
                             <th class="px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-700">الحالة</th>
                             <th class="px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-700">النتائج</th>
+                            <th class="px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-700">⏱️ الوقت</th>
                             <th class="px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-700">الخطأ</th>
                             <th class="px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-700">التاريخ</th>
+                            <th class="px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-700">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">

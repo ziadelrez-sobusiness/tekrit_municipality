@@ -17,16 +17,88 @@ $database = new Database();
 $db = $database->getConnection();
 $db->exec("SET NAMES utf8mb4");
 
-// أمثلة على مصادر APIs (قد تحتاج إلى تعديل)
+// أمثلة على مصادر APIs حقيقية من لبنان
 $examples = [
+    [
+        'name_ar' => 'دليل الحكومة اللبنانية - TRA',
+        'name_en' => 'Lebanese Government Directory - TRA',
+        'description' => 'دليل الوزارات والمؤسسات الرسمية من هيئة تنظيم الاتصالات',
+        'api_url' => '',
+        'scraping_url' => 'https://www.tra.gov.lb/useful-links-governmental-institutions',
+        'api_key' => '',
+        'source_type' => 'scraping',
+        'fetch_method' => 'html_scraper',
+        'file_format' => 'html',
+        'source_category_id' => 1, // GOV_DIRECTORY
+        'category_id' => 1, // وزارات
+        'scraping_selector' => json_encode([
+            'item_selector' => '//table//tr[position()>1]',
+            'fields' => [
+                'name_ar' => './/td[1]',
+                'website' => './/td[2]//a/@href',
+                'description_ar' => './/td[3]'
+            ]
+        ]),
+        'mapping_config' => null,
+        'note' => 'Scraping من صفحة TRA - يحتاج إلى اختبار وتعديل selectors'
+    ],
+    [
+        'name_ar' => 'مستشفيات حكومية - Open Data Lebanon',
+        'name_en' => 'Public Hospitals - Open Data',
+        'description' => 'ملف Excel من Open Data Lebanon لمستشفيات حكومية',
+        'api_url' => 'https://www.opendatalebanon.org/job/list-of-public-hospitals-in-lebanon/',
+        'file_url' => 'https://www.opendatalebanon.org/job/list-of-public-hospitals-in-lebanon/',
+        'api_key' => '',
+        'source_type' => 'api',
+        'fetch_method' => 'file_import',
+        'file_format' => 'xlsx',
+        'source_category_id' => 2, // PUBLIC_HOSPITALS
+        'category_id' => 2, // مستشفيات حكومية
+        'scraping_selector' => null,
+        'mapping_config' => json_encode([
+            'name_ar' => 'hospital_name',
+            'phone' => 'phone',
+            'address_ar' => 'address',
+            'location_lat' => 'latitude',
+            'location_lng' => 'longitude'
+        ]),
+        'note' => 'ملف Excel - قد يحتاج إلى تحميل يدوي أول مرة'
+    ],
+    [
+        'name_ar' => 'مستشفيات - وزارة الصحة',
+        'name_en' => 'Hospitals - MOPH',
+        'description' => 'صفحة وزارة الصحة للمستشفيات الحكومية',
+        'api_url' => '',
+        'scraping_url' => 'https://www.moph.gov.lb/en/HealthFacilities/index/3/188/8?facility_type=1',
+        'api_key' => '',
+        'source_type' => 'scraping',
+        'fetch_method' => 'html_scraper',
+        'file_format' => 'html',
+        'source_category_id' => 2,
+        'category_id' => 2,
+        'scraping_selector' => json_encode([
+            'item_selector' => '//div[@class="facility-item"] | //table//tr',
+            'fields' => [
+                'name_ar' => './/h3 | .//td[1]',
+                'phone' => './/span[@class="phone"] | .//td[2]',
+                'address_ar' => './/span[@class="address"] | .//td[3]'
+            ]
+        ]),
+        'mapping_config' => null,
+        'note' => 'Scraping - يحتاج إلى اختبار selectors حسب تصميم الصفحة'
+    ],
     [
         'name_ar' => 'OpenStreetMap Nominatim API',
         'name_en' => 'OpenStreetMap Nominatim',
-        'description' => 'API للبحث عن أماكن ومرافق',
-        'api_url' => 'https://nominatim.openstreetmap.org/search?format=json&q=hospital+lebanon',
+        'description' => 'API للبحث عن أماكن ومرافق (مصدر عام)',
+        'api_url' => 'https://nominatim.openstreetmap.org/search?format=json&q=hospital+lebanon&limit=10',
         'api_key' => '',
         'source_type' => 'api',
+        'fetch_method' => 'api',
+        'file_format' => 'json',
+        'source_category_id' => null,
         'category_id' => null,
+        'scraping_selector' => null,
         'mapping_config' => json_encode([
             'data_path' => '',
             'name_ar' => 'display_name',
@@ -34,18 +106,7 @@ $examples = [
             'location_lng' => 'lon',
             'address_ar' => 'display_name'
         ]),
-        'note' => 'API مجاني، لا يحتاج API key'
-    ],
-    [
-        'name_ar' => 'Lebanon Data API (مثال)',
-        'name_en' => 'Lebanon Data API',
-        'description' => 'مثال على API محلي - قد يحتاج إلى تعديل',
-        'api_url' => 'https://api.example.com/lebanon/facilities',
-        'api_key' => 'your-api-key-here',
-        'source_type' => 'api',
-        'category_id' => null,
-        'mapping_config' => null,
-        'note' => 'هذا مثال - استبدل بالرابط الفعلي'
+        'note' => 'API مجاني، لا يحتاج API key - مصدر عام'
     ],
     [
         'name_ar' => 'WHO Health Facilities',
@@ -54,7 +115,11 @@ $examples = [
         'api_url' => 'https://ghoapi.azureedge.net/api/FACILITY',
         'api_key' => '',
         'source_type' => 'api',
+        'fetch_method' => 'api',
+        'file_format' => 'json',
+        'source_category_id' => null,
         'category_id' => 2, // مستشفيات
+        'scraping_selector' => null,
         'mapping_config' => json_encode([
             'data_path' => 'value',
             'name_ar' => 'FacilityName',
@@ -74,18 +139,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_example'])) {
         try {
             $stmt = $db->prepare("
                 INSERT INTO important_link_sources 
-                (name_ar, name_en, source_type, api_url, api_key, category_id, 
+                (name_ar, name_en, source_type, fetch_method, file_format, api_url, api_key, scraping_url, 
+                 scraping_selector, source_category_id, category_id, 
                  update_frequency, auto_import, mapping_config, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, 'weekly', 1, ?, 0)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'weekly', 1, ?, 0)
             ");
             $stmt->execute([
                 $example['name_ar'],
-                $example['name_en'],
+                $example['name_en'] ?? null,
                 $example['source_type'],
-                $example['api_url'],
-                $example['api_key'],
-                $example['category_id'],
-                $example['mapping_config']
+                $example['fetch_method'] ?? $example['source_type'],
+                $example['file_format'] ?? 'json',
+                $example['api_url'] ?? null,
+                $example['api_key'] ?? null,
+                $example['scraping_url'] ?? null,
+                $example['scraping_selector'] ?? null,
+                $example['source_category_id'] ?? null,
+                $example['category_id'] ?? null,
+                $example['mapping_config'] ?? null
             ]);
             
             $success_message = "تم إضافة المثال بنجاح (غير مفعّل - يمكنك تفعيله بعد التعديل)";
@@ -158,17 +229,46 @@ $error_message = $error_message ?? '';
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div>
-                                <strong>رابط API:</strong>
-                                <code class="block bg-gray-100 p-2 rounded mt-1 text-xs break-all"><?= htmlspecialchars($example['api_url']) ?></code>
+                                <strong>النوع:</strong>
+                                <span class="block bg-gray-100 p-2 rounded mt-1 text-xs">
+                                    <?php
+                                    $typeLabels = [
+                                        'api' => '🌐 API',
+                                        'scraping' => '🕷️ Scraping',
+                                        'file_import' => '📄 File Import'
+                                    ];
+                                    echo $typeLabels[$example['source_type']] ?? $example['source_type'];
+                                    ?>
+                                </span>
                             </div>
                             <div>
-                                <strong>API Key:</strong>
-                                <code class="block bg-gray-100 p-2 rounded mt-1 text-xs"><?= $example['api_key'] ? htmlspecialchars($example['api_key']) : 'غير مطلوب' ?></code>
+                                <strong>طريقة الجلب:</strong>
+                                <span class="block bg-gray-100 p-2 rounded mt-1 text-xs">
+                                    <?= htmlspecialchars($example['fetch_method'] ?? $example['source_type']) ?>
+                                </span>
                             </div>
+                            <?php if (!empty($example['api_url'])): ?>
+                                <div>
+                                    <strong>رابط API/الملف:</strong>
+                                    <code class="block bg-gray-100 p-2 rounded mt-1 text-xs break-all"><?= htmlspecialchars($example['api_url']) ?></code>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($example['scraping_url'])): ?>
+                                <div>
+                                    <strong>رابط Scraping:</strong>
+                                    <code class="block bg-gray-100 p-2 rounded mt-1 text-xs break-all"><?= htmlspecialchars($example['scraping_url']) ?></code>
+                                </div>
+                            <?php endif; ?>
                             <?php if ($example['mapping_config']): ?>
                                 <div class="md:col-span-2">
                                     <strong>Mapping Config:</strong>
                                     <pre class="bg-gray-100 p-2 rounded mt-1 text-xs overflow-auto"><?= htmlspecialchars($example['mapping_config']) ?></pre>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ($example['scraping_selector']): ?>
+                                <div class="md:col-span-2">
+                                    <strong>Scraping Selectors:</strong>
+                                    <pre class="bg-gray-100 p-2 rounded mt-1 text-xs overflow-auto"><?= htmlspecialchars($example['scraping_selector']) ?></pre>
                                 </div>
                             <?php endif; ?>
                         </div>

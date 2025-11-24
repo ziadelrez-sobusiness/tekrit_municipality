@@ -5,14 +5,27 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/mappers/BaseMapper.php';
+require_once __DIR__ . '/mappers/GovernmentDirectoryMapper.php';
+require_once __DIR__ . '/mappers/HospitalsMapper.php';
+require_once __DIR__ . '/mappers/EmbassiesMapper.php';
 
 class ImportantLinksFetcher {
     private $db;
     private $logMessages = [];
+    private $mappers = [];
     
     public function __construct($db) {
         $this->db = $db;
         $this->db->exec("SET NAMES utf8mb4");
+        
+        // تهيئة Mappers
+        $this->mappers = [
+            'GOV_DIRECTORY' => new GovernmentDirectoryMapper($db),
+            'PUBLIC_HOSPITALS' => new HospitalsMapper($db),
+            'PRIVATE_HOSPITALS' => new HospitalsMapper($db),
+            'EMBASSIES' => new EmbassiesMapper($db)
+        ];
     }
     
     /**
@@ -39,28 +52,54 @@ class ImportantLinksFetcher {
             $status = 'success';
             $errorMessage = null;
             
-            // جلب البيانات حسب نوع المصدر
-            switch ($source['source_type']) {
+            // جلب البيانات حسب نوع المصدر وطريقة الجلب
+            $fetchMethod = $source['fetch_method'] ?? $source['source_type'];
+            
+            switch ($fetchMethod) {
                 case 'api':
                     $data = $this->fetchFromAPI($source);
                     break;
+                case 'html_scraper':
                 case 'scraping':
                     $data = $this->fetchFromScraping($source);
                     break;
-                case 'csv_import':
-                    $data = $this->fetchFromCSV($source);
+                case 'file_import':
+                    $data = $this->fetchFromFile($source);
                     break;
                 default:
-                    throw new Exception("نوع المصدر غير مدعوم: " . $source['source_type']);
+                    throw new Exception("طريقة الجلب غير مدعومة: " . $fetchMethod);
             }
             
             $itemsFetched = count($data);
             
-            // معالجة البيانات واستيرادها
-            if (!empty($data)) {
-                $result = $this->importData($data, $source);
-                $itemsImported = $result['imported'];
-                $itemsUpdated = $result['updated'];
+            // استخدام Mapper إذا كان محدداً
+            if (!empty($source['source_category_id'])) {
+                $categoryStmt = $this->db->prepare("SELECT code FROM source_categories WHERE id = ?");
+                $categoryStmt->execute([$source['source_category_id']]);
+                $categoryCode = $categoryStmt->fetchColumn();
+                
+                if ($categoryCode && isset($this->mappers[$categoryCode])) {
+                    $mapper = $this->mappers[$categoryCode];
+                    $mappedData = $mapper->map($data, $source);
+                    $result = $mapper->save($mappedData, $source);
+                    $itemsImported = $result['imported'];
+                    $itemsUpdated = $result['updated'];
+                } else {
+                    // استخدام الطريقة القديمة
+                    if (!empty($data)) {
+                        $result = $this->importData($data, $source);
+                        $itemsImported = $result['imported'];
+                        $itemsUpdated = $result['updated'];
+                    }
+                }
+            } else {
+                // استخدام الطريقة القديمة
+                if (!empty($data)) {
+                    $result = $this->importData($data, $source);
+                    $itemsImported = $result['imported'];
+                    $itemsUpdated = $result['updated'];
+                    $itemsSkipped = $result['skipped'] ?? 0;
+                }
             }
             
             // تحديث معلومات المصدر
@@ -70,9 +109,13 @@ class ImportantLinksFetcher {
             $executionTime = round(microtime(true) - $startTime, 2);
             
             // تسجيل العملية
-            $this->logFetch($sourceId, 'auto', $status, $itemsFetched, $itemsImported, $itemsUpdated, null, $executionTime);
+            $this->logFetch($sourceId, 'auto', $status, $itemsFetched, $itemsImported, $itemsUpdated, $itemsSkipped ?? 0, null, $executionTime);
             
-            $this->log("تم جلب " . $itemsFetched . " عنصر، استيراد " . $itemsImported . "، تحديث " . $itemsUpdated);
+            $logMessage = "تم جلب " . $itemsFetched . " عنصر، استيراد " . $itemsImported . "، تحديث " . $itemsUpdated;
+            if (isset($itemsSkipped) && $itemsSkipped > 0) {
+                $logMessage .= "، متخطى " . $itemsSkipped;
+            }
+            $this->log($logMessage);
             
             return [
                 'success' => true,
@@ -224,17 +267,41 @@ class ImportantLinksFetcher {
     /**
      * جلب البيانات من scraping
      */
-    private function fetchFromScraping($source) {
-        $url = $source['scraping_url'];
+    public function fetchFromScraping($source) {
+        $url = $source['scraping_url'] ?? $source['api_url'];
         if (empty($url)) {
             throw new Exception("رابط scraping غير محدد");
         }
         
-        // استخدام DOMDocument أو SimpleHTMLDom
-        $html = @file_get_contents($url);
-        if ($html === false) {
-            throw new Exception("فشل في جلب الصفحة");
+        $this->log("بدء scraping من: " . $url);
+        
+        // استخدام cURL للحصول على HTML
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+        
+        $html = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+        
+        if ($error) {
+            throw new Exception("خطأ في الاتصال: " . $error);
         }
+        
+        if ($httpCode !== 200) {
+            throw new Exception("خطأ HTTP " . $httpCode);
+        }
+        
+        if (empty($html)) {
+            throw new Exception("الصفحة فارغة");
+        }
+        
+        $this->log("تم جلب " . strlen($html) . " بايت من HTML");
         
         $dom = new DOMDocument();
         @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
@@ -246,36 +313,241 @@ class ImportantLinksFetcher {
         if (!empty($source['scraping_selector'])) {
             $selectors = json_decode($source['scraping_selector'], true);
             
-            // جلب العناصر
-            $items = $xpath->query($selectors['item_selector'] ?? '//div[@class="item"]');
-            
-            foreach ($items as $item) {
-                $itemData = [];
+            if ($selectors) {
+                // جلب العناصر
+                $itemSelector = $selectors['item_selector'] ?? '//tr | //div[@class="item"] | //li';
+                $items = $xpath->query($itemSelector);
                 
-                // استخراج البيانات حسب selectors
-                foreach ($selectors['fields'] ?? [] as $field => $selector) {
-                    $nodes = $xpath->query($selector, $item);
-                    if ($nodes->length > 0) {
-                        $itemData[$field] = trim($nodes->item(0)->textContent);
+                $this->log("تم العثور على " . $items->length . " عنصر");
+                
+                foreach ($items as $item) {
+                    $itemData = [];
+                    
+                    // استخراج البيانات حسب selectors
+                    foreach ($selectors['fields'] ?? [] as $field => $selector) {
+                        $nodes = $xpath->query($selector, $item);
+                        if ($nodes->length > 0) {
+                            $value = trim($nodes->item(0)->textContent);
+                            // استخراج الروابط
+                            if ($field == 'website' || $field == 'url') {
+                                $href = $xpath->query('.//a/@href', $item);
+                                if ($href->length > 0) {
+                                    $value = $href->item(0)->nodeValue;
+                                    if (!preg_match('/^https?:\/\//', $value)) {
+                                        $value = $this->resolveUrl($url, $value);
+                                    }
+                                }
+                            }
+                            $itemData[$field] = $value;
+                        }
+                    }
+                    
+                    if (!empty($itemData)) {
+                        $data[] = $itemData;
                     }
                 }
+            }
+        } else {
+            // محاولة استخراج تلقائي من الجداول
+            $tables = $xpath->query('//table');
+            foreach ($tables as $table) {
+                $rows = $xpath->query('.//tr', $table);
+                $headers = [];
+                $firstRow = true;
                 
-                if (!empty($itemData)) {
-                    $data[] = $itemData;
+                foreach ($rows as $row) {
+                    $cells = $xpath->query('.//td | .//th', $row);
+                    $rowData = [];
+                    
+                    foreach ($cells as $cell) {
+                        $value = trim($cell->textContent);
+                        if ($firstRow) {
+                            $headers[] = $value;
+                        } else {
+                            $rowData[] = $value;
+                        }
+                    }
+                    
+                    if ($firstRow && !empty($headers)) {
+                        $firstRow = false;
+                    } elseif (!empty($rowData) && count($rowData) === count($headers)) {
+                        $data[] = array_combine($headers, $rowData);
+                    }
                 }
             }
         }
+        
+        $this->log("تم استخراج " . count($data) . " عنصر من HTML");
         
         return $data;
     }
     
     /**
-     * جلب البيانات من CSV
-     * يمكن استدعاؤها للاختبار
+     * حل URL نسبي إلى مطلق
+     */
+    private function resolveUrl($baseUrl, $relativeUrl) {
+        $base = parse_url($baseUrl);
+        $relative = parse_url($relativeUrl);
+        
+        if (isset($relative['scheme'])) {
+            return $relativeUrl;
+        }
+        
+        $url = $base['scheme'] . '://' . $base['host'];
+        if (isset($base['port'])) {
+            $url .= ':' . $base['port'];
+        }
+        
+        if (isset($relative['path'])) {
+            if (strpos($relative['path'], '/') === 0) {
+                $url .= $relative['path'];
+            } else {
+                $url .= dirname($base['path']) . '/' . $relative['path'];
+            }
+        } else {
+            $url .= $base['path'];
+        }
+        
+        return $url;
+    }
+    
+    /**
+     * جلب البيانات من ملف (Excel, CSV, PDF)
+     */
+    public function fetchFromFile($source) {
+        $fileUrl = $source['file_url'] ?? $source['api_url'] ?? null;
+        $fileFormat = $source['file_format'] ?? 'xlsx';
+        
+        if (empty($fileUrl)) {
+            throw new Exception("رابط الملف غير محدد");
+        }
+        
+        $this->log("تحميل الملف من: " . $fileUrl);
+        
+        // تحميل الملف
+        $tempFile = tempnam(sys_get_temp_dir(), 'links_import_');
+        $fileContent = @file_get_contents($fileUrl);
+        
+        if ($fileContent === false) {
+            throw new Exception("فشل في تحميل الملف من: " . $fileUrl);
+        }
+        
+        file_put_contents($tempFile, $fileContent);
+        $this->log("تم تحميل " . strlen($fileContent) . " بايت");
+        
+        try {
+            // معالجة الملف حسب النوع
+            switch ($fileFormat) {
+                case 'csv':
+                    $data = $this->parseCSV($tempFile);
+                    break;
+                case 'xlsx':
+                case 'xls':
+                    $data = $this->parseExcel($tempFile);
+                    break;
+                case 'pdf':
+                    $data = $this->parsePDF($tempFile);
+                    break;
+                default:
+                    throw new Exception("نوع الملف غير مدعوم: " . $fileFormat);
+            }
+            
+            return $data;
+        } finally {
+            // حذف الملف المؤقت
+            @unlink($tempFile);
+        }
+    }
+    
+    /**
+     * تحليل ملف CSV
+     */
+    private function parseCSV($filePath) {
+        $data = [];
+        $handle = fopen($filePath, 'r');
+        
+        if ($handle === false) {
+            throw new Exception("فشل في فتح ملف CSV");
+        }
+        
+        // قراءة header
+        $headers = fgetcsv($handle);
+        if ($headers === false) {
+            fclose($handle);
+            throw new Exception("ملف CSV فارغ أو تالف");
+        }
+        
+        // قراءة البيانات
+        while (($row = fgetcsv($handle)) !== false) {
+            if (count($row) === count($headers)) {
+                $data[] = array_combine($headers, $row);
+            }
+        }
+        
+        fclose($handle);
+        $this->log("تم تحليل " . count($data) . " صف من CSV");
+        
+        return $data;
+    }
+    
+    /**
+     * تحليل ملف Excel
+     */
+    private function parseExcel($filePath) {
+        // استخدام PhpSpreadsheet إذا كان متاحاً
+        if (class_exists('PhpOffice\PhpSpreadsheet\IOFactory')) {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $data = [];
+            
+            $headers = [];
+            $firstRow = true;
+            
+            foreach ($worksheet->getRowIterator() as $row) {
+                $rowData = [];
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(false);
+                
+                foreach ($cellIterator as $cell) {
+                    $value = $cell->getValue();
+                    if ($firstRow) {
+                        $headers[] = $value;
+                    } else {
+                        $rowData[] = $value;
+                    }
+                }
+                
+                if ($firstRow) {
+                    $firstRow = false;
+                } else {
+                    if (count($rowData) === count($headers)) {
+                        $data[] = array_combine($headers, $rowData);
+                    }
+                }
+            }
+            
+            $this->log("تم تحليل " . count($data) . " صف من Excel");
+            return $data;
+        } else {
+            // Fallback: محاولة قراءة كـ CSV
+            $this->log("PhpSpreadsheet غير متاح، محاولة قراءة كـ CSV");
+            return $this->parseCSV($filePath);
+        }
+    }
+    
+    /**
+     * تحليل ملف PDF (بسيط - يحتاج مكتبات متقدمة)
+     */
+    private function parsePDF($filePath) {
+        // يمكن استخدام مكتبة مثل FPDI أو Smalot\PdfParser
+        throw new Exception("تحليل PDF يحتاج إلى مكتبات إضافية. يرجى تحويل PDF إلى CSV أو Excel أولاً.");
+    }
+    
+    /**
+     * جلب البيانات من CSV (للتوافق مع الكود القديم)
      */
     public function fetchFromCSV($source) {
-        // يمكن إضافة دعم CSV لاحقاً
-        throw new Exception("CSV import غير مدعوم حالياً");
+        return $this->fetchFromFile($source);
     }
     
     /**
@@ -284,11 +556,38 @@ class ImportantLinksFetcher {
     private function importData($data, $source) {
         $imported = 0;
         $updated = 0;
+        $skipped = 0;
         
-        foreach ($data as $item) {
+        $this->log("بدء استيراد " . count($data) . " عنصر");
+        
+        foreach ($data as $index => $item) {
             try {
+                // تخطي العناصر الفارغة
+                if (empty($item) || (!is_array($item))) {
+                    $skipped++;
+                    continue;
+                }
+                
                 // تطبيق mapping
                 $mappedItem = $this->mapItemData($item, $source);
+                
+                // التحقق من وجود اسم (مطلوب)
+                if (empty($mappedItem['name_ar']) || $mappedItem['name_ar'] === 'غير محدد') {
+                    $this->log("⏭️ تخطي عنصر #" . ($index + 1) . " - لا يوجد اسم. الحقول المتاحة: " . implode(', ', array_keys($item)));
+                    $skipped++;
+                    continue;
+                }
+                
+                // التحقق من وجود category_id
+                if (empty($mappedItem['category_id'])) {
+                    $this->log("⚠️ تحذير: عنصر بدون فئة. سيتم استخدام فئة المصدر الافتراضية.");
+                    $mappedItem['category_id'] = $source['category_id'] ?? null;
+                    if (empty($mappedItem['category_id'])) {
+                        $this->log("⏭️ تخطي عنصر #" . ($index + 1) . " - لا توجد فئة متاحة");
+                        $skipped++;
+                        continue;
+                    }
+                }
                 
                 // البحث عن رابط موجود (بالاسم أو الهاتف)
                 $existing = $this->findExistingLink($mappedItem);
@@ -297,37 +596,86 @@ class ImportantLinksFetcher {
                     // تحديث الرابط الموجود
                     $this->updateLink($existing['id'], $mappedItem);
                     $updated++;
+                    if ($updated % 100 == 0) {
+                        $this->log("تم تحديث " . $updated . " رابط حتى الآن...");
+                    }
                 } else {
                     // إضافة رابط جديد
                     $this->insertLink($mappedItem);
                     $imported++;
+                    if ($imported % 100 == 0) {
+                        $this->log("تم استيراد " . $imported . " رابط حتى الآن...");
+                    }
                 }
             } catch (Exception $e) {
-                $this->log("خطأ في استيراد عنصر: " . $e->getMessage());
+                $this->log("❌ خطأ في استيراد عنصر #" . ($index + 1) . ": " . $e->getMessage());
+                $skipped++;
                 continue;
             }
         }
         
-        return ['imported' => $imported, 'updated' => $updated];
+        $this->log("✅ انتهى الاستيراد: " . $imported . " مستورد، " . $updated . " محدث، " . $skipped . " متخطى");
+        
+        return ['imported' => $imported, 'updated' => $updated, 'skipped' => $skipped];
     }
     
     /**
      * ربط بيانات العنصر مع الحقول
      */
     private function mapItemData($item, $source) {
+        // البحث عن اسم في أي حقل محتمل
+        $name_ar = null;
+        $possibleNameFields = ['name_ar', 'name', 'اسم', 'الاسم', 'hospital_name', 'facility_name', 'institution_name', 'ministry_name', 'embassy_name'];
+        foreach ($possibleNameFields as $field) {
+            if (!empty($item[$field])) {
+                $name_ar = trim($item[$field]);
+                break;
+            }
+        }
+        
+        // البحث عن هاتف في أي حقل محتمل
+        $phone = null;
+        $possiblePhoneFields = ['phone', 'telephone', 'tel', 'phone_number', 'هاتف', 'رقم الهاتف', 'contact_phone'];
+        foreach ($possiblePhoneFields as $field) {
+            if (!empty($item[$field])) {
+                $phone = trim($item[$field]);
+                break;
+            }
+        }
+        
+        // البحث عن عنوان في أي حقل محتمل
+        $address_ar = null;
+        $possibleAddressFields = ['address_ar', 'address', 'عنوان', 'location', 'موقع'];
+        foreach ($possibleAddressFields as $field) {
+            if (!empty($item[$field])) {
+                $address_ar = trim($item[$field]);
+                break;
+            }
+        }
+        
+        // البحث عن موقع إلكتروني
+        $website = null;
+        $possibleWebsiteFields = ['website', 'url', 'website_url', 'link', 'موقع', 'رابط'];
+        foreach ($possibleWebsiteFields as $field) {
+            if (!empty($item[$field])) {
+                $website = trim($item[$field]);
+                break;
+            }
+        }
+        
         $mapped = [
             'category_id' => $source['category_id'] ?? null,
-            'name_ar' => $item['name_ar'] ?? $item['name'] ?? '',
+            'name_ar' => $name_ar ?: ($item['name_ar'] ?? $item['name'] ?? 'غير محدد'),
             'name_en' => $item['name_en'] ?? $item['name_en'] ?? null,
             'description_ar' => $item['description_ar'] ?? $item['description'] ?? null,
-            'phone' => $item['phone'] ?? $item['telephone'] ?? null,
+            'phone' => $phone ?: ($item['phone'] ?? $item['telephone'] ?? null),
             'phone_2' => $item['phone_2'] ?? null,
-            'email' => $item['email'] ?? null,
-            'website' => $item['website'] ?? $item['url'] ?? null,
-            'address_ar' => $item['address_ar'] ?? $item['address'] ?? null,
-            'location_lat' => isset($item['latitude']) ? floatval($item['latitude']) : null,
-            'location_lng' => isset($item['longitude']) ? floatval($item['longitude']) : null,
-            'working_hours_ar' => $item['working_hours'] ?? null,
+            'email' => $item['email'] ?? $item['e_mail'] ?? $item['email_address'] ?? null,
+            'website' => $website ?: ($item['website'] ?? $item['url'] ?? null),
+            'address_ar' => $address_ar ?: ($item['address_ar'] ?? $item['address'] ?? null),
+            'location_lat' => isset($item['latitude']) ? floatval($item['latitude']) : (isset($item['lat']) ? floatval($item['lat']) : null),
+            'location_lng' => isset($item['longitude']) ? floatval($item['longitude']) : (isset($item['lng']) ? floatval($item['lng']) : (isset($item['lon']) ? floatval($item['lon']) : null)),
+            'working_hours_ar' => $item['working_hours'] ?? $item['hours'] ?? null,
             'is_government' => isset($item['is_government']) ? (int)$item['is_government'] : 0,
             'is_emergency' => isset($item['is_emergency']) ? (int)$item['is_emergency'] : 0,
             'display_order' => 0
@@ -336,11 +684,18 @@ class ImportantLinksFetcher {
         // تطبيق mapping مخصص إذا كان موجوداً
         if (!empty($source['mapping_config'])) {
             $mapping = json_decode($source['mapping_config'], true);
-            foreach ($mapping as $dbField => $sourceField) {
-                if (isset($item[$sourceField])) {
-                    $mapped[$dbField] = $item[$sourceField];
+            if ($mapping && is_array($mapping)) {
+                foreach ($mapping as $dbField => $sourceField) {
+                    if (isset($item[$sourceField]) && !empty($item[$sourceField])) {
+                        $mapped[$dbField] = $item[$sourceField];
+                    }
                 }
             }
+        }
+        
+        // تسجيل تحذير إذا كان الاسم فارغاً
+        if (empty($mapped['name_ar']) || $mapped['name_ar'] === 'غير محدد') {
+            $this->log("⚠️ تحذير: عنصر بدون اسم. البيانات: " . json_encode(array_keys($item), JSON_UNESCAPED_UNICODE));
         }
         
         return $mapped;
@@ -505,7 +860,13 @@ class ImportantLinksFetcher {
     /**
      * تسجيل عملية الجلب
      */
-    private function logFetch($sourceId, $fetchType, $status, $itemsFetched, $itemsImported, $itemsUpdated, $errorMessage, $executionTime) {
+    private function logFetch($sourceId, $fetchType, $status, $itemsFetched, $itemsImported, $itemsUpdated, $itemsSkipped = 0, $errorMessage = null, $executionTime = null) {
+        // إضافة ملاحظة عن العناصر المتخطاة في error_message إذا لم يكن هناك خطأ
+        $finalErrorMessage = $errorMessage;
+        if ($itemsSkipped > 0 && empty($errorMessage)) {
+            $finalErrorMessage = "ملاحظة: تم تخطي " . $itemsSkipped . " عنصر (بدون اسم أو فئة صحيحة)";
+        }
+        
         $stmt = $this->db->prepare("
             INSERT INTO important_link_fetch_logs 
             (source_id, fetch_type, status, items_fetched, items_imported, items_updated, error_message, execution_time)
@@ -519,7 +880,7 @@ class ImportantLinksFetcher {
             $itemsFetched,
             $itemsImported,
             $itemsUpdated,
-            $errorMessage,
+            $finalErrorMessage,
             $executionTime
         ]);
     }

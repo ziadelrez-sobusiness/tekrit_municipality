@@ -339,12 +339,13 @@ $stats = [
         
         <!-- Statistics -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-            <div class="bg-white p-4 md:p-6 rounded-lg shadow">
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow cursor-pointer hover:shadow-lg transition" onclick="window.location.href='?category='">
                 <div class="flex items-center">
                     <div class="text-2xl md:text-3xl text-blue-500 ml-2 md:ml-3">🔗</div>
                     <div>
                         <p class="text-xs md:text-sm text-gray-600">إجمالي الروابط</p>
                         <p class="text-xl md:text-2xl font-bold"><?= $stats['total_links'] ?></p>
+                        <p class="text-xs text-blue-600 mt-1">👆 اضغط للعرض</p>
                     </div>
                 </div>
             </div>
@@ -415,6 +416,29 @@ $stats = [
         
         <!-- Links Table -->
         <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="p-4 md:p-6 border-b bg-gray-50">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">قائمة الروابط</h2>
+                        <p class="text-sm text-gray-600 mt-1">
+                            إجمالي: <strong><?= $total_records ?></strong> رابط
+                            <?php if ($stats['active_links'] != $stats['total_links']): ?>
+                                | نشط: <strong><?= $stats['active_links'] ?></strong>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="../public/important-links.php" target="_blank" 
+                           class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-bold">
+                            🌐 معاينة الصفحة العامة
+                        </a>
+                        <a href="important_links_sources_management.php" 
+                           class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-bold">
+                            📡 إدارة المصادر
+                        </a>
+                    </div>
+                </div>
+            </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -430,19 +454,29 @@ $stats = [
                         <?php if (empty($links)): ?>
                             <tr>
                                 <td colspan="5" class="px-4 py-8 text-center text-gray-500">
-                                    لا توجد روابط
+                                    <div class="text-6xl mb-4">📭</div>
+                                    <p class="text-lg">لا توجد روابط</p>
+                                    <p class="text-sm text-gray-400 mt-2">استخدم "إدارة المصادر" لجلب البيانات تلقائياً</p>
                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($links as $link): ?>
-                                <tr class="hover:bg-gray-50">
+                                <tr class="hover:bg-gray-50 transition">
                                     <td class="px-4 py-3">
                                         <div class="text-sm md:text-base font-medium text-gray-900">
                                             <?= htmlspecialchars($link['name_ar']) ?>
                                         </div>
-                                        <?php if ($link['is_emergency']): ?>
-                                            <span class="inline-block mt-1 bg-red-100 text-red-800 px-2 py-1 rounded text-xs">🚨 طوارئ</span>
+                                        <?php if (!empty($link['name_en'])): ?>
+                                            <div class="text-xs text-gray-500 mt-1"><?= htmlspecialchars($link['name_en']) ?></div>
                                         <?php endif; ?>
+                                        <div class="flex flex-wrap gap-1 mt-2">
+                                            <?php if ($link['is_emergency']): ?>
+                                                <span class="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-xs">🚨 طوارئ</span>
+                                            <?php endif; ?>
+                                            <?php if ($link['is_government']): ?>
+                                                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">🏛️ حكومي</span>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                     <td class="px-4 py-3">
                                         <span class="inline-flex items-center px-2 py-1 rounded text-xs md:text-sm" 
