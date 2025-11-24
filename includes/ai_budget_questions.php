@@ -307,5 +307,104 @@ class AIBudgetQuestions {
 
         return $prompt;
     }
+
+    /**
+     * إنشاء ميزانية نموذجية (للاختبار أو عند عدم تفعيل AI)
+     */
+    public static function generateSampleBudget($answers, $budget_type = 'general') {
+        $standard_items = self::getStandardBudgetItems();
+
+        // حساب إجمالي الإيرادات من الإجابات
+        $estimated_revenues = floatval($answers['estimated_revenues'] ?? 100000000);
+
+        // إنشاء بنود الإيرادات
+        $revenue_items = [];
+        $total_revenues = 0;
+
+        foreach ($standard_items['revenues'] as $code => $item) {
+            $amount = $estimated_revenues * ($item['typical_percentage'] / 100);
+            $revenue_items[] = [
+                'code' => $code,
+                'name' => $item['name'],
+                'description' => $item['description'],
+                'amount' => round($amount, 2)
+            ];
+            $total_revenues += $amount;
+        }
+
+        // إنشاء بنود المصاريف
+        $expense_items = [];
+        $total_expenses = 0;
+
+        // حساب الرواتب بناءً على الإجابات
+        $employees_count = intval($answers['employees_count'] ?? 10);
+        $average_salary = floatval($answers['average_salary'] ?? 1500000);
+        $annual_salaries = $employees_count * $average_salary * 12;
+
+        // إضافة بند الرواتب
+        $expense_items[] = [
+            'code' => 'EXP-001',
+            'name' => 'رواتب وأجور',
+            'description' => "رواتب $employees_count موظف بمعدل " . number_format($average_salary) . " شهرياً",
+            'amount' => round($annual_salaries, 2)
+        ];
+        $total_expenses += $annual_salaries;
+
+        // باقي البنود بناءً على النسب القياسية
+        $remaining_budget = $total_revenues - $annual_salaries;
+
+        foreach ($standard_items['expenses'] as $code => $item) {
+            if ($code === 'EXP-001') continue; // تخطي الرواتب (أضفناها مسبقاً)
+
+            $amount = $remaining_budget * ($item['typical_percentage'] / 100);
+            $expense_items[] = [
+                'code' => $code,
+                'name' => $item['name'],
+                'description' => $item['description'],
+                'amount' => round($amount, 2)
+            ];
+            $total_expenses += $amount;
+        }
+
+        // حساب الرصيد
+        $balance = $total_revenues - $total_expenses;
+
+        // التوصيات
+        $recommendations = [
+            'تم إنشاء هذه الميزانية بشكل تلقائي بناءً على المعايير القياسية للبلديات اللبنانية',
+            'يُنصح بمراجعة جميع البنود وتعديلها حسب احتياجات البلدية الفعلية',
+            'تأكد من توازن الميزانية قبل الاعتماد النهائي'
+        ];
+
+        if ($balance < 0) {
+            $recommendations[] = 'تحذير: الميزانية غير متوازنة. المصاريف تتجاوز الإيرادات بمقدار ' . number_format(abs($balance));
+            $recommendations[] = 'يُنصح بتقليل المصاريف أو زيادة الإيرادات';
+        } else {
+            $recommendations[] = 'الميزانية متوازنة مع فائض قدره ' . number_format($balance);
+        }
+
+        // إضافة توصيات بناءً على الأولويات
+        if (isset($answers['priority_sectors']) && is_array($answers['priority_sectors'])) {
+            $recommendations[] = 'تم مراعاة القطاعات ذات الأولوية: ' . implode(', ', $answers['priority_sectors']);
+        }
+
+        return [
+            'budget_summary' => [
+                'total_revenues' => round($total_revenues, 2),
+                'total_expenses' => round($total_expenses, 2),
+                'balance' => round($balance, 2)
+            ],
+            'revenue_items' => $revenue_items,
+            'expense_items' => $expense_items,
+            'recommendations' => $recommendations,
+            'metadata' => [
+                'fiscal_year' => $answers['fiscal_year'] ?? date('Y'),
+                'population' => $answers['population'] ?? 'غير محدد',
+                'budget_type' => $budget_type,
+                'generated_at' => date('Y-m-d H:i:s'),
+                'method' => 'automatic'
+            ]
+        ];
+    }
 }
 ?>

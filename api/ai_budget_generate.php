@@ -62,17 +62,33 @@ try {
             break;
 
         case 'generate_budget':
-            // التحقق من تفعيل AI
-            if (!isAIEnabled()) {
-                throw new Exception('الذكاء الاصطناعي غير مفعل في النظام');
-            }
-
             // الحصول على الإجابات
             $answers = $input['answers'] ?? [];
             $budget_type = $input['budget_type'] ?? 'general';
 
             if (empty($answers)) {
                 throw new Exception('يرجى الإجابة على الأسئلة أولاً');
+            }
+
+            // التحقق من تفعيل AI
+            $ai_enabled = false;
+            try {
+                $ai_enabled = isAIEnabled();
+            } catch (Exception $e) {
+                // تجاهل خطأ الاتصال بقاعدة البيانات
+            }
+
+            if (!$ai_enabled) {
+                // وضع تجريبي: إنشاء ميزانية نموذجية
+                $budget_data = AIBudgetQuestions::generateSampleBudget($answers, $budget_type);
+
+                echo json_encode([
+                    'success' => true,
+                    'budget_data' => $budget_data,
+                    'demo_mode' => true,
+                    'message' => 'تم إنشاء ميزانية نموذجية. لاستخدام الذكاء الاصطناعي، يرجى تفعيله من إعدادات النظام.'
+                ]);
+                break;
             }
 
             // بناء prompt
@@ -84,38 +100,51 @@ try {
             $system_message .= "أعط الرد بصيغة JSON فقط بدون أي نص إضافي.";
 
             // إرسال الطلب للذكاء الاصطناعي
-            $ai_service = new AIService();
-            $result = $ai_service->sendTextRequest($prompt, $system_message, [
-                'temperature' => 0.7,
-                'max_tokens' => 3000
-            ]);
+            try {
+                $ai_service = new AIService();
+                $result = $ai_service->sendTextRequest($prompt, $system_message, [
+                    'temperature' => 0.7,
+                    'max_tokens' => 3000
+                ]);
 
-            if (!$result['success']) {
-                throw new Exception($result['error'] ?? 'فشل الاتصال بخدمة الذكاء الاصطناعي');
-            }
-
-            // تحليل النتيجة
-            $ai_content = $result['content'];
-
-            // محاولة استخراج JSON من الرد
-            $json_start = strpos($ai_content, '{');
-            $json_end = strrpos($ai_content, '}');
-
-            if ($json_start !== false && $json_end !== false) {
-                $json_string = substr($ai_content, $json_start, $json_end - $json_start + 1);
-                $budget_data = json_decode($json_string, true);
-
-                if (!$budget_data) {
-                    throw new Exception('فشل تحليل رد الذكاء الاصطناعي');
+                if (!$result['success']) {
+                    throw new Exception($result['error'] ?? 'فشل الاتصال بخدمة الذكاء الاصطناعي');
                 }
+
+                // تحليل النتيجة
+                $ai_content = $result['content'];
+
+                // محاولة استخراج JSON من الرد
+                $json_start = strpos($ai_content, '{');
+                $json_end = strrpos($ai_content, '}');
+
+                if ($json_start !== false && $json_end !== false) {
+                    $json_string = substr($ai_content, $json_start, $json_end - $json_start + 1);
+                    $budget_data = json_decode($json_string, true);
+
+                    if (!$budget_data) {
+                        throw new Exception('فشل تحليل رد الذكاء الاصطناعي');
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'budget_data' => $budget_data,
+                        'raw_response' => $ai_content,
+                        'demo_mode' => false
+                    ]);
+                } else {
+                    throw new Exception('الرد لا يحتوي على بيانات صحيحة');
+                }
+            } catch (Exception $e) {
+                // في حالة فشل AI، استخدم الوضع التجريبي
+                $budget_data = AIBudgetQuestions::generateSampleBudget($answers, $budget_type);
 
                 echo json_encode([
                     'success' => true,
                     'budget_data' => $budget_data,
-                    'raw_response' => $ai_content
+                    'demo_mode' => true,
+                    'message' => 'تم إنشاء ميزانية نموذجية بسبب خطأ في AI: ' . $e->getMessage()
                 ]);
-            } else {
-                throw new Exception('الرد لا يحتوي على بيانات صحيحة');
             }
             break;
 
