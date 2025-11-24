@@ -360,21 +360,22 @@ $site_title = getSetting('site_title', 'بلدية تكريت');
                             <p class="text-gray-600 text-sm">إذا كنت قدمت طلباً أو شكوى سابقاً، أدخل رمز الدخول الخاص بك</p>
                         </div>
 
-                        <div class="max-w-md mx-auto">
-                            <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-                                <div class="flex-1 flex items-center border-2 border-blue-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white" style="direction: ltr;">
-                                    <div class="px-4 py-3 text-lg font-bold text-gray-500 flex items-center">
+                        <div class="max-w-md mx-auto w-full px-2">
+                            <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full">
+                                <div class="flex-1 flex items-center border-2 border-blue-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 bg-white min-w-0 w-full sm:w-auto" style="direction: ltr; box-sizing: border-box;">
+                                    <div class="px-2 sm:px-4 py-2 sm:py-3 text-base sm:text-lg font-bold text-gray-500 flex items-center flex-shrink-0">
                                         <span>TKT-</span>
                                     </div>
                                     <input type="text" id="access-code-input"
-                                           class="flex-1 px-4 py-3 border-0 focus:ring-0 focus:outline-none text-center font-bold text-lg tracking-wider"
+                                           class="flex-1 min-w-0 px-2 sm:px-4 py-2 sm:py-3 border-0 focus:ring-0 focus:outline-none text-center font-bold text-base sm:text-lg tracking-wider w-full"
                                            placeholder="12345"
                                            maxlength="5"
                                            pattern="[0-9]{5}"
-                                           inputmode="numeric">
+                                           inputmode="numeric"
+                                           style="box-sizing: border-box;">
                                 </div>
                                 <button type="button" onclick="loadDataByAccessCode()"
-                                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-bold whitespace-nowrap">
+                                        class="bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-blue-700 transition font-bold whitespace-nowrap w-full sm:w-auto text-sm sm:text-base">
                                     🔍 جلب البيانات
                                 </button>
                             </div>

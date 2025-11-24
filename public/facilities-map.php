@@ -1038,21 +1038,6 @@ $t = $texts[$lang];
         });
     </script>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-16">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                 <div class="text-center md:text-left mb-4 md:mb-0">
-                    <p class="text-gray-400">© <?= date('Y') ?> جميع الحقوق محفوظة - <?= htmlspecialchars($site_title) ?></p>
-                </div>
-                <div class="flex items-center text-center md:text-right">
-                    <a href="https://www.sobusiness.group/" target="_blank" class="hover:opacity-80 transition-opacity">
-                        <img src="assets/images/sobusiness-logo.png" alt="SoBusiness Group" class="h-8 w-auto">
-                    </a>
-					<span class="text-gray-400 text-sm mr-2">Development and Designed By</span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <?php require_once 'includes/footer.php'; ?>
 </body>
 </html> 

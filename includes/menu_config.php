@@ -231,13 +231,19 @@ $menu_items = [
     ],
     [
         'category' => '🌐 الموقع والاتصالات',
-        'permissions_check' => ['website_view', 'contact_view', 'telegram_view', 'sms_view'],
+        'permissions_check' => ['website_view', 'contact_view', 'telegram_view', 'sms_view', 'important_links_view'],
         'items' => [
             [
                 'permission' => 'website_view',
                 'url' => 'modules/public_content_management.php',
                 'icon' => '🌐',
                 'label' => 'الموقع العام'
+            ],
+            [
+                'permission' => 'important_links_view',
+                'url' => 'modules/important_links_management.php',
+                'icon' => '🔗',
+                'label' => 'روابط مهمة'
             ],
             [
                 'permission' => 'contact_view',
@@ -310,7 +316,15 @@ $menu_items = [
 function renderMenu($menu_items) {
     foreach ($menu_items as $category) {
         // التحقق إذا كان المستخدم لديه أي صلاحية من الفئة
-        if (!hasCategoryPermission($category['permissions_check'])) {
+        // استثناء: قسم "الموقع والاتصالات" يظهر إذا كان المستخدم مسجل دخول (لإظهار روابط مهمة)
+        $should_show_category = false;
+        if ($category['category'] == '🌐 الموقع والاتصالات' && isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+            $should_show_category = true;
+        } else {
+            $should_show_category = hasCategoryPermission($category['permissions_check']);
+        }
+        
+        if (!$should_show_category) {
             continue;
         }
 
@@ -321,7 +335,20 @@ function renderMenu($menu_items) {
 
         // عرض العناصر
         foreach ($category['items'] as $item) {
-            if (hasPermission($item['permission'])) {
+            // السماح بعرض روابط مهمة لجميع المستخدمين المسجلين (إذا لم تكن الصلاحية موجودة)
+            $show_item = false;
+            if ($item['permission'] == 'important_links_view') {
+                // إذا كان المستخدم مسجل دخول، اعرض الرابط
+                $show_item = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+                // أو إذا كان لديه الصلاحية
+                if (!$show_item) {
+                    $show_item = hasPermission($item['permission']);
+                }
+            } else {
+                $show_item = hasPermission($item['permission']);
+            }
+            
+            if ($show_item) {
                 $class = isset($item['class']) ? $item['class'] : '';
                 echo '<a href="' . $item['url'] . '" class="nav-item flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 ' . $class . '">';
                 echo '    <span class="sidebar-icon">' . $item['icon'] . '</span>';

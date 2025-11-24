@@ -236,7 +236,10 @@ INSERT INTO permissions (permission_name, display_name, description, category, m
 
 -- الرسائل النصية SMS
 ('sms_view', 'عرض الرسائل النصية', 'عرض سجلات الرسائل النصية', 'website', 'sms', 'modules/sms.php', '📱', 630),
-('sms_send', 'إرسال رسائل نصية', 'إرسال رسائل نصية للمواطنين', 'website', 'sms', 'modules/sms.php', '📤', 631);
+('sms_send', 'إرسال رسائل نصية', 'إرسال رسائل نصية للمواطنين', 'website', 'sms', 'modules/sms.php', '📤', 631),
+
+-- روابط مهمة
+('important_links_view', 'إدارة روابط مهمة', 'عرض وإدارة روابط مهمة (المرافق العامة)', 'website', 'important_links', 'modules/important_links_management.php', '🔗', 640);
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- الفئة 8: 📊 التقارير والأرشفة (reports)

@@ -209,56 +209,7 @@ $news_types = ['رسمية', 'مناسبات محلية', 'أنشطة اجتما
         <?php endif; ?>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-8 mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <div class="flex items-center mb-4">
-                        <div class="bg-indigo-600 text-white p-2 rounded-lg ml-3">🏛️</div>
-                        <h3 class="text-lg font-bold"><?= htmlspecialchars($site_title) ?></h3>
-                    </div>
-                    <p class="text-gray-300">متابعة دائمة لآخر أخبار وأنشطة البلدية</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">الأقسام</h4>
-                    <ul class="space-y-2">
-                        <li><a href="index.php" class="text-gray-300 hover:text-white">الرئيسية</a></li>
-                        <li><a href="citizen-requests.php" class="text-gray-300 hover:text-white">طلبات المواطنين</a></li>
-                        <li><a href="projects.php" class="text-gray-300 hover:text-white">المشاريع</a></li>
-                        <li><a href="contact.php" class="text-gray-300 hover:text-white">اتصل بنا</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">أنواع الأخبار</h4>
-                    <ul class="space-y-2">
-                        <?php foreach ($news_types as $type): ?>
-                            <li><a href="?type=<?= urlencode($type) ?>" class="text-gray-300 hover:text-white"><?= $type ?></a></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">تواصل معنا</h4>
-                    <div class="space-y-2">
-                        <p class="text-gray-300">📞 <?= htmlspecialchars(getSetting('contact_phone')) ?></p>
-                        <p class="text-gray-300">✉️ <?= htmlspecialchars(getSetting('contact_email')) ?></p>
-                    </div>
-                </div>
-            </div>
-            <hr class="my-8 border-gray-700">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                 <div class="text-center md:text-left mb-4 md:mb-0">
-                    <p class="text-gray-400">© <?= date('Y') ?> جميع الحقوق محفوظة - <?= htmlspecialchars($site_title) ?></p>
-                </div>
-                <div class="flex items-center text-center md:text-right">
-                    <a href="https://www.sobusiness.group/" target="_blank" class="hover:opacity-80 transition-opacity">
-                        <img src="assets/images/sobusiness-logo.png" alt="SoBusiness Group" class="h-8 w-auto">
-                    </a>
-					<span class="text-gray-400 text-sm mr-2">Development and Designed By</span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <?php require_once 'includes/footer.php'; ?>
 
 </body>
 </html> 

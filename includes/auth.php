@@ -149,7 +149,21 @@ class Auth {
     
     public function requireLogin() {
         if (!$this->isLoggedIn()) {
-            header('Location: ' . $this->getBaseUrl() . '/login.php');
+            // تحديد المسار الصحيح لصفحة تسجيل الدخول
+            $current_dir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
+            
+            // إذا كنا في مجلد modules، استخدم ../login.php
+            if (strpos($current_dir, '/modules') !== false || strpos($current_dir, '\\modules') !== false) {
+                $redirect_url = '../login.php';
+            } else {
+                // خلاف ذلك، استخدم المسار المطلق
+                $base_url = $this->getBaseUrl();
+                // إزالة /modules من المسار إذا كان موجوداً
+                $base_url = str_replace('/modules', '', $base_url);
+                $redirect_url = $base_url . '/login.php';
+            }
+            
+            header('Location: ' . $redirect_url);
             exit();
         }
     }

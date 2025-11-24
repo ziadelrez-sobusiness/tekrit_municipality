@@ -139,10 +139,25 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                 <!-- Desktop Navigation -->
                 <nav class="hidden lg:flex items-center space-x-6 space-x-reverse">
                     <a href="#" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">الرئيسية</a>
-                    <a href="citizen-requests.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">طلبات المواطنين</a>
+                    <div class="relative group">
+                        <button class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap flex items-center transition">
+                            المواطنين
+                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <div class="py-1">
+                                <a href="citizen-dashboard.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">👤 حساب المواطنين</a>
+                                <a href="citizen-requests.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">📝 طلبات المواطنين</a>
+                                <a href="citizen-complaints.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">📢 شكاوى المواطنين</a>
+                            </div>
+                        </div>
+                    </div>
                     <a href="projects.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">المشاريع</a>
                     <a href="initiatives.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">المبادرات</a>
                     <a href="news.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">الأخبار</a>
+                    <a href="important-links.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition">🔗 روابط مهمة</a>
                     <div class="relative group">
                         <button class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap flex items-center transition">
                             البلدية
@@ -163,10 +178,6 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                 
                 <!-- Desktop Login Buttons -->
                 <div class="hidden lg:flex items-center space-x-3 space-x-reverse flex-shrink-0">
-                    <a href="login.php" class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold text-sm hover:from-green-600 hover:to-green-700 transition duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center whitespace-nowrap">
-                        <span class="ml-2">👤</span>
-                        المواطنين
-                    </a>
                     <a href="../login.php" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-bold text-sm hover:from-orange-600 hover:to-orange-700 transition duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center whitespace-nowrap">
                         <span class="ml-2">🔐</span>
                         الموظفين
@@ -187,10 +198,26 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
             <div id="mobile-menu" class="lg:hidden hidden">
                 <div class="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
                     <a href="#" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium">الرئيسية</a>
-                    <a href="citizen-requests.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium">طلبات المواطنين</a>
+                    
+                    <!-- Mobile Citizens Submenu -->
+                    <div class="space-y-1">
+                        <button id="mobile-citizens-btn" class="w-full text-right px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium flex items-center justify-between">
+                            المواطنين
+                            <svg class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="mobile-citizens-menu" class="hidden pr-4 space-y-1">
+                            <a href="citizen-dashboard.php" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md">👤 حساب المواطنين</a>
+                            <a href="citizen-requests.php" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md">📝 طلبات المواطنين</a>
+                            <a href="citizen-complaints.php" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md">📢 شكاوى المواطنين</a>
+                        </div>
+                    </div>
+                    
                     <a href="projects.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium">المشاريع</a>
                     <a href="initiatives.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium">المبادرات</a>
                     <a href="news.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium">الأخبار</a>
+                    <a href="important-links.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium">🔗 روابط مهمة</a>
                     
                     <!-- Mobile Municipality Submenu -->
                     <div class="space-y-1">
@@ -211,9 +238,6 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                     
                     <!-- Mobile Login Buttons -->
                     <div class="pt-4 border-t border-gray-200 space-y-3">
-                        <a href="login.php" class="block w-full text-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold hover:from-green-600 hover:to-green-700 transition duration-300 shadow-md">
-                            👤 دخول المواطنين
-                        </a>
                         <a href="../login.php" class="block w-full text-center btn-primary-orange">
                             🔐 دخول الموظفين
                         </a>
@@ -523,22 +547,7 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
     </section>
     <?php endif; ?>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-16">
-        <div class="container mx-auto px-4">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="text-center md:text-left mb-4 md:mb-0">
-                    <p class="text-gray-400">© <?= date('Y') ?> جميع الحقوق محفوظة - <?= htmlspecialchars($site_title) ?></p>
-                </div>
-                <div class="flex items-center text-center md:text-right">
-                    <a href="https://www.sobusiness.group/" target="_blank" class="hover:opacity-80 transition-opacity">
-                        <img src="assets/images/sobusiness-logo.png" alt="SoBusiness Group" class="h-8 w-auto">
-                    </a>
-					<span class="text-gray-400 text-sm mr-2">Development and Designed By</span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <?php require_once 'includes/footer.php'; ?>
 
     <!-- Mobile Menu JavaScript -->
     <script>
@@ -560,6 +569,19 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                     icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
                 }
             });
+
+            // Toggle citizens submenu in mobile
+            const citizensBtn = document.getElementById('mobile-citizens-btn');
+            const citizensMenu = document.getElementById('mobile-citizens-menu');
+            if (citizensBtn && citizensMenu) {
+                citizensBtn.addEventListener('click', function() {
+                    citizensMenu.classList.toggle('hidden');
+                    
+                    // Rotate arrow
+                    const arrow = citizensBtn.querySelector('svg');
+                    arrow.classList.toggle('rotate-180');
+                });
+            }
 
             // Toggle municipality submenu in mobile
             if (municipalityBtn && municipalityMenu) {

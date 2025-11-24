@@ -333,168 +333,201 @@ if (isset($_GET['code'])) {
                 </div>
             </div>
 
-           
-
-            <!-- الطلبات -->
-            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 طلباتي</h2>
-                
-                <?php if (empty($requests)): ?>
-                    <div class="text-center py-12">
-                        <div class="text-6xl mb-4">📭</div>
-                        <p class="text-xl text-gray-600">لا توجد طلبات حتى الآن</p>
-                        <a href="citizen-requests.php" class="inline-block mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
-                            ➕ تقديم طلب جديد
-                        </a>
-                    </div>
-                <?php else: ?>
-                    <div class="space-y-4">
-                        <?php foreach ($requests as $request): ?>
-                            <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-blue-400 transition">
-                                <div class="flex items-start justify-between mb-3">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-gray-800 mb-1">
-                                            <?= htmlspecialchars($request['request_title'] ?? $request['type_name']) ?>
-                                        </h3>
-                                        <p class="text-sm text-gray-600">
-                                            🔢 <?= htmlspecialchars($request['tracking_number']) ?>
-                                        </p>
-                                    </div>
-                                    <span class="px-3 py-1 rounded-full text-sm font-bold 
-                                        <?php 
-                                        switch($request['status']) {
-                                            case 'جديد': echo 'bg-blue-100 text-blue-800'; break;
-                                            case 'قيد المراجعة': echo 'bg-yellow-100 text-yellow-800'; break;
-                                            case 'قيد التنفيذ': echo 'bg-purple-100 text-purple-800'; break;
-                                            case 'مكتمل': echo 'bg-green-100 text-green-800'; break;
-                                            case 'مرفوض': echo 'bg-red-100 text-red-800'; break;
-                                            default: echo 'bg-gray-100 text-gray-800';
-                                        }
-                                        ?>">
-                                        <?= htmlspecialchars($request['status']) ?>
-                                    </span>
-                                </div>
-                                <div class="text-sm text-gray-600 mb-3">
-                                    📅 <?= date('Y-m-d', strtotime($request['created_at'])) ?>
-                                </div>
-                                <div class="flex gap-2">
-                                    <a href="citizen-request-details.php?tracking=<?= urlencode($request['tracking_number']) ?>" 
-                                       class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition">
-                                        👁️ التفاصيل الكاملة
-                                    </a>
-                                    <a href="track-request.php?tracking=<?= urlencode($request['tracking_number']) ?>" 
-                                       class="inline-block bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition">
-                                        🔍 تتبع
-                                    </a>
-                                </div>
+            <!-- تبويبات الطلبات والشكاوى -->
+            <div class="bg-white rounded-2xl shadow-xl p-4 md:p-8 mb-8">
+                <!-- أزرار التبويبات -->
+                <div class="flex flex-col sm:flex-row gap-3 mb-6 border-b-2 border-gray-200 pb-4">
+                    <button id="tab-requests" 
+                            onclick="switchTab('requests')" 
+                            class="tab-button flex-1 px-4 md:px-6 py-3 md:py-4 rounded-lg font-bold text-base md:text-lg transition-all duration-300 transform hover:scale-105 active-tab">
+                        <div class="flex items-center justify-center gap-2 md:gap-3">
+                            <span class="text-2xl md:text-3xl">📋</span>
+                            <div class="text-right">
+                                <div class="font-bold">طلباتي</div>
+                                <div class="text-xs md:text-sm font-normal opacity-75"><?= count($requests) ?> طلب</div>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- الشكاوى -->
-            <div id="complaints" class="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">📢 شكواي</h2>
-                    <a href="citizen-complaints.php" class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 transition text-sm">
-                        ➕ شكوى جديدة
-                    </a>
+                        </div>
+                    </button>
+                    
+                    <button id="tab-complaints" 
+                            onclick="switchTab('complaints')" 
+                            class="tab-button flex-1 px-4 md:px-6 py-3 md:py-4 rounded-lg font-bold text-base md:text-lg transition-all duration-300 transform hover:scale-105">
+                        <div class="flex items-center justify-center gap-2 md:gap-3">
+                            <span class="text-2xl md:text-3xl">📢</span>
+                            <div class="text-right">
+                                <div class="font-bold">شكواي</div>
+                                <div class="text-xs md:text-sm font-normal opacity-75"><?= count($complaints) ?> شكوى</div>
+                            </div>
+                        </div>
+                    </button>
                 </div>
                 
-                <?php 
-                // Debug: عرض معلومات التشخيص (يمكن إزالة true لإخفاءه)
-                if (isset($_GET['debug'])) {
-                    echo "<div class='bg-yellow-50 border border-yellow-400 rounded p-4 mb-4 text-sm'>";
-                    echo "<strong>🔍 Debug Info:</strong><br>";
-                    echo "عدد الشكاوى في المتغير: " . count($complaints) . "<br>";
-                    echo "Citizen ID: " . ($citizen['id'] ?? 'N/A') . "<br>";
-                    echo "Citizen Phone: " . ($citizen['phone'] ?? 'N/A') . "<br>";
-                    echo "Is empty: " . (empty($complaints) ? 'YES' : 'NO') . "<br>";
-                    if (!empty($complaints)) {
-                        echo "<strong>الشكاوى:</strong><br>";
-                        echo "<pre class='mt-2 text-xs bg-white p-2 rounded overflow-auto max-h-64'>";
-                        print_r($complaints);
-                        echo "</pre>";
-                    } else {
-                        echo "<strong class='text-red-600'>⚠️ لا توجد شكاوى في المتغير \$complaints</strong><br>";
-                        // محاولة جلب مباشرة
-                        try {
-                            $testStmt = $db->prepare("SELECT * FROM complaints WHERE citizen_id = ? OR citizen_phone = ? LIMIT 5");
-                            $testStmt->execute([$citizen['id'], $citizen['phone']]);
-                            $testComplaints = $testStmt->fetchAll(PDO::FETCH_ASSOC);
-                            echo "<strong>اختبار مباشر:</strong> وجد " . count($testComplaints) . " شكوى<br>";
-                            if (!empty($testComplaints)) {
-                                echo "<pre class='mt-2 text-xs bg-white p-2 rounded overflow-auto max-h-64'>";
-                                print_r($testComplaints);
-                                echo "</pre>";
-                            }
-                        } catch (Exception $e) {
-                            echo "خطأ في الاختبار المباشر: " . $e->getMessage();
-                        }
-                    }
-                    echo "</div>";
-                }
-                ?>
-                
-                <?php if (empty($complaints)): ?>
-                    <div class="text-center py-12">
-                        <div class="text-6xl mb-4">📭</div>
-                        <p class="text-xl text-gray-600">لا توجد شكاوى حتى الآن</p>
-                        <a href="citizen-complaints.php" class="inline-block mt-4 bg-red-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700 transition">
-                            ➕ تقديم شكوى جديدة
+                <!-- محتوى الطلبات -->
+                <div id="content-requests" class="tab-content">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800">📋 طلباتي</h2>
+                        <a href="citizen-requests.php" class="bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition text-sm md:text-base">
+                            ➕ طلب جديد
                         </a>
                     </div>
-                <?php else: ?>
-                    <div class="space-y-4">
-                        <?php foreach ($complaints as $complaint): ?>
-                            <div class="border-2 border-gray-200 rounded-xl p-6 hover:border-red-400 transition">
-                                <div class="flex items-start justify-between mb-3">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-gray-800 mb-1">
-                                            <?= htmlspecialchars($complaint['subject']) ?>
-                                        </h3>
-                                        <p class="text-sm text-gray-600">
-                                            🔢 <?= htmlspecialchars($complaint['complaint_number'] ?? '#' . $complaint['id']) ?>
-                                        </p>
+                    
+                    <?php if (empty($requests)): ?>
+                        <div class="text-center py-12">
+                            <div class="text-6xl mb-4">📭</div>
+                            <p class="text-lg md:text-xl text-gray-600 mb-4">لا توجد طلبات حتى الآن</p>
+                            <a href="citizen-requests.php" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                                ➕ تقديم طلب جديد
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="space-y-4">
+                            <?php foreach ($requests as $request): ?>
+                                <div class="border-2 border-gray-200 rounded-xl p-4 md:p-6 hover:border-blue-400 transition">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                                        <div class="flex-1">
+                                            <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1">
+                                                <?= htmlspecialchars($request['request_title'] ?? $request['type_name']) ?>
+                                            </h3>
+                                            <p class="text-sm text-gray-600">
+                                                🔢 <?= htmlspecialchars($request['tracking_number']) ?>
+                                            </p>
+                                        </div>
+                                        <span class="px-3 py-1 rounded-full text-xs md:text-sm font-bold self-start
+                                            <?php 
+                                            switch($request['status']) {
+                                                case 'جديد': echo 'bg-blue-100 text-blue-800'; break;
+                                                case 'قيد المراجعة': echo 'bg-yellow-100 text-yellow-800'; break;
+                                                case 'قيد التنفيذ': echo 'bg-purple-100 text-purple-800'; break;
+                                                case 'مكتمل': echo 'bg-green-100 text-green-800'; break;
+                                                case 'مرفوض': echo 'bg-red-100 text-red-800'; break;
+                                                default: echo 'bg-gray-100 text-gray-800';
+                                            }
+                                            ?>">
+                                            <?= htmlspecialchars($request['status']) ?>
+                                        </span>
                                     </div>
-                                    <span class="px-3 py-1 rounded-full text-sm font-bold 
-                                        <?php 
-                                        switch($complaint['status']) {
-                                            case 'جديدة': echo 'bg-red-100 text-red-800'; break;
-                                            case 'قيد المراجعة': echo 'bg-yellow-100 text-yellow-800'; break;
-                                            case 'قيد المعالجة': echo 'bg-blue-100 text-blue-800'; break;
-                                            case 'مكتملة': echo 'bg-green-100 text-green-800'; break;
-                                            case 'مؤجلة': echo 'bg-gray-100 text-gray-800'; break;
-                                            case 'مرفوضة': echo 'bg-red-100 text-red-800'; break;
-                                            default: echo 'bg-gray-100 text-gray-800';
-                                        }
-                                        ?>">
-                                        <?= htmlspecialchars($complaint['status']) ?>
-                                    </span>
+                                    <div class="text-sm text-gray-600 mb-3">
+                                        📅 <?= date('Y-m-d', strtotime($request['created_at'])) ?>
+                                    </div>
+                                    <div class="flex flex-col sm:flex-row gap-2">
+                                        <a href="citizen-request-details.php?tracking=<?= urlencode($request['tracking_number']) ?>" 
+                                           class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition text-center">
+                                            👁️ التفاصيل الكاملة
+                                        </a>
+                                        <a href="track-request.php?tracking=<?= urlencode($request['tracking_number']) ?>" 
+                                           class="inline-block bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition text-center">
+                                            🔍 تتبع
+                                        </a>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                                    <?php 
-                                    // دعم أسماء الأعمدة المختلفة: category, complaint_type, category_display
-                                    $category = $complaint['category_display'] ?? $complaint['category'] ?? $complaint['complaint_type'] ?? 'غير محدد';
-                                    $dateField = $complaint['created_at'] ?? $complaint['date_submitted'] ?? 'now';
-                                    ?>
-                                    <span>📂 <?= htmlspecialchars($category) ?></span>
-                                    <span>📅 <?= date('Y-m-d', strtotime($dateField)) ?></span>
-                                    <?php if (isset($complaint['updates_count']) && $complaint['updates_count'] > 0): ?>
-                                        <span>💬 <?= $complaint['updates_count'] ?> تحديث</span>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="flex gap-2">
-                                    <a href="citizen-complaint-details.php?number=<?= urlencode($complaint['complaint_number'] ?? $complaint['id']) ?>" 
-                                       class="inline-block bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition">
-                                        👁️ التفاصيل الكاملة
-                                    </a>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <!-- محتوى الشكاوى -->
+                <div id="content-complaints" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-800">📢 شكواي</h2>
+                        <a href="citizen-complaints.php" class="bg-red-600 text-white px-3 md:px-4 py-2 rounded-lg font-bold hover:bg-red-700 transition text-sm md:text-base">
+                            ➕ شكوى جديدة
+                        </a>
                     </div>
-                <?php endif; ?>
+                    
+                    <?php 
+                    // Debug: عرض معلومات التشخيص (يمكن إزالة true لإخفاءه)
+                    if (isset($_GET['debug'])) {
+                        echo "<div class='bg-yellow-50 border border-yellow-400 rounded p-4 mb-4 text-sm'>";
+                        echo "<strong>🔍 Debug Info:</strong><br>";
+                        echo "عدد الشكاوى في المتغير: " . count($complaints) . "<br>";
+                        echo "Citizen ID: " . ($citizen['id'] ?? 'N/A') . "<br>";
+                        echo "Citizen Phone: " . ($citizen['phone'] ?? 'N/A') . "<br>";
+                        echo "Is empty: " . (empty($complaints) ? 'YES' : 'NO') . "<br>";
+                        if (!empty($complaints)) {
+                            echo "<strong>الشكاوى:</strong><br>";
+                            echo "<pre class='mt-2 text-xs bg-white p-2 rounded overflow-auto max-h-64'>";
+                            print_r($complaints);
+                            echo "</pre>";
+                        } else {
+                            echo "<strong class='text-red-600'>⚠️ لا توجد شكاوى في المتغير \$complaints</strong><br>";
+                            // محاولة جلب مباشرة
+                            try {
+                                $testStmt = $db->prepare("SELECT * FROM complaints WHERE citizen_id = ? OR citizen_phone = ? LIMIT 5");
+                                $testStmt->execute([$citizen['id'], $citizen['phone']]);
+                                $testComplaints = $testStmt->fetchAll(PDO::FETCH_ASSOC);
+                                echo "<strong>اختبار مباشر:</strong> وجد " . count($testComplaints) . " شكوى<br>";
+                                if (!empty($testComplaints)) {
+                                    echo "<pre class='mt-2 text-xs bg-white p-2 rounded overflow-auto max-h-64'>";
+                                    print_r($testComplaints);
+                                    echo "</pre>";
+                                }
+                            } catch (Exception $e) {
+                                echo "خطأ في الاختبار المباشر: " . $e->getMessage();
+                            }
+                        }
+                        echo "</div>";
+                    }
+                    ?>
+                    
+                    <?php if (empty($complaints)): ?>
+                        <div class="text-center py-12">
+                            <div class="text-6xl mb-4">📭</div>
+                            <p class="text-lg md:text-xl text-gray-600 mb-4">لا توجد شكاوى حتى الآن</p>
+                            <a href="citizen-complaints.php" class="inline-block mt-4 bg-red-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700 transition">
+                                ➕ تقديم شكوى جديدة
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="space-y-4">
+                            <?php foreach ($complaints as $complaint): ?>
+                                <div class="border-2 border-gray-200 rounded-xl p-4 md:p-6 hover:border-red-400 transition">
+                                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                                        <div class="flex-1">
+                                            <h3 class="text-base md:text-lg font-bold text-gray-800 mb-1">
+                                                <?= htmlspecialchars($complaint['subject']) ?>
+                                            </h3>
+                                            <p class="text-sm text-gray-600">
+                                                🔢 <?= htmlspecialchars($complaint['complaint_number'] ?? '#' . $complaint['id']) ?>
+                                            </p>
+                                        </div>
+                                        <span class="px-3 py-1 rounded-full text-xs md:text-sm font-bold self-start
+                                            <?php 
+                                            switch($complaint['status']) {
+                                                case 'جديدة': echo 'bg-red-100 text-red-800'; break;
+                                                case 'قيد المراجعة': echo 'bg-yellow-100 text-yellow-800'; break;
+                                                case 'قيد المعالجة': echo 'bg-blue-100 text-blue-800'; break;
+                                                case 'مكتملة': echo 'bg-green-100 text-green-800'; break;
+                                                case 'مؤجلة': echo 'bg-gray-100 text-gray-800'; break;
+                                                case 'مرفوضة': echo 'bg-red-100 text-red-800'; break;
+                                                default: echo 'bg-gray-100 text-gray-800';
+                                            }
+                                            ?>">
+                                            <?= htmlspecialchars($complaint['status']) ?>
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 mb-3">
+                                        <?php 
+                                        // دعم أسماء الأعمدة المختلفة: category, complaint_type, category_display
+                                        $category = $complaint['category_display'] ?? $complaint['category'] ?? $complaint['complaint_type'] ?? 'غير محدد';
+                                        $dateField = $complaint['created_at'] ?? $complaint['date_submitted'] ?? 'now';
+                                        ?>
+                                        <span>📂 <?= htmlspecialchars($category) ?></span>
+                                        <span>📅 <?= date('Y-m-d', strtotime($dateField)) ?></span>
+                                        <?php if (isset($complaint['updates_count']) && $complaint['updates_count'] > 0): ?>
+                                            <span>💬 <?= $complaint['updates_count'] ?> تحديث</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <a href="citizen-complaint-details.php?number=<?= urlencode($complaint['complaint_number'] ?? $complaint['id']) ?>" 
+                                           class="inline-block bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition text-center">
+                                            👁️ التفاصيل الكاملة
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <!-- الرسائل -->
@@ -526,6 +559,49 @@ if (isset($_GET['code'])) {
         </div>
     </div>
     
+    <style>
+        /* تنسيق التبويبات */
+        .tab-button {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #6b7280;
+            border: 2px solid transparent;
+        }
+        
+        .tab-button.active-tab {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border-color: #1d4ed8;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .tab-button:hover:not(.active-tab) {
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        }
+        
+        .tab-content {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* تحسينات للشاشات الصغيرة */
+        @media (max-width: 640px) {
+            .tab-button {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+    
     <script>
         // نسخ رمز الدخول
         function copyAccessCode(code) {
@@ -543,6 +619,45 @@ if (isset($_GET['code'])) {
                 alert('✅ تم نسخ رمز الدخول!');
             });
         }
+        
+        // التبديل بين التبويبات
+        function switchTab(tabName) {
+            // إخفاء جميع المحتويات
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // إزالة حالة النشاط من جميع الأزرار
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active-tab');
+            });
+            
+            // إظهار المحتوى المحدد
+            const content = document.getElementById('content-' + tabName);
+            if (content) {
+                content.classList.remove('hidden');
+            }
+            
+            // إضافة حالة النشاط للزر المحدد
+            const button = document.getElementById('tab-' + tabName);
+            if (button) {
+                button.classList.add('active-tab');
+            }
+            
+            // حفظ التبويب النشط في localStorage
+            localStorage.setItem('activeTab', tabName);
+        }
+        
+        // استعادة التبويب النشط عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTab = localStorage.getItem('activeTab');
+            if (savedTab && (savedTab === 'requests' || savedTab === 'complaints')) {
+                switchTab(savedTab);
+            } else {
+                // افتراضياً، عرض تبويب الطلبات
+                switchTab('requests');
+            }
+        });
     </script>
 </body>
 </html>

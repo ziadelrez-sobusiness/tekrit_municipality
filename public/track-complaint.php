@@ -52,7 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || isset($_GET['complaint_number'])) {
             
             $selectClause = implode(", ", $selectFields);
             
-            // البحث عن الشكوى
+            // البحث عن الشكوى - محاولة متعددة
+            $complaint = null;
+            
+            // 1. البحث بـ complaint_number مباشرة
             $sql = "
                 SELECT $selectClause
                 FROM complaints c
@@ -64,7 +67,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || isset($_GET['complaint_number'])) {
             $stmt->execute([$complaint_number]);
             $complaint = $stmt->fetch(PDO::FETCH_ASSOC);
             
+            // 2. إذا لم نجد، جرب البحث بـ ID إذا كان الرقم صغيراً (مثل 00002 = 2)
+            if (!$complaint && is_numeric($number ?? '')) {
+                $idToSearch = intval($number);
+                if ($idToSearch > 0 && $idToSearch < 100000) {
+                    $sql = "
+                        SELECT $selectClause
+                        FROM complaints c
+                        LEFT JOIN citizens_accounts ca ON c.citizen_id = ca.id
+                        LEFT JOIN users u ON c.assigned_to = u.id
+                        WHERE c.id = ?
+                    ";
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute([$idToSearch]);
+                    $complaint = $stmt->fetch(PDO::FETCH_ASSOC);
+                }
+            }
+            
+            // 3. إذا لم نجد، جرب البحث الجزئي (LIKE)
+            if (!$complaint) {
+                $sql = "
+                    SELECT $selectClause
+                    FROM complaints c
+                    LEFT JOIN citizens_accounts ca ON c.citizen_id = ca.id
+                    LEFT JOIN users u ON c.assigned_to = u.id
+                    WHERE c.complaint_number LIKE ?
+                    ORDER BY c.id DESC
+                    LIMIT 1
+                ";
+                $stmt = $db->prepare($sql);
+                $stmt->execute(['%' . $complaint_number . '%']);
+                $complaint = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            
+            // 4. إذا لم نجد، جرب البحث بدون البادئة (فقط السنة والرقم)
+            if (!$complaint && isset($year) && isset($number)) {
+                $searchPattern = $year . '-' . str_pad($number, 5, '0', STR_PAD_LEFT);
+                $sql = "
+                    SELECT $selectClause
+                    FROM complaints c
+                    LEFT JOIN citizens_accounts ca ON c.citizen_id = ca.id
+                    LEFT JOIN users u ON c.assigned_to = u.id
+                    WHERE c.complaint_number LIKE ?
+                    ORDER BY c.id DESC
+                    LIMIT 1
+                ";
+                $stmt = $db->prepare($sql);
+                $stmt->execute(['%' . $searchPattern]);
+                $complaint = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
+            
+            // 5. سجل للتحقق - عرض جميع الشكاوى الموجودة
+            error_log("🔍 البحث عن: " . $complaint_number);
+            $debugStmt = $db->query("SELECT id, complaint_number, subject, created_at FROM complaints ORDER BY id DESC LIMIT 10");
+            $allComplaints = $debugStmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("📋 الشكاوى الموجودة: " . json_encode($allComplaints, JSON_UNESCAPED_UNICODE));
+            
             if ($complaint) {
+                error_log("✅ تم العثور على الشكوى: ID=" . $complaint['id'] . ", Number=" . ($complaint['complaint_number'] ?? 'NULL'));
                 // جلب سجل التحديثات (المرئية للمواطن فقط)
                 $updatesStmt = $db->prepare("
                     SELECT cu.*, u.full_name as updated_by_name
@@ -76,9 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' || isset($_GET['complaint_number'])) {
                 $updatesStmt->execute([$complaint['id']]);
                 $updates = $updatesStmt->fetchAll(PDO::FETCH_ASSOC);
             } else {
+                error_log("❌ لم يتم العثور على شكوى برقم: " . $complaint_number);
                 $error_message = 'لم يتم العثور على شكوى بهذا الرقم. يرجى التأكد من رقم التتبع.';
             }
         } catch (Exception $e) {
+            error_log("❌ خطأ في البحث: " . $e->getMessage());
             $error_message = 'خطأ في البحث: ' . $e->getMessage();
         }
     } else {
@@ -110,6 +172,23 @@ function getProgressPercentage($status) {
         case 'مؤجلة': return 50;
         default: return 0;
     }
+}
+
+// دالة لترجمة نوع التحديث إلى العربية
+function getUpdateTypeLabel($type) {
+    $translations = [
+        'municipality_response' => 'رد من البلدية',
+        'status_change' => 'تغيير الحالة',
+        'comment' => 'تعليق',
+        'admin_note' => 'ملاحظة إدارية',
+        'data_update' => 'تحديث البيانات',
+        'تحديث حالة' => 'تغيير الحالة',
+        'تعليق' => 'تعليق',
+        'رد البلدية' => 'رد من البلدية',
+        'ملاحظة إدارية' => 'ملاحظة إدارية',
+        'تحديث بيانات' => 'تحديث البيانات'
+    ];
+    return $translations[$type] ?? ($type ?: 'تحديث');
 }
 ?>
 
@@ -696,11 +775,13 @@ function getProgressPercentage($status) {
                         </div>
                         <div class="card-body">
                             <div class="timeline">
-                                <?php foreach ($updates as $update): ?>
+                                <?php foreach ($updates as $update): 
+                                    $updateTypeDisplay = getUpdateTypeLabel($update['update_type'] ?? '');
+                                ?>
                                     <div class="timeline-item">
                                         <div class="timeline-content">
                                             <div class="timeline-header">
-                                                <span class="timeline-title"><?= htmlspecialchars($update['update_type'] ?? 'تحديث') ?></span>
+                                                <span class="timeline-title"><?= htmlspecialchars($updateTypeDisplay) ?></span>
                                                 <span class="timeline-date"><?= date('Y-m-d H:i', strtotime($update['created_at'])) ?></span>
                                             </div>
                                             <div class="timeline-body">

@@ -151,6 +151,20 @@ class Utils {
      * إعادة توجيه
      */
     public static function redirect($url) {
+        // إذا كان المسار نسبياً، تأكد من أنه صحيح
+        if (!preg_match('/^https?:\/\//', $url) && !preg_match('/^\//', $url)) {
+            // تحديد المسار النسبي بناءً على موقع الملف الحالي
+            $current_dir = dirname($_SERVER['SCRIPT_NAME']);
+            $base_dir = dirname(dirname($_SERVER['SCRIPT_NAME']));
+            
+            // إذا كنا في مجلد modules، استخدم ../login.php
+            if (strpos($current_dir, '/modules') !== false || strpos($current_dir, '\\modules') !== false) {
+                if ($url === 'login.php') {
+                    $url = '../login.php';
+                }
+            }
+        }
+        
         header("Location: $url");
         exit;
     }
@@ -174,7 +188,16 @@ class Utils {
      */
     public static function logout() {
         session_destroy();
-        self::redirect('login.php');
+        // تحديد المسار الصحيح لصفحة تسجيل الدخول
+        $login_path = 'login.php';
+        $current_dir = dirname($_SERVER['SCRIPT_NAME']);
+        
+        // إذا كنا في مجلد modules، استخدم ../login.php
+        if (strpos($current_dir, '/modules') !== false || strpos($current_dir, '\\modules') !== false) {
+            $login_path = '../login.php';
+        }
+        
+        self::redirect($login_path);
     }
     
     /**

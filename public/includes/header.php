@@ -49,10 +49,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <!-- Desktop Navigation -->
             <nav class="hidden lg:flex items-center space-x-6 space-x-reverse">
                 <a href="index.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition <?= $current_page == 'index.php' ? 'text-blue-600 font-semibold' : '' ?>">الرئيسية</a>
-                <a href="citizen-requests.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition <?= $current_page == 'citizen-requests.php' ? 'text-blue-600 font-semibold' : '' ?>">طلبات المواطنين</a>
+                <div class="relative group">
+                    <button class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap flex items-center transition <?= in_array($current_page, ['citizen-dashboard.php', 'citizen-requests.php', 'citizen-complaints.php']) ? 'text-blue-600 font-semibold' : '' ?>">
+                        المواطنين
+                        <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="py-1">
+                            <a href="citizen-dashboard.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 <?= $current_page == 'citizen-dashboard.php' ? 'bg-blue-50 text-blue-600' : '' ?>">👤 حساب المواطنين</a>
+                            <a href="citizen-requests.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 <?= $current_page == 'citizen-requests.php' ? 'bg-blue-50 text-blue-600' : '' ?>">📝 طلبات المواطنين</a>
+                            <a href="citizen-complaints.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 <?= $current_page == 'citizen-complaints.php' ? 'bg-blue-50 text-blue-600' : '' ?>">📢 شكاوى المواطنين</a>
+                        </div>
+                    </div>
+                </div>
                 <a href="projects.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition <?= $current_page == 'projects.php' ? 'text-blue-600 font-semibold' : '' ?>">المشاريع</a>
                 <a href="initiatives.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition <?= $current_page == 'initiatives.php' ? 'text-blue-600 font-semibold' : '' ?>">المبادرات</a>
                 <a href="news.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition <?= $current_page == 'news.php' ? 'text-blue-600 font-semibold' : '' ?>">الأخبار</a>
+                <a href="important-links.php" class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap transition <?= $current_page == 'important-links.php' ? 'text-blue-600 font-semibold' : '' ?>">🔗 روابط مهمة</a>
                 <div class="relative group">
                     <button class="text-gray-700 hover:text-blue-600 font-medium text-sm whitespace-nowrap flex items-center transition <?= in_array($current_page, ['council.php', 'committees.php']) ? 'text-blue-600 font-semibold' : '' ?>">
                         البلدية
@@ -73,10 +88,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
             
             <!-- Desktop Login Buttons -->
             <div class="hidden lg:flex items-center space-x-3 space-x-reverse flex-shrink-0">
-                <a href="login.php" class="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold text-sm hover:from-green-600 hover:to-green-700 transition duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center whitespace-nowrap">
-                    <span class="ml-2">👤</span>
-                    المواطنين
-                </a>
                 <a href="../login.php" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-bold text-sm hover:from-orange-600 hover:to-orange-700 transition duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center whitespace-nowrap">
                     <span class="ml-2">🔐</span>
                     الموظفين
@@ -97,10 +108,26 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <div id="mobile-menu" class="lg:hidden hidden">
             <div class="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
                 <a href="index.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium <?= $current_page == 'index.php' ? 'bg-blue-50 text-blue-600' : '' ?>">الرئيسية</a>
-                <a href="citizen-requests.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium <?= $current_page == 'citizen-requests.php' ? 'bg-blue-50 text-blue-600' : '' ?>">طلبات المواطنين</a>
+                
+                <!-- Mobile Citizens Submenu -->
+                <div class="space-y-1">
+                    <button id="mobile-citizens-btn" class="w-full text-right px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium flex items-center justify-between <?= in_array($current_page, ['citizen-dashboard.php', 'citizen-requests.php', 'citizen-complaints.php']) ? 'bg-blue-50 text-blue-600' : '' ?>">
+                        المواطنين
+                        <svg class="h-4 w-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="mobile-citizens-menu" class="hidden pr-4 space-y-1">
+                        <a href="citizen-dashboard.php" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md <?= $current_page == 'citizen-dashboard.php' ? 'bg-blue-50 text-blue-600' : '' ?>">👤 حساب المواطنين</a>
+                        <a href="citizen-requests.php" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md <?= $current_page == 'citizen-requests.php' ? 'bg-blue-50 text-blue-600' : '' ?>">📝 طلبات المواطنين</a>
+                        <a href="citizen-complaints.php" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md <?= $current_page == 'citizen-complaints.php' ? 'bg-blue-50 text-blue-600' : '' ?>">📢 شكاوى المواطنين</a>
+                    </div>
+                </div>
+                
                 <a href="projects.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium <?= $current_page == 'projects.php' ? 'bg-blue-50 text-blue-600' : '' ?>">المشاريع</a>
                 <a href="initiatives.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium <?= $current_page == 'initiatives.php' ? 'bg-blue-50 text-blue-600' : '' ?>">المبادرات</a>
                 <a href="news.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium <?= $current_page == 'news.php' ? 'bg-blue-50 text-blue-600' : '' ?>">الأخبار</a>
+                <a href="important-links.php" class="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md font-medium <?= $current_page == 'important-links.php' ? 'bg-blue-50 text-blue-600' : '' ?>">🔗 روابط مهمة</a>
                 
                 <!-- Mobile Municipality Submenu -->
                 <div class="space-y-1">
@@ -121,9 +148,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 
                 <!-- Mobile Login Buttons -->
                 <div class="pt-4 border-t border-gray-200 space-y-3">
-                    <a href="login.php" class="block w-full text-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold hover:from-green-600 hover:to-green-700 transition duration-300 shadow-md">
-                        👤 دخول المواطنين
-                    </a>
                     <a href="../login.php" class="block w-full text-center px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-bold hover:from-orange-600 hover:to-orange-700 transition duration-300 shadow-md">
                         🔐 دخول الموظفين
                     </a>
@@ -154,6 +178,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
                 }
             });
+
+            // Toggle citizens submenu in mobile
+            const citizensBtn = document.getElementById('mobile-citizens-btn');
+            const citizensMenu = document.getElementById('mobile-citizens-menu');
+            if (citizensBtn && citizensMenu) {
+                citizensBtn.addEventListener('click', function() {
+                    citizensMenu.classList.toggle('hidden');
+                    
+                    // Rotate arrow
+                    const arrow = citizensBtn.querySelector('svg');
+                    arrow.classList.toggle('rotate-180');
+                });
+            }
 
             // Toggle municipality submenu in mobile
             if (municipalityBtn && municipalityMenu) {
