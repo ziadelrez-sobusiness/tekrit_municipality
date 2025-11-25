@@ -71,10 +71,25 @@ class AIHelper {
      * الحصول على إعدادات AI
      */
     public function getAISettings() {
+        $provider = getSetting('ai_provider', 'openai');
+        $model = getSetting('ai_model', 'gpt-4o'); // Default to GPT-4o (الأكثر استقراراً)
+        
+        // For Gemini, if model is not set or is an unavailable model, default to gemini-pro
+        if ($provider === 'gemini') {
+            // If model is one of the newer models that might not be available, check and fallback
+            $unavailable_models = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.5-pro-latest'];
+            if (in_array($model, $unavailable_models)) {
+                // Keep the model as is, but the service will try gemini-pro as fallback
+                // Don't auto-change here to avoid breaking user's explicit choice
+            } elseif (empty($model)) {
+                $model = 'gemini-pro';
+            }
+        }
+        
         return [
-            'provider' => getSetting('ai_provider', 'openai'),
+            'provider' => $provider,
             'api_key' => $this->decryptApiKey(getSetting('ai_api_key', '')),
-            'model' => getSetting('ai_model', 'gpt-4'),
+            'model' => $model,
             'enabled' => getSetting('ai_enabled', '0') === '1',
             'image_provider' => getSetting('ai_image_provider', 'auto'),
             'temperature' => floatval(getSetting('ai_temperature', '0.7')),
@@ -96,12 +111,30 @@ class AIHelper {
         return [
             'openai' => [
                 'name' => 'OpenAI (ChatGPT)',
-                'models' => ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+                'models' => [
+                    'gpt-4o',              // GPT-4 Omni (أحدث وأقوى) ⭐ موصى به
+                    'gpt-4o-mini',         // GPT-4 Omni Mini (أسرع وأرخص)
+                    'gpt-4-turbo',         // GPT-4 Turbo
+                    'gpt-4',               // GPT-4 القياسي
+                    'gpt-3.5-turbo',       // GPT-3.5 Turbo (للحالات البسيطة)
+                    'o1-preview',           // O1 Preview (للتفكير المعقد)
+                    'o1-mini',             // O1 Mini
+                    'o3-mini',             // O3 Mini
+                    // GPT-5.1 قد لا يكون متاحاً في API بعد أو يحتاج أسماء مختلفة
+                    // إذا كان متاحاً في حسابك، يمكن إضافته يدوياً هنا
+                ],
                 'image_support' => 'dall-e-3'
             ],
             'gemini' => [
                 'name' => 'Google Gemini',
-                'models' => ['gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+                'models' => [
+                    'gemini-2.5-flash',      // الأسرع والأكثر استقراراً
+                    'gemini-2.5-pro',        // الأقوى للاستخدامات المعقدة
+                    'gemini-2.0-flash',       // بديل سريع
+                    'gemini-pro-latest',      // أحدث إصدار من gemini-pro
+                    'gemini-2.5-pro-preview-06-05', // إصدار تجريبي
+                    'gemini-3-pro-preview'   // أحدث إصدار تجريبي
+                ],
                 'image_support' => 'imagen'
             ],
             'claude' => [

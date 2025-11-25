@@ -1431,7 +1431,13 @@ if ($selected_budget_id) {
     <?php endif; ?>
 
     <!-- تضمين مكونات الذكاء الاصطناعي -->
-    <?php include 'budget_ai_component.php'; ?>
+    <?php 
+    // Pass currencies to JavaScript for AI component
+    $currencies_js = json_encode(array_map(function($c) {
+        return ['id' => $c['id'], 'name' => $c['currency_name'] . ' (' . $c['currency_symbol'] . ')', 'symbol' => $c['currency_symbol']];
+    }, $currencies ?? []), JSON_UNESCAPED_UNICODE);
+    include 'budget_ai_component.php'; 
+    ?>
 
     <script>
         function openModal(modalId) {

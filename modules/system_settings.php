@@ -432,10 +432,16 @@ $supported_providers = $ai_helper_instance->getSupportedProviders();
                             </div>
                         </div>
 
-                        <button type="submit" name="update_ai_settings"
-                                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                            💾 حفظ إعدادات الذكاء الاصطناعي
-                        </button>
+                        <div class="flex gap-3">
+                            <button type="submit" name="update_ai_settings"
+                                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                                💾 حفظ إعدادات الذكاء الاصطناعي
+                            </button>
+                            <button type="button" onclick="testAIConnection()"
+                                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                                🧪 اختبار الاتصال
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -579,25 +585,151 @@ $supported_providers = $ai_helper_instance->getSupportedProviders();
         function updateAIModels() {
             const provider = document.getElementById('ai_provider').value;
             const modelSelect = document.getElementById('ai_model');
+            const apiKeyInput = document.getElementById('ai_api_key');
 
             // مسح الخيارات الحالية
-            modelSelect.innerHTML = '';
+            modelSelect.innerHTML = '<option value="">جاري التحميل...</option>';
 
-            // إضافة النماذج الجديدة
-            if (providers[provider] && providers[provider].models) {
-                providers[provider].models.forEach(model => {
-                    const option = document.createElement('option');
-                    option.value = model;
-                    option.textContent = model;
+            // إذا كان Gemini، جلب النماذج المتاحة من API
+            if (provider === 'gemini') {
+                const apiKey = apiKeyInput.value.trim();
+                if (apiKey.length > 10) {
+                    loadGeminiModels(apiKey, modelSelect);
+                } else {
+                    // إذا لم يكن هناك API key، استخدم القائمة الافتراضية
+                    loadDefaultGeminiModels(modelSelect);
+                }
+            } else {
+                // للمزودين الآخرين، استخدم القائمة الثابتة
+                if (providers[provider] && providers[provider].models) {
+                    providers[provider].models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
 
-                    // تحديد النموذج الحالي
-                    if (model === currentModel) {
-                        option.selected = true;
-                    }
+                        if (model === currentModel) {
+                            option.selected = true;
+                        }
 
-                    modelSelect.appendChild(option);
-                });
+                        modelSelect.appendChild(option);
+                    });
+                }
             }
+        }
+        
+        // جلب النماذج المتاحة من Gemini API
+        function loadGeminiModels(apiKey, modelSelect) {
+            // Reset select to loading state
+            modelSelect.innerHTML = '<option value="">جاري التحميل...</option>';
+            
+            fetch(`../api/get_gemini_models.php?api_key=${encodeURIComponent(apiKey)}`)
+                .then(response => {
+                    // Check if response is ok
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    // Check if response is actually JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        return response.text().then(text => {
+                            console.error('Non-JSON response:', text.substring(0, 200));
+                            throw new Error('Expected JSON but got HTML/text');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.models.length > 0) {
+                        modelSelect.innerHTML = '';
+                        
+                        // إضافة النماذج الموصى بها أولاً
+                        const recommended = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-pro-latest'];
+                        recommended.forEach(model => {
+                            if (data.models.includes(model)) {
+                                const option = document.createElement('option');
+                                option.value = model;
+                                option.textContent = model + ' ⭐';
+                                if (model === currentModel || (!currentModel && model === 'gemini-2.5-flash')) {
+                                    option.selected = true;
+                                }
+                                modelSelect.appendChild(option);
+                            }
+                        });
+                        
+                        // إضافة فاصل إذا كان هناك نماذج أخرى
+                        if (data.models.length > recommended.length) {
+                            const separator = document.createElement('option');
+                            separator.disabled = true;
+                            separator.textContent = '──────────';
+                            modelSelect.appendChild(separator);
+                        }
+                        
+                        // إضافة النماذج الأخرى
+                        data.models.forEach(model => {
+                            if (!recommended.includes(model)) {
+                                const option = document.createElement('option');
+                                option.value = model;
+                                option.textContent = model;
+                                if (model === currentModel) {
+                                    option.selected = true;
+                                }
+                                modelSelect.appendChild(option);
+                            }
+                        });
+                    } else {
+                        // Fallback to default models
+                        loadDefaultGeminiModels(modelSelect);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading Gemini models:', error);
+                    // Show error message briefly
+                    modelSelect.innerHTML = '<option value="">خطأ في التحميل</option>';
+                    // Fallback to default models after short delay
+                    setTimeout(() => {
+                        try {
+                            loadDefaultGeminiModels(modelSelect);
+                        } catch (e) {
+                            console.error('Error loading default models:', e);
+                            modelSelect.innerHTML = '<option value="gemini-2.5-flash">gemini-2.5-flash</option>';
+                        }
+                    }, 500);
+                });
+        }
+        
+        // تحميل النماذج الافتراضية لـ Gemini
+        function loadDefaultGeminiModels(modelSelect) {
+            const defaultModels = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-pro-latest'];
+            defaultModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model;
+                option.textContent = model;
+                if (model === currentModel || (!currentModel && model === 'gemini-2.5-flash')) {
+                    option.selected = true;
+                }
+                modelSelect.appendChild(option);
+            });
+        }
+        
+        // تحديث النماذج عند تغيير API key (لـ Gemini فقط)
+        const apiKeyInput = document.getElementById('ai_api_key');
+        if (apiKeyInput) {
+            // Use a debounce to avoid multiple rapid calls
+            let debounceTimer;
+            apiKeyInput.addEventListener('blur', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const provider = document.getElementById('ai_provider').value;
+                    if (provider === 'gemini' && this.value.trim().length > 10) {
+                        try {
+                            updateAIModels();
+                        } catch (e) {
+                            console.error('Error updating AI models:', e);
+                        }
+                    }
+                }, 300);
+            });
         }
 
         // إظهار/إخفاء مفتاح API
@@ -618,6 +750,63 @@ $supported_providers = $ai_helper_instance->getSupportedProviders();
         document.addEventListener('DOMContentLoaded', function() {
             updateAIModels();
         });
+        
+        // اختبار الاتصال بـ AI
+        function testAIConnection() {
+            const provider = document.getElementById('ai_provider').value;
+            const model = document.getElementById('ai_model').value;
+            const apiKey = document.getElementById('ai_api_key').value;
+            
+            if (!apiKey) {
+                alert('يرجى إدخال مفتاح API أولاً');
+                return;
+            }
+            
+            const testBtn = event.target;
+            const originalText = testBtn.textContent;
+            testBtn.disabled = true;
+            testBtn.textContent = 'جاري الاختبار...';
+            
+            fetch('../api/test_ai_connection.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    provider: provider,
+                    model: model,
+                    api_key: apiKey
+                })
+            })
+            .then(response => {
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                // Check content type
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    return response.text().then(text => {
+                        throw new Error('Expected JSON but got: ' + text.substring(0, 100));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                testBtn.disabled = false;
+                testBtn.textContent = originalText;
+                
+                if (data.success) {
+                    alert('✅ نجح الاتصال!\n\n' + (data.message || 'النموذج يعمل بشكل صحيح'));
+                } else {
+                    alert('❌ فشل الاتصال:\n\n' + (data.error || 'خطأ غير معروف'));
+                }
+            })
+            .catch(error => {
+                testBtn.disabled = false;
+                testBtn.textContent = originalText;
+                console.error('Test connection error:', error);
+                alert('❌ خطأ في الاتصال:\n\n' + (error.message || 'خطأ غير معروف'));
+            });
+        }
     </script>
 </body>
 </html> 
