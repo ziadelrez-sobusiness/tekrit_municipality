@@ -9,7 +9,7 @@ class CitizenRequest {
     
     public function __construct() {
         $this->db = Database::getInstance();
-        $this->requestType = new RequestType();
+        $this->requestType = new RequestType($this->db);
     }
     
     /**
@@ -105,7 +105,7 @@ class CitizenRequest {
                    dp.project_name, mc.committee_name as assigned_committee_name
             FROM citizen_requests cr
             LEFT JOIN request_types rt ON cr.request_type_id = rt.id
-            LEFT JOIN development_projects dp ON cr.project_id = dp.id
+            LEFT JOIN projects dp ON cr.project_id = dp.id
             LEFT JOIN municipal_committees mc ON cr.assigned_to_committee_id = mc.id
             WHERE cr.tracking_number = :tracking_number
         ";
@@ -135,7 +135,7 @@ class CitizenRequest {
                    dp.project_name, d.department_name, mc.committee_name as assigned_committee_name, u.full_name as assigned_user_name
             FROM citizen_requests cr
             LEFT JOIN request_types rt ON cr.request_type_id = rt.id
-            LEFT JOIN development_projects dp ON cr.project_id = dp.id
+            LEFT JOIN projects dp ON cr.project_id = dp.id
             LEFT JOIN departments d ON cr.assigned_to_department_id = d.id
             LEFT JOIN municipal_committees mc ON cr.assigned_to_committee_id = mc.id
             LEFT JOIN users u ON cr.assigned_to_user_id = u.id
@@ -167,7 +167,7 @@ class CitizenRequest {
                    d.department_name, mc.committee_name as assigned_committee_name, u.full_name as assigned_user_name
             FROM citizen_requests cr
             LEFT JOIN request_types rt ON cr.request_type_id = rt.id
-            LEFT JOIN development_projects dp ON cr.project_id = dp.id
+            LEFT JOIN projects dp ON cr.project_id = dp.id
             LEFT JOIN departments d ON cr.assigned_to_department_id = d.id
             LEFT JOIN municipal_committees mc ON cr.assigned_to_committee_id = mc.id
             LEFT JOIN users u ON cr.assigned_to_user_id = u.id

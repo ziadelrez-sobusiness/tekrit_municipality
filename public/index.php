@@ -40,8 +40,8 @@ $latest_news = $db->query("
 
 // جلب المشاريع المميزة
 $featured_projects = $db->query("
-    SELECT * FROM development_projects 
-    WHERE is_featured = 1 
+    SELECT * FROM projects 
+    WHERE is_featured = 1 AND is_public = 1
     ORDER BY created_at DESC 
     LIMIT 3
 ")->fetchAll();
@@ -59,8 +59,8 @@ $active_initiatives = $db->query("
 
 // إحصائيات
 $stats = [
-    'total_projects' => $db->query("SELECT COUNT(*) as count FROM development_projects")->fetch()['count'],
-    'completed_projects' => $db->query("SELECT COUNT(*) as count FROM development_projects WHERE project_status = 'منفذ'")->fetch()['count'],
+    'total_projects' => $db->query("SELECT COUNT(*) as count FROM projects WHERE is_public = 1")->fetch()['count'],
+    'completed_projects' => $db->query("SELECT COUNT(*) as count FROM projects WHERE is_public = 1 AND status = 'مكتمل'")->fetch()['count'],
     'total_requests' => $db->query("SELECT COUNT(*) as count FROM citizen_requests")->fetch()['count'],
     'completed_requests' => $db->query("SELECT COUNT(*) as count FROM citizen_requests WHERE status = 'مكتمل'")->fetch()['count']
 ];
@@ -434,36 +434,36 @@ $welcome_message = getSetting('welcome_message', 'أهلاً وسهلاً بكم
                                 <h3 class="text-lg font-semibold"><?= htmlspecialchars($project['project_name']) ?></h3>
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full 
                                     <?php 
-                                        switch($project['project_status']) {
-                                            case 'مطروح': echo 'bg-blue-100 text-blue-800'; break;
+                                        switch($project['status']) {
+                                            case 'مخطط': echo 'bg-blue-100 text-blue-800'; break;
                                             case 'قيد التنفيذ': echo 'bg-yellow-100 text-yellow-800'; break;
-                                            case 'منفذ': echo 'bg-green-100 text-green-800'; break;
+                                            case 'مكتمل': echo 'bg-green-100 text-green-800'; break;
                                             default: echo 'bg-gray-100 text-gray-800';
                                         }
                                     ?>">
-                                    <?= $project['project_status'] ?>
+                                    <?= $project['status'] ?>
                                 </span>
                             </div>
-                            <p class="text-gray-600 mb-4"><?= htmlspecialchars(substr($project['project_description'], 0, 100)) ?>...</p>
+                            <p class="text-gray-600 mb-4"><?= htmlspecialchars(substr($project['description'], 0, 100)) ?>...</p>
                             <div class="space-y-2 mb-4">
                                 <div class="flex justify-between">
                                     <span class="text-sm text-gray-500">📍 الموقع:</span>
-                                    <span class="text-sm"><?= htmlspecialchars($project['project_location']) ?></span>
+                                    <span class="text-sm"><?= htmlspecialchars($project['location']) ?></span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-sm text-gray-500">💰 التكلفة:</span>
                                     <span class="text-sm"><?= formatProjectCost($project, $db) ?></span>
                                 </div>
-                                <?php if ($project['completion_percentage'] > 0): ?>
+                                <?php if ($project['progress_percentage'] > 0): ?>
                                 <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-600 h-2 rounded-full" style="width: <?= $project['completion_percentage'] ?>%"></div>
+                                    <div class="bg-green-600 h-2 rounded-full" style="width: <?= $project['progress_percentage'] ?>%"></div>
                                 </div>
-                                <span class="text-xs text-gray-600"><?= $project['completion_percentage'] ?>% مكتمل</span>
+                                <span class="text-xs text-gray-600"><?= $project['progress_percentage'] ?>% مكتمل</span>
                                 <?php endif; ?>
                             </div>
                             <div class="flex justify-between items-center">
                                 <a href="project-detail.php?id=<?= $project['id'] ?>" class="text-indigo-600 hover:text-indigo-800">تفاصيل المشروع</a>
-                                <?php if ($project['allow_contributions']): ?>
+                                <?php if ($project['allow_public_contributions']): ?>
                                     <button class="px-3 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700">ساهم</button>
                                 <?php endif; ?>
                             </div>

@@ -1,12 +1,5 @@
 <?php
-session_start();
-require_once '../config/database.php';
-
-// التحقق من تسجيل الدخول
-if (!isset($_SESSION['admin_id'])) {
-    header("Location: login.php");
-    exit();
-}
+require_once '../includes/admin_guard.php';
 
 $database = new Database();
 $db = $database->getConnection();

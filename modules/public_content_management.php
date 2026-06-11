@@ -200,163 +200,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // إضافة مشروع جديد
     elseif ($action == 'add_project') {
-    $name = trim($_POST['project_name']);
-    $description = trim($_POST['project_description']);
-    $goal = trim($_POST['project_goal']);
-    $location = trim($_POST['project_location']);
-    $cost = $_POST['project_base_cost'] ?: 0;
-    $duration = trim($_POST['project_duration']);
-    $beneficiaries = $_POST['beneficiaries_count'];
-    $status = $_POST['project_status'];
-    $start_date = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
-    $responsible_dept = $_POST['responsible_department_id'] ?: null;
-    $is_featured = isset($_POST['is_featured']) ? 1 : 0;
-    $allow_contributions = isset($_POST['allow_contributions']) ? 1 : 0;
-    
-    // نظام التمويل المتقدم
-    $project_base_cost = $_POST['project_base_cost'] ?: $cost;
-    $project_base_cost_currency_id = $_POST['project_base_cost_currency_id'] ?: $default_currency_id;
-    
-    $municipality_contribution_amount = $_POST['municipality_contribution_amount'] ?: 0;
-    $municipality_contribution_currency_id = $_POST['municipality_contribution_currency_id'] ?: $default_currency_id;
-    
-    $donor_contribution_amount = $_POST['donor_contribution_amount'] ?: 0;
-    $donor_contribution_currency_id = $_POST['donor_contribution_currency_id'] ?: $default_currency_id;
-    
-    $donors_contribution_amount = $_POST['donors_contribution_amount'] ?: 0;
-    $donors_contribution_currency_id = $_POST['donors_contribution_currency_id'] ?: $default_currency_id;
-    $donors_list = trim($_POST['donors_list']);
-    
-    $is_municipality_project = isset($_POST['is_municipality_project']) ? 1 : 0;
-    $donor_organization = trim($_POST['donor_organization']);
-    $funding_source = $_POST['funding_source'] ?: 'بلدية';
-    $funding_notes = trim($_POST['funding_notes']);
-    
-    // الحقول القديمة للتوافق
-    $currency_id = $_POST['currency_id'] ?: $default_currency_id;
-    $total_project_cost = $project_base_cost;
-    
-    // حساب التمويل مباشرة في PHP
-    $total_contributions_iqd = $municipality_contribution_amount + $donor_contribution_amount + $donors_contribution_amount;
-    $remaining_cost_iqd = $project_base_cost - $total_contributions_iqd;
-    $funding_completion_percentage = $project_base_cost > 0 ? min(($total_contributions_iqd / $project_base_cost) * 100, 100) : 0;
-    
-    if (!empty($name) && !empty($description) && !empty($goal)) {
-        try {
-            $stmt = $db->prepare("INSERT INTO development_projects (
-                project_name, project_description, project_goal, project_location, 
-                project_cost, project_duration, beneficiaries_count, project_status, 
-                start_date, responsible_department_id, is_featured, allow_contributions, 
-                currency_id, is_municipality_project, donor_organization, funding_source, 
-                funding_notes, project_base_cost, project_base_cost_currency_id, 
-                municipality_contribution_amount, municipality_contribution_currency_id, 
-                donor_contribution_amount, donor_contribution_currency_id, 
-                donors_contribution_amount, donors_contribution_currency_id, 
-                donors_list, total_project_cost, total_contributions_iqd, 
-                remaining_cost_iqd, funding_completion_percentage
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            
-            $stmt->execute([
-                $name, $description, $goal, $location, $cost, $duration, 
-                $beneficiaries, $status, $start_date, $responsible_dept, 
-                $is_featured, $allow_contributions, $currency_id, 
-                $is_municipality_project, $donor_organization, $funding_source, 
-                $funding_notes, $project_base_cost, $project_base_cost_currency_id, 
-                $municipality_contribution_amount, $municipality_contribution_currency_id, 
-                $donor_contribution_amount, $donor_contribution_currency_id, 
-                $donors_contribution_amount, $donors_contribution_currency_id, 
-                $donors_list, $total_project_cost, $total_contributions_iqd, 
-                $remaining_cost_iqd, $funding_completion_percentage
-            ]);
-            
-            $success_message = "تم إضافة المشروع بنجاح";
-            header("Location: " . $_SERVER['PHP_SELF'] . "?tab=projects&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في إضافة المشروع: " . $e->getMessage();
-        }
-    }
+        $error_message = "إدارة المشاريع تم نقلها إلى الوحدة الموحدة للمشاريع. يرجى استخدام إدارة المشاريع الموحدة بدلاً من ذلك.";
     }
     
     // تعديل مشروع
     elseif ($action == 'edit_project') {
-    $project_id = $_POST['project_id'];
-    $name = trim($_POST['project_name']);
-    $description = trim($_POST['project_description']);
-    $goal = trim($_POST['project_goal']);
-    $location = trim($_POST['project_location']);
-    $duration = trim($_POST['project_duration']);
-    $beneficiaries = $_POST['beneficiaries_count'];
-    $status = $_POST['project_status'];
-    $start_date = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
-    $responsible_dept = $_POST['responsible_department_id'] ?: null;
-    $is_featured = isset($_POST['is_featured']) ? 1 : 0;
-    $allow_contributions = isset($_POST['allow_contributions']) ? 1 : 0;
-    
-    // نظام التمويل المتقدم
-    $project_base_cost = $_POST['project_base_cost'] ?: 0;
-    $project_base_cost_currency_id = $_POST['project_base_cost_currency_id'] ?: $default_currency_id;
-    
-    $municipality_contribution_amount = $_POST['municipality_contribution_amount'] ?: 0;
-    $municipality_contribution_currency_id = $_POST['municipality_contribution_currency_id'] ?: $default_currency_id;
-    
-    $donor_contribution_amount = $_POST['donor_contribution_amount'] ?: 0;
-    $donor_contribution_currency_id = $_POST['donor_contribution_currency_id'] ?: $default_currency_id;
-    
-    $donors_contribution_amount = $_POST['donors_contribution_amount'] ?: 0;
-    $donors_contribution_currency_id = $_POST['donors_contribution_currency_id'] ?: $default_currency_id;
-    $donors_list = trim($_POST['donors_list']);
-    
-    $is_municipality_project = isset($_POST['is_municipality_project']) ? 1 : 0;
-    $donor_organization = trim($_POST['donor_organization']);
-    $funding_source = $_POST['funding_source'] ?: 'بلدية';
-    $funding_notes = trim($_POST['funding_notes']);
-    
-    // الحقول القديمة للتوافق
-    $currency_id = $_POST['currency_id'] ?: $default_currency_id;
-    $project_cost = $project_base_cost;
-    
-    // حساب التمويل مباشرة في PHP
-    $total_contributions_iqd = $municipality_contribution_amount + $donor_contribution_amount + $donors_contribution_amount;
-    $remaining_cost_iqd = $project_base_cost - $total_contributions_iqd;
-    $funding_completion_percentage = $project_base_cost > 0 ? min(($total_contributions_iqd / $project_base_cost) * 100, 100) : 0;
-    
-    if (!empty($name) && !empty($description) && !empty($goal)) {
-        try {
-            $stmt = $db->prepare("UPDATE development_projects SET 
-                project_name = ?, project_description = ?, project_goal = ?, project_location = ?, 
-                project_cost = ?, project_duration = ?, beneficiaries_count = ?, project_status = ?, 
-                start_date = ?, responsible_department_id = ?, is_featured = ?, allow_contributions = ?, 
-                currency_id = ?, project_base_cost = ?, project_base_cost_currency_id = ?, 
-                is_municipality_project = ?, donor_organization = ?, funding_source = ?, 
-                funding_notes = ?, municipality_contribution_amount = ?, 
-                municipality_contribution_currency_id = ?, donor_contribution_amount = ?, 
-                donor_contribution_currency_id = ?, donors_contribution_amount = ?, 
-                donors_contribution_currency_id = ?, donors_list = ?, total_contributions_iqd = ?,
-                remaining_cost_iqd = ?, funding_completion_percentage = ?, total_project_cost = ?
-                  WHERE id = ?");
-                
-            $stmt->execute([
-                $name, $description, $goal, $location, $project_cost, $duration, 
-                $beneficiaries, $status, $start_date, $responsible_dept, 
-                $is_featured, $allow_contributions, $currency_id, 
-                $project_base_cost, $project_base_cost_currency_id, 
-                $is_municipality_project, $donor_organization, $funding_source, 
-                $funding_notes, $municipality_contribution_amount, 
-                $municipality_contribution_currency_id, $donor_contribution_amount, 
-                $donor_contribution_currency_id, $donors_contribution_amount, 
-                $donors_contribution_currency_id, $donors_list, $total_contributions_iqd, 
-                $remaining_cost_iqd, $funding_completion_percentage, $project_base_cost, 
-                $project_id
-            ]);
-            
-            $success_message = "تم تحديث المشروع بنجاح";
-            header("Location: " . $_SERVER['PHP_SELF'] . "?tab=projects&success=1");
-            exit();
-        } catch (Exception $e) {
-            $error_message = "خطأ في تحديث المشروع: " . $e->getMessage();
-        }
-    }
+        $error_message = "إدارة المشاريع تم نقلها إلى الوحدة الموحدة للمشاريع. يرجى استخدام إدارة المشاريع الموحدة بدلاً من ذلك.";
     }
     
     // إضافة مبادرة جديدة
@@ -845,22 +694,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $table = $_POST['table'];
         $id = $_POST['id'];
         
-        $allowed_tables = ['news_activities', 'development_projects', 'youth_environmental_initiatives', 'request_types'];
-        if (in_array($table, $allowed_tables)) {
-            try {
-                $stmt = $db->prepare("DELETE FROM $table WHERE id = ?");
-                $stmt->execute([$id]);
+        if ($table == 'development_projects') {
+            $error_message = "إدارة المشاريع تم نقلها إلى الوحدة الموحدة للمشاريع.";
+        } else {
+            $allowed_tables = ['news_activities', 'youth_environmental_initiatives', 'request_types'];
+            if (in_array($table, $allowed_tables)) {
+                try {
+                    $stmt = $db->prepare("DELETE FROM $table WHERE id = ?");
+                    $stmt->execute([$id]);
                 $success_message = "تم الحذف بنجاح";
                 
-                // إعادة توجيه حسب نوع الجدول
-                if ($table == 'request_types') {
-                    header("Location: " . $_SERVER['PHP_SELF'] . "?tab=request_types&success=1");
-                } else {
-                    header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
+                    // إعادة توجيه حسب نوع الجدول
+                    if ($table == 'request_types') {
+                        header("Location: " . $_SERVER['PHP_SELF'] . "?tab=request_types&success=1");
+                    } else {
+                        header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
+                    }
+                    exit();
+                } catch (Exception $e) {
+                    $error_message = "خطأ في الحذف: " . $e->getMessage();
                 }
-                exit();
-            } catch (Exception $e) {
-                $error_message = "خطأ في الحذف: " . $e->getMessage();
             }
         }
     }
@@ -1622,10 +1475,12 @@ $stats = [
         <div id="projects" class="tab-content <?= $active_tab == 'projects' ? 'active' : '' ?>">
             <div class="bg-white shadow rounded-lg p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-bold">🏗️ إدارة المشاريع الإنمائية</h3>
-                    <button onclick="toggleForm('projectForm')" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                        ➕ إضافة مشروع جديد
-                    </button>
+                    <h3 class="text-lg font-bold">🏗️ إدارة المشاريع الإنمائية (سجل قديم)</h3>
+                </div>
+                
+                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6" role="alert">
+                    <p class="font-bold">تنبيه النظام</p>
+                    <p>تم نقل إدارة المشاريع إلى الوحدة الموحدة للمشاريع. يرجى استخدام <a href="projects_unified.php" class="underline font-bold text-blue-600">إدارة المشاريع الموحدة</a>. هذا السجل متاح للقراءة فقط للرجوع إلى البيانات القديمة.</p>
                 </div>
 
                 <!-- نموذج إضافة مشروع -->
@@ -1896,18 +1751,8 @@ $stats = [
                                 </div>
                                 <?php endif; ?>
                             </div>
-                            <div class="flex justify-between items-center">
-                                <div class="flex space-x-2 space-x-reverse">
-                                    <a href="../public/project-detail.php?id=<?= $project['id'] ?>" target="_blank" class="text-blue-600 hover:text-blue-800">👁️ عرض</a>
-                                    <button onclick="editProject(<?= $project['id'] ?>)" class="text-green-600 hover:text-green-800">✏️ تعديل</button>
-                                </div>
-                                <form method="POST" style="display: inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا المشروع؟')">
-                                    <?php echo csrf_input('csrf_token'); ?>
-                                    <input type="hidden" name="action" value="delete_item">
-                                    <input type="hidden" name="table" value="development_projects">
-                                    <input type="hidden" name="id" value="<?= $project['id'] ?>">
-                                    <button type="submit" class="text-red-600 hover:text-red-800">🗑️ حذف</button>
-                                </form>
+                            <div class="flex justify-between items-center mt-2">
+                                <a href="../public/project-detail.php?id=<?= $project['id'] ?>" target="_blank" class="text-blue-600 hover:text-blue-800">👁️ عرض التفاصيل في الموقع العام</a>
                             </div>
                         </div>
                     <?php endforeach; ?>

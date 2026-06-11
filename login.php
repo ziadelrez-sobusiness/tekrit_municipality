@@ -90,8 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: comprehensive_dashboard.php');
             exit();
         } else {
-            // استخدام رسالة الخطأ من Auth إذا كانت متوفرة
-            $error = $auth->getLastError() ?: 'اسم المستخدم أو كلمة المرور غير صحيحة';
+            $error = 'Invalid username or password.';
         }
     } else {
         $error = 'يرجى إدخال اسم المستخدم وكلمة المرور';
@@ -189,17 +188,11 @@ try {
         // تحسين تجربة المستخدم
         document.addEventListener('DOMContentLoaded', function() {
             const usernameField = document.getElementById('username');
-            const passwordField = document.getElementById('password');
             
             // التركيز على حقل اسم المستخدم
-            usernameField.focus();
-            
-            // عند كتابة اسم المستخدم، ضع نفس القيمة في كلمة المرور
-            usernameField.addEventListener('input', function() {
-                if (passwordField.value === '') {
-                    passwordField.value = usernameField.value;
-                }
-            });
+            if (usernameField) {
+                usernameField.focus();
+            }
         });
     </script>
 </body>

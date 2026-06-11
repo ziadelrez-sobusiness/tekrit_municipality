@@ -24,12 +24,12 @@ $trackingNumber = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_request'])) {
     try {
         // التحقق من reCAPTCHA
-        if (!RecaptchaHelper::verifyResponse($_POST['g-recaptcha-response'] ?? '')) {
+        if (!RecaptchaHelper::isValid($_POST['g-recaptcha-response'] ?? '')) {
             throw new Exception('فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى.');
         }
         
         // تنظيف البيانات
-        $data = Utils::sanitizeArray($_POST);
+        $data = Utils::sanitizeInput($_POST);
         
         // التحقق من البيانات الأساسية
         $requiredFields = ['citizen_name', 'citizen_phone', 'request_type_id', 'request_title', 'request_description'];
@@ -137,7 +137,7 @@ $requestTypes = $requestType->getAllActiveTypes();
 // جلب المشاريع للمساهمة
 $projects = [];
 try {
-    $stmt = $db->query("SELECT id, project_name FROM development_projects WHERE project_status = 'نشط' ORDER BY project_name");
+    $stmt = $db->query("SELECT id, project_name FROM projects WHERE is_public = 1 AND status IN ('مخطط', 'قيد التنفيذ') ORDER BY project_name");
     $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     // تجاهل الخطأ إذا كان الجدول غير موجود

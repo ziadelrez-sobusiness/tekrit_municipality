@@ -91,7 +91,8 @@ $newFunction = "        // إنشاء محتوى النافذة المنبثقة
                         <button onclick=\"getDirections(\${facility.latitude}, \${facility.longitude})\" 
                                 class=\"bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 mr-2\">
                             🧭 \${TEXTS.get_directions}
-                        </button>";
+                        </button>
+            `;
 
             if (facility.phone) {
                 content += `

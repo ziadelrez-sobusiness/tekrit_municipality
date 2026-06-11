@@ -15,7 +15,7 @@ $db = $database->getConnection();
 $initiative_id = $_POST['initiative_id'] ?? 0;
 $uploaded_files = $_FILES['images'] ?? [];
 
-if (empty($initiative_id) {
+if (empty($initiative_id)) {
     echo json_encode(['success' => false, 'message' => 'معرف المبادرة غير صالح']);
     exit();
 }
