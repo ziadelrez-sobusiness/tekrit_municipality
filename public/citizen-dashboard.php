@@ -331,6 +331,22 @@ if (isset($_GET['code'])) {
                     </div>
                     <p class="text-xs text-gray-500 mt-2">احتفظ بهذا الرمز للدخول لحسابك في أي وقت</p>
                 </div>
+
+                <!-- أزرار الوصول السريع (تقليل النقرات للمواطن) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <a href="citizen-complaints.php" class="flex items-center justify-center gap-3 bg-red-600 text-white p-4 rounded-xl font-bold shadow hover:bg-red-700 transition transform hover:-translate-y-1">
+                        <span class="text-2xl">📢</span>
+                        <span>تقديم شكوى عاجلة</span>
+                    </a>
+                    <a href="citizen-requests.php" class="flex items-center justify-center gap-3 bg-blue-600 text-white p-4 rounded-xl font-bold shadow hover:bg-blue-700 transition transform hover:-translate-y-1">
+                        <span class="text-2xl">📝</span>
+                        <span>تقديم طلب خدمة</span>
+                    </a>
+                    <a href="important-links.php" class="flex items-center justify-center gap-3 bg-green-600 text-white p-4 rounded-xl font-bold shadow hover:bg-green-700 transition transform hover:-translate-y-1">
+                        <span class="text-2xl">💵</span>
+                        <span>كشف الحساب والضرائب</span>
+                    </a>
+                </div>
             </div>
 
             <!-- تبويبات الطلبات والشكاوى -->

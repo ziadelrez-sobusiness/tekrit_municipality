@@ -48,68 +48,100 @@ if (!isset($_SESSION['cancel_nonce_' . $id])) {
 
 // Handle cancellation POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_cancel'])) {
-    // CSRF: validate our cancel nonce (robust, does not depend on helper chain)
-    $submitted_nonce  = $_POST['cancel_nonce'] ?? '';
-    $expected_nonce   = $_SESSION['cancel_nonce_' . $id] ?? '';
-    $csrf_ok = !empty($expected_nonce) && !empty($submitted_nonce) && hash_equals($expected_nonce, $submitted_nonce);
-
-    // Also accept the standard csrf_token as a secondary check
-    if (!$csrf_ok) {
-        $std_token = $_POST['csrf_token'] ?? '';
-        $sess_token = $_SESSION['csrf_token'] ?? '';
-        $csrf_ok = !empty($sess_token) && !empty($std_token) && hash_equals($sess_token, $std_token);
-    }
-
-    if (!$csrf_ok) {
-        $error = 'خطأ أمني. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
-    } elseif ($is_cancelled) {
-        $error = 'هذه الحركة ملغاة مسبقاً ولا يمكن إلغاؤها مجدداً.';
+    // Check permission - strictly require supervisor (mayor or admin)
+    if (!$auth->checkPermission('mayor')) {
+        $error = 'خطأ: لا تملك الصلاحية الكافية لإلغاء الحركات المالية. يتطلب هذا الإجراء صلاحية مشرف.';
     } else {
-        $reason = trim($_POST['cancellation_reason'] ?? '');
-        if (empty($reason)) {
-            $error = 'يرجى إدخال سبب الإلغاء.';
+        // CSRF: validate our cancel nonce (robust, does not depend on helper chain)
+        $submitted_nonce  = $_POST['cancel_nonce'] ?? '';
+        $expected_nonce   = $_SESSION['cancel_nonce_' . $id] ?? '';
+        $csrf_ok = !empty($expected_nonce) && !empty($submitted_nonce) && hash_equals($expected_nonce, $submitted_nonce);
+
+        // Also accept the standard csrf_token as a secondary check
+        if (!$csrf_ok) {
+            $std_token = $_POST['csrf_token'] ?? '';
+            $sess_token = $_SESSION['csrf_token'] ?? '';
+            $csrf_ok = !empty($sess_token) && !empty($std_token) && hash_equals($sess_token, $std_token);
+        }
+
+        if (!$csrf_ok) {
+            $error = 'خطأ أمني. يرجى تحديث الصفحة والمحاولة مرة أخرى.';
+        } elseif ($is_cancelled) {
+            $error = 'هذه الحركة ملغاة مسبقاً ولا يمكن إلغاؤها مجدداً.';
         } else {
-            try {
-                $db->beginTransaction();
+            $reason = trim($_POST['cancellation_reason'] ?? '');
+            if (empty($reason)) {
+                $error = 'يرجى إدخال سبب الإلغاء.';
+            } else {
+                try {
+                    $db->beginTransaction();
 
-                // 1. Mark transaction as cancelled
-                $stmt = $db->prepare("UPDATE financial_transactions SET status='ملغى', cancelled_at=NOW(), cancelled_by_user_id=?, cancellation_reason=?, updated_at=NOW() WHERE id=?");
-                $stmt->execute([$user['id'], $reason, $id]);
+                    // 1. Mark transaction as cancelled
+                    $stmt = $db->prepare("UPDATE financial_transactions SET status='ملغى', cancelled_at=NOW(), cancelled_by_user_id=?, cancellation_reason=?, updated_at=NOW() WHERE id=?");
+                    $stmt->execute([$user['id'], $reason, $id]);
 
-                // 2. Reverse cashbox balance
-                if ($is_income) {
-                    $db->prepare("UPDATE accounting_cashboxes SET current_balance = current_balance - ? WHERE id=?")->execute([$tx['amount'], $tx['cashbox_id']]);
-                } else {
-                    $db->prepare("UPDATE accounting_cashboxes SET current_balance = current_balance + ? WHERE id=?")->execute([$tx['amount'], $tx['cashbox_id']]);
+                    // 2. Reverse cashbox balance
+                    if ($is_income) {
+                        $db->prepare("UPDATE accounting_cashboxes SET current_balance = current_balance - ? WHERE id=?")->execute([$tx['amount'], $tx['cashbox_id']]);
+                    } else {
+                        $db->prepare("UPDATE accounting_cashboxes SET current_balance = current_balance + ? WHERE id=?")->execute([$tx['amount'], $tx['cashbox_id']]);
+                    }
+
+                    // 3. Cancel linked receipt
+                    if ($tx['r_id']) {
+                        $db->prepare("UPDATE accounting_receipts SET status='cancelled' WHERE id=?")->execute([$tx['r_id']]);
+                    }
+
+                    // 4. Cancel linked voucher
+                    if ($tx['v_id']) {
+                        $db->prepare("UPDATE accounting_payment_vouchers SET status='cancelled' WHERE id=?")->execute([$tx['v_id']]);
+                    }
+
+                    // 5. Audit log (Parsing both old_data and new_data)
+                    $old_data = [
+                        'transaction_id' => $tx['id'],
+                        'amount' => $tx['amount'],
+                        'type' => $tx['type'],
+                        'status' => $tx['status'],
+                        'cashbox_id' => $tx['cashbox_id'],
+                        'receipt_id' => $tx['receipt_id'],
+                        'voucher_id' => $tx['voucher_id']
+                    ];
+                    $new_data = [
+                        'transaction_id' => $tx['id'],
+                        'amount' => $tx['amount'],
+                        'type' => $tx['type'],
+                        'status' => 'ملغى',
+                        'cashbox_id' => $tx['cashbox_id'],
+                        'receipt_id' => $tx['receipt_id'],
+                        'voucher_id' => $tx['voucher_id'],
+                        'cancellation_reason' => $reason,
+                        'cancelled_by' => $user['id']
+                    ];
+
+                    $db->prepare("INSERT INTO accounting_audit_log (user_id, action, entity_type, entity_id, old_data, new_data) VALUES (?,?,?,?,?,?)")
+                       ->execute([
+                           $user['id'], 
+                           'إلغاء حركة مالية', 
+                           'financial_transactions', 
+                           $id,
+                           json_encode($old_data, JSON_UNESCAPED_UNICODE),
+                           json_encode($new_data, JSON_UNESCAPED_UNICODE)
+                       ]);
+
+                    $db->commit();
+                    $is_cancelled = true;
+                    $message = 'تم إلغاء الحركة بنجاح. تم عكس رصيد الصندوق تلقائياً.';
+
+                    // Refresh balance
+                    $r2 = $db->prepare("SELECT current_balance FROM accounting_cashboxes WHERE id=?");
+                    $r2->execute([$tx['cashbox_id']]);
+                    $new_balance = $r2->fetchColumn();
+
+                } catch (Exception $e) {
+                    $db->rollBack();
+                    $error = 'خطأ أثناء الإلغاء: ' . $e->getMessage();
                 }
-
-                // 3. Cancel linked receipt
-                if ($tx['r_id']) {
-                    $db->prepare("UPDATE accounting_receipts SET status='cancelled' WHERE id=?")->execute([$tx['r_id']]);
-                }
-
-                // 4. Cancel linked voucher
-                if ($tx['v_id']) {
-                    $db->prepare("UPDATE accounting_payment_vouchers SET status='cancelled' WHERE id=?")->execute([$tx['v_id']]);
-                }
-
-                // 5. Audit log
-                $db->prepare("INSERT INTO accounting_audit_log (user_id, action, entity_type, entity_id, new_data) VALUES (?,?,?,?,?)")
-                   ->execute([$user['id'], 'إلغاء حركة مالية', 'financial_transactions', $id,
-                     json_encode(['type'=>$tx['type'],'amount'=>$tx['amount'],'cashbox_id'=>$tx['cashbox_id'],'reason'=>$reason])]);
-
-                $db->commit();
-                $is_cancelled = true;
-                $message = 'تم إلغاء الحركة بنجاح. تم عكس رصيد الصندوق تلقائياً.';
-
-                // Refresh balance
-                $r2 = $db->prepare("SELECT current_balance FROM accounting_cashboxes WHERE id=?");
-                $r2->execute([$tx['cashbox_id']]);
-                $new_balance = $r2->fetchColumn();
-
-            } catch (Exception $e) {
-                $db->rollBack();
-                $error = 'خطأ أثناء الإلغاء: ' . $e->getMessage();
             }
         }
     }

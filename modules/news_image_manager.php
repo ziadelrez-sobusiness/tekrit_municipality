@@ -45,10 +45,11 @@ class NewsImageManager {
             return ['success' => false, 'error' => 'ملف غير صالح'];
         }
         
+        require_once __DIR__ . '/../includes/ImageOptimizer.php';
         $filename = $this->generateFilename($file, 'featured');
         $full_path = $this->upload_dir . $filename;
         
-        if (move_uploaded_file($file['tmp_name'], $full_path)) {
+        if (ImageOptimizer::optimizeToWebP($file['tmp_name'], $full_path)) {
             // تحديث الصورة الرئيسية في جدول الأخبار
             $stmt = $this->db->prepare("UPDATE news_activities SET featured_image = ? WHERE id = ?");
             $stmt->execute([$filename, $news_id]);
@@ -56,7 +57,7 @@ class NewsImageManager {
             return ['success' => true, 'filename' => $filename];
         }
         
-        return ['success' => false, 'error' => 'فشل في رفع الملف'];
+        return ['success' => false, 'error' => 'فشل في رفع وتعديل الملف'];
     }
     
     /**
@@ -66,6 +67,7 @@ class NewsImageManager {
         $uploaded = [];
         $errors = [];
         
+        require_once __DIR__ . '/../includes/ImageOptimizer.php';
         // التحقق من عدد الصور الحالية
         $current_count = $this->getImageCount($news_id);
         $max_images = (int)$this->getSetting('max_images_per_news', '10');
@@ -96,19 +98,23 @@ class NewsImageManager {
             $filename = $this->generateFilename($file, 'gallery');
             $full_path = $this->upload_dir . $filename;
             
-            if (move_uploaded_file($file['tmp_name'], $full_path)) {
+            if (ImageOptimizer::optimizeToWebP($file['tmp_name'], $full_path)) {
                 // إضافة الصورة لجدول صور الأخبار
                 $display_order = $this->getNextDisplayOrder($news_id);
+                
+                // Get optimized WebP size
+                $optimized_size = filesize($full_path);
+                
                 $stmt = $this->db->prepare("
                     INSERT INTO news_images (news_id, image_filename, image_type, display_order, image_size, uploaded_by) 
                     VALUES (?, ?, 'gallery', ?, ?, ?)
                 ");
-                $stmt->execute([$news_id, $filename, $display_order, $file['size'], $uploaded_by]);
+                $stmt->execute([$news_id, $filename, $display_order, $optimized_size, $uploaded_by]);
                 
                 $uploaded[] = [
                     'id' => $this->db->lastInsertId(),
                     'filename' => $filename,
-                    'size' => $file['size']
+                    'size' => $optimized_size
                 ];
             } else {
                 $errors[] = "فشل في رفع: " . $file['name'];
@@ -174,11 +180,9 @@ class NewsImageManager {
      * إنشاء اسم ملف فريد
      */
     private function generateFilename($file, $prefix = '') {
-        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $timestamp = time();
         $random = mt_rand(1000, 9999);
-        
-        return "news_{$prefix}_{$timestamp}_{$random}.{$extension}";
+        return "news_{$prefix}_{$timestamp}_{$random}.webp";
     }
     
     /**

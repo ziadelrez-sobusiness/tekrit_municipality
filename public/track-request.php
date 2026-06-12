@@ -128,16 +128,22 @@ function getImageUrl($filename) {
     
     return $imagePath;
 }
-// دالة لتحديد نسبة التقدم
+// دالة لتحديد نسبة التقدم الموحدة (مقدم ➔ قيد المراجعة ➔ مكتمل)
 function getProgressPercentage($status) {
     switch($status) {
-        case 'جديد': return 20;
-        case 'قيد المراجعة': return 40;
-        case 'قيد التنفيذ': return 70;
-        case 'مكتمل': return 100;
-        case 'مرفوض': return 100;
-        case 'معلق': return 50;
-        default: return 0;
+        case 'جديد':
+        case 'مقدم':
+            return 33;
+        case 'قيد المراجعة':
+        case 'قيد التنفيذ':
+        case 'معلق':
+            return 66;
+        case 'مكتمل':
+        case 'موافق عليه':
+        case 'مرفوض':
+            return 100;
+        default:
+            return 33;
     }
 }
 ?>

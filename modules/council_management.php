@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Handle image upload
                 $profile_picture = '';
                 if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+                    require_once __DIR__ . '/../includes/ImageOptimizer.php';
                     $upload_dir = 'uploads/council_members/';
                     $full_upload_dir = '../' . $upload_dir;
                     
@@ -52,19 +53,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     
                     $file_extension = pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
-                    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+                    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                     
                     if (in_array(strtolower($file_extension), $allowed_extensions)) {
-                        $new_filename = 'member_' . time() . '_' . uniqid() . '.' . $file_extension;
+                        $new_filename = 'member_' . time() . '_' . uniqid() . '.webp';
                         $upload_path = $full_upload_dir . $new_filename;
                         
-                        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $upload_path)) {
+                        if (ImageOptimizer::optimizeToWebP($_FILES['profile_picture']['tmp_name'], $upload_path)) {
                             $profile_picture = $upload_dir . $new_filename;
                         } else {
-                            throw new Exception('فشل في رفع الصورة');
+                            throw new Exception('فشل في رفع ومعالجة الصورة');
                         }
                     } else {
-                        throw new Exception('نوع الملف غير مدعوم. يُسمح فقط بـ JPG, JPEG, PNG, GIF');
+                        throw new Exception('نوع الملف غير مدعوم. يُسمح فقط بـ JPG, JPEG, PNG, GIF, WEBP');
                     }
                 }
                 
@@ -106,19 +107,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Handle new image upload
                 if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+                    require_once __DIR__ . '/../includes/ImageOptimizer.php';
                     $upload_dir = '../uploads/council_members/';
                     if (!is_dir($upload_dir)) {
                         mkdir($upload_dir, 0755, true);
                     }
                     
                     $file_extension = pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION);
-                    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+                    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                     
                     if (in_array(strtolower($file_extension), $allowed_extensions)) {
-                        $new_filename = 'member_' . time() . '_' . uniqid() . '.' . $file_extension;
+                        $new_filename = 'member_' . time() . '_' . uniqid() . '.webp';
                         $upload_path = $upload_dir . $new_filename;
                         
-                        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $upload_path)) {
+                        if (ImageOptimizer::optimizeToWebP($_FILES['profile_picture']['tmp_name'], $upload_path)) {
                             // Delete old image if exists
                             if ($profile_picture && file_exists('../' . $profile_picture)) {
                                 unlink('../' . $profile_picture);
@@ -126,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $profile_picture = 'uploads/council_members/' . $new_filename;
                         }
                     } else {
-                        throw new Exception('نوع الملف غير مدعوم. يُسمح فقط بـ JPG, JPEG, PNG, GIF');
+                        throw new Exception('نوع الملف غير مدعوم. يُسمح فقط بـ JPG, JPEG, PNG, GIF, WEBP');
                     }
                 }
                 

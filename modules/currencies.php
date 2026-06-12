@@ -127,6 +127,15 @@ try {
             <p class="text-slate-600 mt-2">إدارة العملات وأسعار الصرف - العملة الأساسية: الليرة اللبنانية</p>
         </div>
 
+        <!-- Exchange Rate Volatility Safeguard Warning -->
+        <div class="bg-amber-50 border-r-4 border-amber-500 text-amber-900 p-4 rounded-lg shadow-sm mb-6 flex items-start gap-3">
+            <span class="text-2xl mt-0.5">⚠️</span>
+            <div>
+                <h4 class="font-bold text-amber-800 mb-1">تحذير أمان: حماية السجلات المالية التاريخية</h4>
+                <p class="text-xs leading-relaxed text-amber-700">إن تعديل أسعار الصرف يؤثر فقط على <strong>المعاملات المالية المستقبلية والجديدة</strong>. كافة المعاملات والقيود القديمة المسجلة تحتفظ بأسعار الصرف التاريخية التي نُفذت بها وقت المعاملة لحماية سلامة الدفاتر وتجنب حدوث أي فروقات محاسبية في الأرصدة التراكمية للصناديق.</p>
+            </div>
+        </div>
+
         <!-- Messages -->
         <?php if (!empty($message)): ?>
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
